@@ -1,0 +1,1 @@
+# base_django_react_next_feature
