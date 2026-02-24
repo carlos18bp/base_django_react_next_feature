@@ -1,0 +1,113 @@
+.attachments-widget {
+	margin: 4px;
+	padding: 10px 10px 0 10px;
+	text-align: center;
+	border: 2px dashed #eeeeee;
+	border-radius: 5px;
+	font-family: sans-serif;
+	font-size: 16px;
+	clear: both;
+}
+
+.attachments-widget.dz-clickable.empty {
+	background: url('../img/upload.png') no-repeat center;
+	background-size: 64px 64px;
+	padding: 80px;
+}
+
+.attachments-widget.dz-clickable.dz-drag-hover {
+	background-color: rgba(80, 150, 200, 0.1);
+	border: 2px dashed rgba(80, 150, 200, 1);
+	border-radius: 0;
+}
+
+.attachments-widget .files {
+	overflow: hidden;
+	margin-left: -10px;
+}
+
+.attachments-widget .attachment {
+	position: relative;
+	float: left;
+	margin-left: 10px;
+	margin-bottom: 10px;
+	height: 150px;
+	overflow: hidden;
+}
+
+.attachments-widget .attachment.deleted {
+	display: none;
+}
+
+.attachments-widget .thumbnail {
+	width: 200px;
+	height: 150px;
+	text-align: center;
+	line-height: 150px;
+}
+
+.attachments-widget .thumbnail img {
+	display: inline-block;
+	vertical-align: baseline;
+	max-width: 200px;
+	max-height: 150px;
+	padding: 0;
+	margin: 0;
+	border: none;
+}
+
+.attachments-widget .caption {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	padding: 4px 8px;
+	font-size: 80%;
+	background: rgba(0, 0, 0, 0.5);
+}
+
+.attachments-widget .caption span {
+	display: block;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	text-align: center;
+	color: white;
+	position: relative;
+}
+
+.attachments-widget .progress {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	width: 0%;
+	height: 3px;
+	background: #22aaee;
+}
+
+.attachments-widget .delete {
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	overflow: hidden;
+	text-indent: -9999px;
+	width: 16px;
+	height: 16px;
+	background: url('../img/trashcan.png') no-repeat top left;
+}
+
+.attachments-widget .messages {
+	list-style: none;
+	padding: 0;
+	margin: 0 0 16px 0;
+	text-align: left;
+}
+
+.attachments-widget .messages li {
+	padding: 4px 0;
+	margin: 0;
+}
+
+.attachments-widget .messages li.error {
+	color: #ee4422;
+}

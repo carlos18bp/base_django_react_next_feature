@@ -1,0 +1,45 @@
+# -*- coding: utf-8 -*-
+from django import forms
+from django.db import models
+
+
+class LibraryFormField(forms.ModelChoiceField):
+	pass
+
+
+class GalleryFormField(LibraryFormField):
+	pass
+
+
+class LibraryField(models.ForeignKey):
+	description = "Attachments"
+
+	def __init__(self, to='django_attachments.Library', *args, **kwargs):
+		super().__init__(to, *args, **kwargs)
+
+	def formfield(self, **kwargs):
+		defaults = {'form_class': LibraryFormField}
+		defaults.update(kwargs)
+		return super().formfield(**defaults)
+
+
+class GalleryField(LibraryField):
+	description = "Gallery"
+
+	def formfield(self, **kwargs):
+		defaults = {'form_class': GalleryFormField}
+		defaults.update(kwargs)
+		return super().formfield(**defaults)
+	
+
+class SingleImageFormField(LibraryFormField):
+    pass
+
+
+class SingleImageField(LibraryField):
+    description = "Single Image"
+
+    def formfield(self, **kwargs):
+        defaults = {'form_class': SingleImageFormField}
+        defaults.update(kwargs)
+        return super().formfield(**defaults)

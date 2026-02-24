@@ -1,0 +1,270 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-02-24",
+  "flows": {
+    "home-loads": {
+      "name": "Home page loads",
+      "module": "home",
+      "roles": ["shared"],
+      "priority": "P1",
+      "description": "Home page renders with main heading visible",
+      "expectedSpecs": 1
+    },
+    "home-to-blog": {
+      "name": "Navigate from home to blog detail",
+      "module": "home",
+      "roles": ["shared"],
+      "priority": "P2",
+      "description": "User clicks 'Read blogs' on home page and navigates to a blog detail",
+      "expectedSpecs": 1
+    },
+    "home-to-catalog": {
+      "name": "Navigate from home to catalog/product",
+      "module": "home",
+      "roles": ["shared"],
+      "priority": "P2",
+      "description": "User clicks 'Shop now' on home page and navigates to catalog then product detail",
+      "expectedSpecs": 1
+    },
+    "home-product-carousel": {
+      "name": "Navigate through product carousel",
+      "module": "home",
+      "roles": ["shared"],
+      "priority": "P3",
+      "description": "User clicks a product from the home page carousel and reaches the detail page",
+      "expectedSpecs": 1
+    },
+    "auth-sign-in-form": {
+      "name": "Sign-in form display and interaction",
+      "module": "auth",
+      "roles": ["shared"],
+      "priority": "P2",
+      "description": "User navigates to sign-in page, sees form fields and can type in them",
+      "expectedSpecs": 1
+    },
+    "auth-login-invalid": {
+      "name": "Login with invalid credentials",
+      "module": "auth",
+      "roles": ["shared"],
+      "priority": "P1",
+      "description": "User submits invalid credentials and stays on sign-in page",
+      "expectedSpecs": 1
+    },
+    "auth-protected-redirect": {
+      "name": "Protected route redirect",
+      "module": "auth",
+      "roles": ["shared"],
+      "priority": "P1",
+      "description": "Unauthenticated user accessing /dashboard or /backoffice is redirected to sign-in",
+      "expectedSpecs": 1
+    },
+    "blog-list-view": {
+      "name": "View blog listing",
+      "module": "blog",
+      "roles": ["shared"],
+      "priority": "P2",
+      "description": "User views the /blogs page and sees blog cards",
+      "expectedSpecs": 1
+    },
+    "blog-detail-view": {
+      "name": "View blog detail",
+      "module": "blog",
+      "roles": ["shared"],
+      "priority": "P2",
+      "description": "User clicks a blog card and views the detail page with matching title",
+      "expectedSpecs": 1
+    },
+    "blog-detail-back": {
+      "name": "Navigate back from blog detail",
+      "module": "blog",
+      "roles": ["shared"],
+      "priority": "P3",
+      "description": "User uses browser back from blog detail and returns to blogs list",
+      "expectedSpecs": 1
+    },
+    "navigation-between-pages": {
+      "name": "Navigate between main sections",
+      "module": "navigation",
+      "roles": ["shared"],
+      "priority": "P2",
+      "description": "User navigates across home, catalog, blogs, checkout, and sign-in pages",
+      "expectedSpecs": 1
+    },
+    "navigation-header": {
+      "name": "Working header navigation",
+      "module": "navigation",
+      "roles": ["shared"],
+      "priority": "P3",
+      "description": "Header/nav element exists and contains navigation links",
+      "expectedSpecs": 1
+    },
+    "navigation-footer": {
+      "name": "Working footer",
+      "module": "navigation",
+      "roles": ["shared"],
+      "priority": "P4",
+      "description": "Footer element is visible on the home page",
+      "expectedSpecs": 1
+    },
+    "catalog-browse": {
+      "name": "Browse product catalog",
+      "module": "catalog",
+      "roles": ["shared"],
+      "priority": "P1",
+      "description": "User visits /catalog and sees product cards",
+      "expectedSpecs": 1
+    },
+    "catalog-product-detail": {
+      "name": "View product detail",
+      "module": "catalog",
+      "roles": ["shared"],
+      "priority": "P1",
+      "description": "User navigates to a product detail page and sees title and price",
+      "expectedSpecs": 1
+    },
+    "catalog-product-gallery": {
+      "name": "Product gallery images",
+      "module": "catalog",
+      "roles": ["shared"],
+      "priority": "P3",
+      "description": "Product detail page displays at least one image",
+      "expectedSpecs": 1
+    },
+    "catalog-back-navigation": {
+      "name": "Navigate back to catalog",
+      "module": "catalog",
+      "roles": ["shared"],
+      "priority": "P3",
+      "description": "User uses browser back from product detail and returns to /catalog",
+      "expectedSpecs": 1
+    },
+    "cart-add": {
+      "name": "Add product to cart",
+      "module": "cart",
+      "roles": ["shared"],
+      "priority": "P1",
+      "description": "User adds a product from detail page to cart; cart is not empty on checkout",
+      "expectedSpecs": 1
+    },
+    "cart-empty": {
+      "name": "Empty cart state",
+      "module": "cart",
+      "roles": ["shared"],
+      "priority": "P2",
+      "description": "Checkout page shows 'Your cart is empty' when no items are in cart",
+      "expectedSpecs": 1
+    },
+    "cart-update-qty": {
+      "name": "Update product quantity in cart",
+      "module": "cart",
+      "roles": ["shared"],
+      "priority": "P2",
+      "description": "User updates the quantity input for a cart item",
+      "expectedSpecs": 1
+    },
+    "cart-remove": {
+      "name": "Remove product from cart",
+      "module": "cart",
+      "roles": ["shared"],
+      "priority": "P2",
+      "description": "User removes a product from cart and sees empty cart message",
+      "expectedSpecs": 1
+    },
+    "cart-subtotal": {
+      "name": "Cart subtotal calculation",
+      "module": "cart",
+      "roles": ["shared"],
+      "priority": "P2",
+      "description": "Checkout page shows a visible Subtotal label when cart has items",
+      "expectedSpecs": 1
+    },
+    "cart-persist": {
+      "name": "Cart persists across page reloads",
+      "module": "cart",
+      "roles": ["shared"],
+      "priority": "P2",
+      "description": "Cart items survive a full page reload",
+      "expectedSpecs": 1
+    },
+    "cart-multiple-products": {
+      "name": "Add multiple different products",
+      "module": "cart",
+      "roles": ["shared"],
+      "priority": "P2",
+      "description": "User adds two different products; both appear in checkout cart",
+      "expectedSpecs": 1
+    },
+    "checkout-form-display": {
+      "name": "Checkout form display",
+      "module": "checkout",
+      "roles": ["shared"],
+      "priority": "P2",
+      "description": "Checkout page renders with form fields visible",
+      "expectedSpecs": 1
+    },
+    "checkout-form-validation": {
+      "name": "Checkout form required field validation",
+      "module": "checkout",
+      "roles": ["shared"],
+      "priority": "P1",
+      "description": "Submit button is disabled when checkout form is empty",
+      "expectedSpecs": 1
+    },
+    "checkout-form-fill": {
+      "name": "Accept valid checkout data",
+      "module": "checkout",
+      "roles": ["shared"],
+      "priority": "P2",
+      "description": "User fills all checkout form fields with valid data",
+      "expectedSpecs": 1
+    },
+    "purchase-complete-flow": {
+      "name": "Complete full purchase flow",
+      "module": "purchase",
+      "roles": ["shared"],
+      "priority": "P1",
+      "description": "End-to-end: home → catalog → product detail → add to cart → checkout → fill form → submit enabled",
+      "expectedSpecs": 1
+    },
+    "purchase-multiple-items": {
+      "name": "Checkout with multiple cart items",
+      "module": "purchase",
+      "roles": ["shared"],
+      "priority": "P2",
+      "description": "User adds two products and both appear in checkout with subtotal visible",
+      "expectedSpecs": 1
+    },
+    "purchase-disabled-empty-cart": {
+      "name": "Checkout disabled when cart is empty",
+      "module": "purchase",
+      "roles": ["shared"],
+      "priority": "P2",
+      "description": "Even with form filled, checkout button is disabled when cart is empty",
+      "expectedSpecs": 1
+    },
+    "purchase-loading-state": {
+      "name": "Loading state during form submission",
+      "module": "purchase",
+      "roles": ["shared"],
+      "priority": "P3",
+      "description": "Submit button triggers loading/navigation state after click",
+      "expectedSpecs": 1
+    },
+    "auth-sign-up-form": {
+      "name": "Sign-up form display and validation",
+      "module": "auth",
+      "roles": ["guest"],
+      "priority": "P1",
+      "description": "User navigates to /sign-up and sees registration form with client-side validation",
+      "expectedSpecs": 1
+    },
+    "auth-forgot-password-form": {
+      "name": "Forgot password form display",
+      "module": "auth",
+      "roles": ["guest"],
+      "priority": "P2",
+      "description": "User navigates to /forgot-password and sees email input and send code button",
+      "expectedSpecs": 1
+    }
+  }
+}
