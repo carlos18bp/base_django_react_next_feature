@@ -449,13 +449,14 @@ def run_backend(
     quiet: bool = False,
     append_log: bool = False,
     run_id: str | None = None,
+    coverage: bool = False,
 ) -> StepResult:
-    backend_cmd: list[str] = [
-        sys.executable, "-m", "pytest",
-        f"--cov={backend_root / 'base_feature_app'}",
-        "--cov-report=term-missing",
-        "-q",
-    ]
+    backend_cmd: list[str] = [sys.executable, "-m", "pytest", "-q"]
+    if coverage:
+        backend_cmd.extend([
+            f"--cov={backend_root / 'base_feature_app'}",
+            "--cov-report=term-missing",
+        ])
     if markers:
         backend_cmd.extend(["-m", markers])
     backend_cmd.extend(extra_args)
@@ -471,7 +472,7 @@ def run_backend(
         command=backend_cmd,
         cwd=backend_root,
         log_path=report_dir / "backend.log",
-        capture_coverage=True,
+        capture_coverage=coverage,
         append_log=append_log,
         log_header=log_header,
         quiet=quiet,
@@ -486,8 +487,11 @@ def run_frontend_unit(
     quiet: bool = False,
     append_log: bool = False,
     run_id: str | None = None,
+    coverage: bool = False,
 ) -> StepResult:
-    unit_cmd = ["npm", "run", "test", "--", "--coverage"]
+    unit_cmd = ["npm", "run", "test", "--"]
+    if coverage:
+        unit_cmd.append("--coverage")
     if workers:
         unit_cmd.append(f"--maxWorkers={workers}")
     unit_cmd.extend(extra_args)
@@ -503,12 +507,12 @@ def run_frontend_unit(
         command=unit_cmd,
         cwd=frontend_root,
         log_path=report_dir / "frontend-unit.log",
-        capture_coverage=True,
+        capture_coverage=coverage,
         append_log=append_log,
         log_header=log_header,
         quiet=quiet,
     )
-    if result.status == "ok":
+    if coverage and result.status == "ok":
         result.coverage = read_jest_coverage_summary(frontend_root)
     return result
 
@@ -521,6 +525,7 @@ def run_frontend_e2e(
     quiet: bool = False,
     append_log: bool = False,
     run_id: str | None = None,
+    coverage: bool = False,
 ) -> StepResult:
     env = dict(os.environ)
     playwright_cmd = ["npx", "playwright", "test"]
@@ -545,7 +550,8 @@ def run_frontend_e2e(
         log_header=log_header,
         quiet=quiet,
     )
-    result.coverage = read_flow_coverage_summary(frontend_root)
+    if coverage:
+        result.coverage = read_flow_coverage_summary(frontend_root)
     return result
 
 
@@ -617,6 +623,8 @@ def main() -> int:
     verbosity.add_argument("--quiet", action="store_true",
                            help="Force quiet output (even in sequential mode)")
     parser.add_argument("--report-dir", default="test-reports")
+    parser.add_argument("--coverage", action="store_true",
+                        help="Enable coverage reporting for all suites (default: off)")
 
     args = parser.parse_args()
 
@@ -654,6 +662,7 @@ def main() -> int:
                 quiet=quiet,
                 append_log=append_log,
                 run_id=run_id,
+                coverage=args.coverage,
             ),
         ))
 
@@ -669,6 +678,7 @@ def main() -> int:
                 quiet=quiet,
                 append_log=append_log,
                 run_id=run_id,
+                coverage=args.coverage,
             ),
         ))
 
@@ -684,6 +694,7 @@ def main() -> int:
                 quiet=quiet,
                 append_log=append_log,
                 run_id=run_id,
+                coverage=args.coverage,
             ),
         ))
 

@@ -136,6 +136,8 @@ Single script runs **all suites** (backend pytest, frontend unit, frontend E2E) 
 
 Runs suites **sequentially** by default. Use `--parallel` for fast feedback (add `--verbose` to stream suite output).
 
+> **Coverage is off by default.** Pass `--coverage` to enable it for all suites.
+
 ```bash
 # Sequential (default)
 python3 scripts/run-tests-all-suites.py
@@ -152,6 +154,35 @@ python3 scripts/run-tests-all-suites.py --skip-e2e
 # Pass extra args to individual suites
 python3 scripts/run-tests-all-suites.py --backend-markers "not slow" --e2e-workers 2
 ```
+
+#### Coverage reporting (`--coverage`)
+
+Pass `--coverage` to enable per-suite coverage collection and display it in the final report.
+Without this flag no coverage instrumentation is added, keeping runs faster.
+
+```bash
+# Enable coverage for all suites
+python3 scripts/run-tests-all-suites.py --coverage
+
+# Coverage + parallel execution
+python3 scripts/run-tests-all-suites.py --coverage --parallel
+
+# Coverage for backend only
+python3 scripts/run-tests-all-suites.py --coverage --skip-unit --skip-e2e
+
+# Coverage for frontend unit only
+python3 scripts/run-tests-all-suites.py --coverage --skip-backend --skip-e2e
+```
+
+When `--coverage` is active each suite collects and reports:
+
+| Suite | Coverage source |
+|-------|----------------|
+| `backend` | `pytest-cov` (`--cov` + `--cov-report=term-missing`) |
+| `frontend-unit` | Jest `--coverage` → `coverage/coverage-summary.json` |
+| `frontend-e2e` | Flow coverage → `e2e-results/flow-coverage.json` |
+
+Coverage metrics are printed per suite in the final summary.
 
 Logs are written to `test-reports/` (configurable via `--report-dir`). Logs are overwritten on
 each run unless `--resume` is used, which appends to existing logs and uses
