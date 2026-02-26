@@ -97,11 +97,11 @@ blob-report/
 .env.test.local
 .env.production.local
 *.env
+!*.env.example
 
 # ============================================================================
 # Logs and Temporary Files
 # ============================================================================
-logs/
 *.log
 pids
 *.pid

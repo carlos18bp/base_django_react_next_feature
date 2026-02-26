@@ -75,6 +75,14 @@ This repository serves as a foundation for rapid implementation of future projec
 - ✅ **CI Workflow** - GitHub Actions test quality gate
 - ✅ **Documentation** - Complete architecture, testing, and quality standards
 
+### Production Infrastructure
+- ✅ **Settings Split** - Base / Dev / Prod settings via `DJANGO_SETTINGS_MODULE`
+- ✅ **Security Hardening** - HSTS, secure cookies, SSL redirect (production)
+- ✅ **Automated Backups** - django-dbbackup with Huey scheduler (every 20 days, 90-day retention)
+- ✅ **Query Profiling** - django-silk behind `ENABLE_SILK` flag (staff-only access)
+- ✅ **Task Queue** - Huey + Redis for background tasks
+- ✅ **Systemd Templates** - Service files for Huey in production
+
 ---
 
 ## 🛠 Technologies
@@ -98,6 +106,10 @@ This repository serves as a foundation for rapid implementation of future projec
 | Pytest | 9.0+ | Testing framework |
 | pytest-cov | 7.0+ | Coverage plugin |
 | Ruff | 0.15+ | Python linter |
+| django-dbbackup | 4.0+ | Database & media backup automation |
+| django-silk | 5.0+ | Query profiling & N+1 detection |
+| Huey | 2.5+ | Lightweight task queue |
+| Redis | 4.0+ | Message broker for Huey |
 
 ### Frontend
 | Technology | Version | Description |
@@ -334,41 +346,140 @@ Frontend will be available at: `http://localhost:3000`
 
 ## 🐍 Backend (Django)
 
-### Environment Variables
+### Environment Configuration
 
-Create a `backend/.env` file based on `backend/.env.example`:
+Copy the example file and configure your environment:
 
 ```bash
-# Core settings
-DJANGO_SECRET_KEY=your-secret-key-here
-DJANGO_DEBUG=true
-DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
-
-# CORS
-DJANGO_CORS_ALLOWED_ORIGINS=http://127.0.0.1:3000,http://localhost:3000
-DJANGO_CSRF_TRUSTED_ORIGINS=http://127.0.0.1:3000,http://localhost:3000
-
-# Database (SQLite by default)
-DJANGO_DB_ENGINE=django.db.backends.sqlite3
-DJANGO_DB_NAME=db.sqlite3
-
-# JWT
-DJANGO_JWT_ACCESS_MINUTES=15
-DJANGO_JWT_REFRESH_DAYS=7
-
-# Google OAuth (optional)
-DJANGO_GOOGLE_CLIENT_ID=your_google_client_id_here.apps.googleusercontent.com
-
-# Email (optional — falls back to console backend if not set)
-# DJANGO_EMAIL_HOST_USER=your-email@gmail.com
-# DJANGO_EMAIL_HOST_PASSWORD=your-app-password
-# DJANGO_DEFAULT_FROM_EMAIL=your-email@gmail.com
+cp backend/.env.example backend/.env
+# Edit backend/.env with your values
 ```
+
+See `backend/.env.example` for all available options grouped by category (environment, CORS, database, JWT, email, Redis, backups, Silk profiling, API keys).
+
+**Settings files:**
+- `settings.py` — Base/shared configuration (used by default)
+- `settings_dev.py` — Development overrides (`DEBUG=True`, console email)
+- `settings_prod.py` — Production hardening (`DEBUG=False`, security headers, required secret validation)
+
+In production, set: `DJANGO_SETTINGS_MODULE=base_feature_project.settings_prod`
 
 **Generate new SECRET_KEY:**
 
 ```bash
 python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
+
+### Backups
+
+Automated backups run every 20 days via Huey task queue. Backups are stored in `/var/backups/base_feature_project/` with 90-day retention (5 backups).
+
+Manual backup:
+```bash
+cd backend
+source venv/bin/activate
+python manage.py dbbackup --compress
+python manage.py mediabackup --compress
+```
+
+### Performance Monitoring
+
+Query profiling is powered by [django-silk](https://github.com/jazzband/django-silk) and is **disabled by default**. Enable it by setting `ENABLE_SILK=true` in your `.env`.
+
+#### What Silk captures
+
+Only `/api/` requests are intercepted (`SILKY_INTERCEPT_FUNC`). For each recorded request Silk stores:
+
+- Request metadata: path, method, status code, response time
+- Every SQL query: SQL text, execution time, query count per request
+
+> **No Python profiler, no request/response bodies, no `/silk/` UI.** The dashboard is intentionally not exposed — this setup is for automated DB-level monitoring only (cron reports + garbage collection).
+
+#### Key settings (configurable via `.env`)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ENABLE_SILK` | `false` | Master switch — adds silk to INSTALLED_APPS and middleware |
+| `SLOW_QUERY_THRESHOLD_MS` | `500` | Queries slower than this (ms) appear in the weekly report |
+| `N_PLUS_ONE_THRESHOLD` | `10` | Requests with more queries than this are flagged as N+1 suspects |
+
+#### Manual data cleanup
+
+Use `silk_garbage_collect` to delete old profiling records:
+
+```bash
+cd backend
+source venv/bin/activate
+
+# Delete records older than 7 days (default)
+python manage.py silk_garbage_collect
+
+# Delete records older than 30 days
+python manage.py silk_garbage_collect --days=30
+
+# Preview what would be deleted (no destructive action)
+python manage.py silk_garbage_collect --dry-run
+
+# Combine: preview with custom retention
+python manage.py silk_garbage_collect --days=14 --dry-run
+```
+
+Example output:
+```
+Silk records older than 2026-02-17 04:00:00+00:00:
+  - Requests to delete: 1847
+Deleted 1847 records
+```
+
+#### Automated Silk cron jobs (Huey)
+
+When `ENABLE_SILK=true`, two periodic tasks run automatically:
+
+**`silk_garbage_collection`** — runs daily at **4:00 AM**
+- Calls `silk_garbage_collect --days=7` to purge records older than 7 days
+- Keeps the profiling database lean without manual intervention
+
+**`weekly_slow_queries_report`** — runs every **Monday at 8:00 AM**
+- Scans the last 7 days of recorded data
+- Appends a structured report to `backend/logs/silk-weekly-report.log`
+- Reports two sections:
+  - **Slow queries**: top 50 SQL queries exceeding `SLOW_QUERY_THRESHOLD_MS` (default 500 ms), ordered slowest first
+  - **N+1 suspects**: top 20 requests with more than `N_PLUS_ONE_THRESHOLD` (default 10) queries, ordered by query count
+
+Example report (`backend/logs/silk-weekly-report.log`):
+```
+============================================================
+WEEKLY QUERY REPORT - 2026-02-24
+============================================================
+
+## SLOW QUERIES (>500ms)
+----------------------------------------
+[1230ms] /api/products/ - SELECT "product"."id", "product"."title" FROM "product" LEFT OUTER JOIN...
+[874ms] /api/sales/ - SELECT "sale"."id", "sale"."email" FROM "sale" INNER JOIN "sold_product"...
+[612ms] /api/blogs/ - SELECT COUNT(*) AS "__count" FROM "blog"...
+
+## POTENTIAL N+1 (>10 queries/request)
+----------------------------------------
+[34 queries] /api/products/
+[18 queries] /api/sales/
+[11 queries] /api/blogs/42/
+
+============================================================
+```
+
+### Task Queue
+
+This project uses Huey with Redis for background tasks:
+
+| Task | Schedule | Description |
+|------|----------|-------------|
+| `scheduled_backup` | Days 1 & 21, 3:00 AM | DB and media backup |
+| `silk_garbage_collection` | Daily, 4:00 AM | Clean old profiling data |
+| `weekly_slow_queries_report` | Mondays, 8:00 AM | Performance report |
+
+In production, ensure the Huey service is running:
+```bash
+sudo systemctl status base_feature_project-huey
 ```
 
 ### Available Models
@@ -459,6 +570,21 @@ python manage.py create_users 10
 # Delete all fake data (protects superusers)
 python manage.py delete_fake_data --confirm
 ```
+
+#### Silk Profiling Data Cleanup
+
+```bash
+# Delete Silk records older than 7 days (default)
+python manage.py silk_garbage_collect
+
+# Custom retention period
+python manage.py silk_garbage_collect --days=30
+
+# Dry run — preview without deleting
+python manage.py silk_garbage_collect --dry-run
+```
+
+> Requires `ENABLE_SILK=true`. This command is also run automatically every day at 4:00 AM by the Huey task queue.
 
 ### Django Admin
 

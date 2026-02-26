@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import json
 import os
 import tempfile
@@ -35,6 +36,48 @@ def _is_production(path: str) -> bool:
     """Return True if the path does not belong to tests/migrations/venv/etc."""
     parts = Path(path).parts
     return not any(part in _EXCLUDE_PARTS for part in parts)
+
+
+def _combined_totals(
+    totals: dict | None,
+    functions_total: int | None,
+    functions_covered: int | None,
+) -> tuple[int, int] | None:
+    combined_total = 0
+    combined_covered = 0
+    if isinstance(totals, dict):
+        total_statements = totals.get("num_statements")
+        missing_lines = totals.get("missing_lines")
+        covered_lines = totals.get("covered_lines")
+        if covered_lines is None and isinstance(total_statements, int) and isinstance(missing_lines, int):
+            covered_lines = total_statements - missing_lines
+
+        total_branches = totals.get("num_branches")
+        missing_branches = totals.get("missing_branches")
+        covered_branches = totals.get("covered_branches")
+        if covered_branches is None and isinstance(total_branches, int) and isinstance(missing_branches, int):
+            covered_branches = total_branches - missing_branches
+
+        total_lines = totals.get("num_lines")
+        line_total = total_lines if isinstance(total_lines, int) else total_statements
+
+        if isinstance(total_statements, int) and isinstance(covered_lines, int):
+            combined_total += total_statements
+            combined_covered += covered_lines
+        if isinstance(total_branches, int) and isinstance(covered_branches, int):
+            combined_total += total_branches
+            combined_covered += covered_branches
+        if isinstance(line_total, int) and isinstance(covered_lines, int):
+            combined_total += line_total
+            combined_covered += covered_lines
+
+    if isinstance(functions_total, int) and isinstance(functions_covered, int):
+        combined_total += functions_total
+        combined_covered += functions_covered
+
+    if combined_total == 0:
+        return None
+    return combined_covered, combined_total
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config) -> None:  # noqa: ARG001
@@ -79,6 +122,62 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config) -> None:  # no
         if not files_data:
             return
 
+        totals = report.get("totals")
+
+        def count_function_coverage(files: dict, coverage_data) -> tuple[int, int] | None:
+            if not files or coverage_data is None:
+                return None
+            total_functions = 0
+            covered_functions = 0
+            for raw_path in files:
+                if not isinstance(raw_path, str) or not _is_production(raw_path):
+                    continue
+                file_path = Path(raw_path)
+                if not file_path.is_absolute():
+                    file_path = rootdir / file_path
+                if file_path.suffix != ".py":
+                    continue
+                try:
+                    source = file_path.read_text(encoding="utf-8")
+                except OSError:
+                    continue
+                try:
+                    tree = ast.parse(source)
+                except SyntaxError:
+                    continue
+                executed_lines = coverage_data.lines(raw_path)
+                if executed_lines is None:
+                    executed_lines = coverage_data.lines(str(file_path))
+                executed_set = set(executed_lines or [])
+                for node in ast.walk(tree):
+                    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        lineno = getattr(node, "lineno", None)
+                        end_lineno = getattr(node, "end_lineno", None)
+                        if not isinstance(lineno, int):
+                            continue
+                        if not isinstance(end_lineno, int):
+                            end_lineno = lineno
+                        total_functions += 1
+                        if end_lineno > lineno:
+                            lines_range = range(lineno + 1, end_lineno + 1)
+                        else:
+                            lines_range = range(lineno, end_lineno + 1)
+                        if any(line in executed_set for line in lines_range):
+                            covered_functions += 1
+            if total_functions == 0:
+                return None
+            return covered_functions, total_functions
+
+        try:
+            coverage_data = cov.get_data()
+        except Exception:
+            coverage_data = None
+        function_metrics = count_function_coverage(files_data, coverage_data)
+        functions_covered = None
+        functions_total = None
+        if function_metrics:
+            functions_covered, functions_total = function_metrics
+
         rows: list[tuple[str, int, int, float]] = []
         for raw_path, info in files_data.items():
             if not _is_production(raw_path):
@@ -111,6 +210,8 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config) -> None:  # no
             else 100.0
         )
 
+        combined_result = _combined_totals(totals, functions_total, functions_covered)
+
         tw = terminalreporter
 
         # ── Header ───────────────────────────────────────────────────────────
@@ -139,6 +240,17 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config) -> None:  # no
             f"{tc}{total_pct:>5.1f}%{_RESET}  {tc}{total_bar}{_RESET}"
         )
         tw.write_line(f"{_BOLD}{total_line}{_RESET}")
+        if combined_result:
+            combined_covered, combined_total = combined_result
+            combined_pct = (combined_covered / combined_total) * 100
+            combined_missing = combined_total - combined_covered
+            combined_color = _colour(combined_pct)
+            combined_bar = _bar(combined_pct)
+            combined_line = (
+                f"{'TOTAL (combined)':<{col_file}}  {combined_total:>6}  {combined_missing:>6}  "
+                f"{combined_color}{combined_pct:>5.1f}%{_RESET}  {combined_color}{combined_bar}{_RESET}"
+            )
+            tw.write_line(f"{_BOLD}{combined_line}{_RESET}")
 
         # ── Top-10 focus list ────────────────────────────────────────────────
         focus = sorted(

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import os
 import re
@@ -9,6 +10,7 @@ import shlex
 import subprocess
 import sys
 import threading
+import tempfile
 import time
 import uuid
 from collections import deque
@@ -169,6 +171,177 @@ def _format_pct(value: object) -> str:
     return str(value)
 
 
+def erase_backend_coverage_data(backend_root: Path, quiet: bool) -> None:
+    cmd = [sys.executable, "-m", "coverage", "erase"]
+    try:
+        result = subprocess.run(
+            cmd,
+            cwd=backend_root,
+            capture_output=True,
+            text=True,
+        )
+    except OSError as exc:
+        if not quiet:
+            print(_red(f"Failed to run coverage erase: {exc}"))
+        return
+    if result.returncode != 0 and not quiet:
+        print(_red(f"coverage erase failed (exit {result.returncode})"))
+        if result.stdout:
+            print(result.stdout, end="")
+        if result.stderr:
+            print(result.stderr, end="")
+
+
+def read_backend_coverage_summary(backend_root: Path) -> list[str]:
+    data_file = backend_root / ".coverage"
+    if not data_file.exists():
+        return []
+    try:
+        import coverage as coverage_module
+    except ImportError:
+        return []
+    try:
+        cov = coverage_module.Coverage(data_file=str(data_file))
+        cov.load()
+    except Exception:
+        return []
+
+    tmp_fd, tmp_path = tempfile.mkstemp(suffix=".json")
+    os.close(tmp_fd)
+    try:
+        cov.json_report(
+            outfile=tmp_path,
+            omit=[
+                "*/venv/*",
+                "*/migrations/*",
+                "*/tests/*",
+                "*/conftest*",
+                "*/__pycache__/*",
+            ],
+            ignore_errors=True,
+        )
+        report = json.loads(Path(tmp_path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+
+    totals = report.get("totals")
+    if not isinstance(totals, dict):
+        return []
+
+    lines: list[str] = []
+
+    def append_metric(label: str, covered: object, total: object, pct: object | None = None) -> None:
+        if not (isinstance(total, int) and total > 0 and isinstance(covered, int)):
+            return
+        if pct is None:
+            pct = (covered / total) * 100
+        pct_colored = _color_for_pct(float(pct), f"{_format_pct(pct)}%")
+        lines.append(f"{label}: {pct_colored} ({covered}/{total})")
+
+    def count_function_coverage(files: object, coverage_data: object) -> tuple[int, int] | None:
+        if not isinstance(files, dict) or coverage_data is None:
+            return None
+        total_functions = 0
+        covered_functions = 0
+        for raw_path in files:
+            if not isinstance(raw_path, str):
+                continue
+            file_path = Path(raw_path)
+            if not file_path.is_absolute():
+                candidates = [backend_root / file_path, backend_root.parent / file_path]
+                file_path = next((candidate for candidate in candidates if candidate.exists()), file_path)
+            if file_path.suffix != ".py":
+                continue
+            try:
+                source = file_path.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            try:
+                tree = ast.parse(source)
+            except SyntaxError:
+                continue
+            executed_lines = coverage_data.lines(raw_path)
+            if executed_lines is None:
+                executed_lines = coverage_data.lines(str(file_path))
+            executed_set = set(executed_lines or [])
+            for node in ast.walk(tree):
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    lineno = getattr(node, "lineno", None)
+                    end_lineno = getattr(node, "end_lineno", None)
+                    if not isinstance(lineno, int):
+                        continue
+                    if not isinstance(end_lineno, int):
+                        end_lineno = lineno
+                    total_functions += 1
+                    if end_lineno > lineno:
+                        lines_range = range(lineno + 1, end_lineno + 1)
+                    else:
+                        lines_range = range(lineno, end_lineno + 1)
+                    if any(line in executed_set for line in lines_range):
+                        covered_functions += 1
+        if total_functions == 0:
+            return None
+        return covered_functions, total_functions
+
+    try:
+        coverage_data = cov.get_data()
+    except Exception:
+        coverage_data = None
+
+    total_statements = totals.get("num_statements")
+    missing_lines = totals.get("missing_lines")
+    covered_lines = totals.get("covered_lines")
+    if isinstance(total_statements, int) and total_statements > 0:
+        if covered_lines is None and isinstance(missing_lines, int):
+            covered_lines = total_statements - missing_lines
+        append_metric("Statements", covered_lines, total_statements)
+
+    total_branches = totals.get("num_branches")
+    missing_branches = totals.get("missing_branches")
+    covered_branches = totals.get("covered_branches")
+    if isinstance(total_branches, int) and total_branches > 0:
+        if covered_branches is None and isinstance(missing_branches, int):
+            covered_branches = total_branches - missing_branches
+        append_metric("Branches", covered_branches, total_branches)
+
+    functions_total = None
+    functions_covered = None
+    function_metrics = count_function_coverage(report.get("files"), coverage_data)
+    if function_metrics:
+        functions_covered, functions_total = function_metrics
+        append_metric("Functions", functions_covered, functions_total)
+
+    total_lines = totals.get("num_lines")
+    line_total = total_lines if isinstance(total_lines, int) else total_statements
+    if isinstance(line_total, int) and isinstance(covered_lines, int):
+        line_pct = totals.get("percent_covered_lines")
+        append_metric("Lines", covered_lines, line_total, line_pct)
+
+    combined_total = 0
+    combined_covered = 0
+    if isinstance(total_statements, int) and isinstance(covered_lines, int):
+        combined_total += total_statements
+        combined_covered += covered_lines
+    if isinstance(total_branches, int) and isinstance(covered_branches, int):
+        combined_total += total_branches
+        combined_covered += covered_branches
+    if isinstance(functions_total, int) and isinstance(functions_covered, int):
+        combined_total += functions_total
+        combined_covered += functions_covered
+    if isinstance(line_total, int) and isinstance(covered_lines, int):
+        combined_total += line_total
+        combined_covered += covered_lines
+    if combined_total > 0:
+        append_metric("Total", combined_covered, combined_total)
+
+    return lines
+
+
 def read_jest_coverage_summary(frontend_root: Path) -> list[str]:
     summary_path = frontend_root / "coverage" / "coverage-summary.json"
     if not summary_path.exists():
@@ -213,21 +386,27 @@ def read_flow_coverage_summary(frontend_root: Path) -> list[str]:
     if not isinstance(summary, dict):
         return []
 
-    totals = summary.get("totals")
-    if not isinstance(totals, dict):
-        return []
+    total_flows = summary.get("total")
+    covered_flows = summary.get("covered")
+    partial_flows = summary.get("partial")
+    failing_flows = summary.get("failing")
+    missing_flows = summary.get("missing")
 
-    total_flows = totals.get("total")
-    covered_flows = totals.get("covered")
-    partial_flows = totals.get("partial")
-    failing_flows = totals.get("failing")
-    missing_flows = totals.get("missing")
-    coverage_percent = summary.get("coveredPercent")
+    coverage_percent = None
+    if isinstance(total_flows, (int, float)) and total_flows > 0:
+        if isinstance(covered_flows, (int, float)):
+            coverage_percent = (covered_flows / total_flows) * 100
 
     lines: list[str] = []
     if total_flows is not None and covered_flows is not None:
-        pct_value = _format_pct(coverage_percent) if coverage_percent is not None else "0"
-        lines.append(f"Flows covered: {covered_flows}/{total_flows} ({pct_value}%)")
+        if coverage_percent is None:
+            pct_text = "0%"
+        else:
+            pct_text = _color_for_pct(
+                float(coverage_percent),
+                f"{_format_pct(coverage_percent)}%",
+            )
+        lines.append(f"Flows covered: {covered_flows}/{total_flows} ({pct_text})")
     if partial_flows is not None and partial_flows > 0:
         lines.append(f"Partial: {partial_flows}")
     if failing_flows is not None and failing_flows > 0:
@@ -451,11 +630,14 @@ def run_backend(
     run_id: str | None = None,
     coverage: bool = False,
 ) -> StepResult:
+    if coverage:
+        erase_backend_coverage_data(backend_root, quiet=quiet)
     backend_cmd: list[str] = [sys.executable, "-m", "pytest", "-q"]
     if coverage:
         backend_cmd.extend([
             f"--cov={backend_root / 'base_feature_app'}",
             "--cov-report=term-missing",
+            "--cov-branch",
         ])
     if markers:
         backend_cmd.extend(["-m", markers])
@@ -467,7 +649,7 @@ def run_backend(
         else None
     )
 
-    return run_command(
+    result = run_command(
         name="backend",
         command=backend_cmd,
         cwd=backend_root,
@@ -477,6 +659,9 @@ def run_backend(
         log_header=log_header,
         quiet=quiet,
     )
+    if coverage and result.status == "ok":
+        result.coverage = read_backend_coverage_summary(backend_root)
+    return result
 
 
 def run_frontend_unit(

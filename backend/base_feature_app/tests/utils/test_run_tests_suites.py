@@ -4,6 +4,7 @@ import builtins
 import importlib.util
 import json
 import sys
+import types
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -150,6 +151,190 @@ def test_resolve_log_path_returns_absolute_for_external_path(tmp_path):
     log_path = tmp_path / "outside.log"
 
     assert run_tests_all_suites.resolve_log_path(log_path, repo_root) == str(log_path)
+
+
+def test_read_backend_summary_returns_statements_branches_functions_lines_total(
+    tmp_path,
+    monkeypatch,
+):
+    backend_root = tmp_path / "backend"
+    backend_root.mkdir()
+    coverage_file = backend_root / ".coverage"
+    coverage_file.write_text("data", encoding="utf-8")
+
+    sample_path = backend_root / "base_feature_app" / "sample.py"
+    sample_path.parent.mkdir(parents=True)
+    sample_path.write_text(
+        "def alpha():\n    return 1\n\ndef beta():\n    return 2\n",
+        encoding="utf-8",
+    )
+
+    report_payload = {
+        "totals": {
+            "num_statements": 10,
+            "missing_lines": 2,
+            "covered_lines": 8,
+            "percent_covered": 78.57,
+            "percent_covered_lines": 80.0,
+            "num_lines": 10,
+            "num_branches": 4,
+            "missing_branches": 1,
+            "covered_branches": 3,
+        },
+        "files": {
+            "backend/base_feature_app/sample.py": {},
+        },
+    }
+
+    class FakeCoverageData:
+        def lines(self, filename):
+            if str(filename).endswith("sample.py"):
+                return [2]
+            return []
+
+    class FakeCoverage:
+        def __init__(self, data_file):
+            self.data_file = data_file
+
+        def load(self):
+            return None
+
+        def json_report(self, outfile, omit, ignore_errors):
+            Path(outfile).write_text(json.dumps(report_payload), encoding="utf-8")
+
+        def get_data(self):
+            return FakeCoverageData()
+
+    fake_module = types.ModuleType("coverage")
+    fake_module.Coverage = FakeCoverage
+    monkeypatch.setitem(sys.modules, "coverage", fake_module)
+
+    lines = run_tests_all_suites.read_backend_coverage_summary(backend_root)
+
+    assert len(lines) == 5
+    assert "Statements:" in lines[0]
+    assert "(8/10)" in lines[0]
+    assert "Branches:" in lines[1]
+    assert "(3/4)" in lines[1]
+    assert "Functions:" in lines[2]
+    assert "(1/2)" in lines[2]
+    assert "Lines:" in lines[3]
+    assert "(8/10)" in lines[3]
+    assert "Total:" in lines[4]
+    assert "(20/26)" in lines[4]
+
+
+def test_read_flow_summary_formats_flow_percent(tmp_path):
+    summary_path = tmp_path / "e2e-results" / "flow-coverage.json"
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_path.write_text(
+        json.dumps(
+            {
+                "summary": {
+                    "total": 10,
+                    "covered": 7,
+                    "partial": 1,
+                    "failing": 0,
+                    "missing": 2,
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    lines = run_tests_all_suites.read_flow_coverage_summary(tmp_path)
+
+    assert len(lines) == 3
+    assert "Flows covered: 7/10" in lines[0]
+    assert "Partial: 1" in lines[1]
+    assert "Missing: 2" in lines[2]
+
+
+def test_run_backend_triggers_erase_when_enabled(tmp_path, monkeypatch):
+    calls = []
+
+    def fake_erase(root, quiet):
+        calls.append((root, quiet))
+
+    def fake_run_command(**_kwargs):
+        return make_step_result("backend")
+
+    monkeypatch.setattr(run_tests_all_suites, "erase_backend_coverage_data", fake_erase)
+    monkeypatch.setattr(run_tests_all_suites, "run_command", fake_run_command)
+
+    result = run_tests_all_suites.run_backend(
+        backend_root=tmp_path,
+        report_dir=tmp_path,
+        markers="",
+        extra_args=[],
+        quiet=True,
+        append_log=False,
+        run_id=None,
+        coverage=True,
+    )
+
+    assert calls == [(tmp_path, True)]
+    assert result.name == "backend"
+
+
+def test_run_backend_skips_erase_when_disabled(tmp_path, monkeypatch):
+    calls = []
+
+    def fake_erase(*_args, **_kwargs):
+        calls.append("called")
+
+    def fake_run_command(**_kwargs):
+        return make_step_result("backend")
+
+    monkeypatch.setattr(run_tests_all_suites, "erase_backend_coverage_data", fake_erase)
+    monkeypatch.setattr(run_tests_all_suites, "run_command", fake_run_command)
+
+    result = run_tests_all_suites.run_backend(
+        backend_root=tmp_path,
+        report_dir=tmp_path,
+        markers="",
+        extra_args=[],
+        quiet=False,
+        append_log=False,
+        run_id=None,
+        coverage=False,
+    )
+
+    assert calls == []
+    assert result.name == "backend"
+
+
+def test_erase_backend_data_warns_on_failure(tmp_path, monkeypatch):
+    messages = []
+    captured = {}
+
+    class FakeResult:
+        returncode = 2
+        stdout = "boom stdout"
+        stderr = "boom stderr"
+
+    def fake_run(cmd, cwd, capture_output, text):
+        captured["cmd"] = cmd
+        captured["cwd"] = cwd
+        captured["capture_output"] = capture_output
+        captured["text"] = text
+        return FakeResult()
+
+    def fake_print(*args, **_kwargs):
+        messages.append(" ".join(str(arg) for arg in args))
+
+    monkeypatch.setattr(run_tests_all_suites.subprocess, "run", fake_run)
+    monkeypatch.setattr(builtins, "print", fake_print)
+
+    run_tests_all_suites.erase_backend_coverage_data(tmp_path, quiet=False)
+
+    assert captured["cmd"] == [sys.executable, "-m", "coverage", "erase"]
+    assert captured["cwd"] == tmp_path
+    assert captured["capture_output"] is True
+    assert captured["text"] is True
+    assert any("coverage erase failed" in msg for msg in messages)
+    assert any("boom stdout" in msg for msg in messages)
+    assert any("boom stderr" in msg for msg in messages)
 
 
 def test_build_log_header_includes_suite_metadata():

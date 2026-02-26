@@ -3787,3 +3787,135 @@ Quality Gate
   □ Exceptions reviewed and not accumulated without reason
 ───────────────────────────────────────────────────────────────
 ```
+
+---
+
+## 9. Production Requirements
+
+All Django projects in production MUST include the following configurations.
+
+### 9.1 Settings Structure
+
+Settings must be split into separate files, selected via `DJANGO_SETTINGS_MODULE`:
+
+```
+backend/[project_name]/
+├── settings.py          # Base/shared settings (used by default)
+├── settings_dev.py      # Development overrides (DEBUG=True)
+└── settings_prod.py     # Production overrides (DEBUG=False enforced)
+```
+
+**`settings_dev.py`** imports from `settings.py` and overrides:
+```python
+from .settings import *  # noqa: F401,F403
+DEBUG = True
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+```
+
+**`settings_prod.py`** imports from `settings.py` and enforces:
+- `DEBUG = False` (hardcoded, never from environment)
+- `SECRET_KEY` must be set (raise error if missing)
+- `ALLOWED_HOSTS` must be set (raise error if missing)
+- Security headers: HSTS, secure cookies, SSL redirect, X-Frame-Options
+
+In production: `DJANGO_SETTINGS_MODULE=[project_name].settings_prod`
+
+### 9.2 Environment Variables
+
+All secrets must be loaded from environment variables via `os.getenv()` + `python-dotenv`:
+- `DJANGO_SECRET_KEY`
+- `DB_USER`, `DB_PASSWORD`
+- `DJANGO_EMAIL_HOST_USER`, `DJANGO_EMAIL_HOST_PASSWORD`
+- API keys (project-specific)
+
+A `.env.example` file must be provided with placeholders (no real secrets).
+
+### 9.3 Automated Backups (django-dbbackup)
+
+**Configuration in `settings.py`:**
+```python
+INSTALLED_APPS = [
+    # ...
+    'dbbackup',
+]
+
+DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+DBBACKUP_STORAGE_OPTIONS = {
+    'location': os.getenv('BACKUP_STORAGE_PATH', '/var/backups/[project_name]'),
+}
+DBBACKUP_COMPRESS = True
+DBBACKUP_CLEANUP_KEEP = 5  # ~90 days at 20-day intervals
+```
+
+**Automation:** Huey periodic task (days 1 & 21, 3:00 AM).
+
+**Storage:** `/var/backups/[project_name]/` (outside project directory).
+
+**Retention:** 90 days (~5 backups).
+
+### 9.4 Query Monitoring (django-silk)
+
+Silk is enabled conditionally via `ENABLE_SILK` environment variable to avoid overhead in production and test environments.
+
+**Configuration in `settings.py`:**
+```python
+ENABLE_SILK = os.getenv('ENABLE_SILK', 'false').lower() in {'1', 'true', 'yes', 'on'}
+
+if ENABLE_SILK:
+    INSTALLED_APPS.append('silk')
+
+# Middleware added conditionally
+MIDDLEWARE = []
+if ENABLE_SILK:
+    MIDDLEWARE.append('silk.middleware.SilkyMiddleware')
+MIDDLEWARE += [...]
+
+# Access control
+SILKY_AUTHENTICATION = True
+SILKY_AUTHORISATION = True
+
+def silk_permissions(user):
+    return user.is_staff
+
+SILKY_PERMISSIONS = silk_permissions
+SILKY_MAX_RECORDED_REQUESTS = 10000
+```
+
+**URL:** Conditionally add `path('silk/', include('silk.urls', namespace='silk'))` to `urls.py`.
+
+**Garbage Collection:** Daily cleanup of data older than 7 days via management command + Huey task.
+
+**Alerts:** Weekly report generated via Huey task (slow queries + N+1 detection).
+
+### 9.5 Task Queue (Huey)
+
+**Configuration in `settings.py`:**
+```python
+from huey import RedisHuey
+
+INSTALLED_APPS = [
+    # ...
+    'huey.contrib.djhuey',
+]
+
+HUEY = RedisHuey(
+    name='[project_name]',
+    url=os.getenv('REDIS_URL', 'redis://localhost:6379/1'),
+    immediate=not IS_PRODUCTION,  # Synchronous in development
+)
+```
+
+**Scheduled Tasks:**
+
+| Task | Schedule | Description |
+|------|----------|-------------|
+| `scheduled_backup` | Days 1 & 21, 3:00 AM | DB and media backup |
+| `silk_garbage_collection` | Daily, 4:00 AM | Clean old profiling data |
+| `weekly_slow_queries_report` | Mondays, 8:00 AM | Performance report |
+
+**Task file location:**
+- `[project_name]/tasks.py` — Operational/infrastructure tasks (backups, monitoring)
+- `[app_name]/tasks.py` — Business logic tasks (if needed)
+
+**Service:** Huey must run as a systemd service in production. Templates are provided in `scripts/systemd/`.

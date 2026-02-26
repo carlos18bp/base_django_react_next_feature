@@ -15,6 +15,7 @@ from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
+from huey import RedisHuey
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,6 +24,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 load_dotenv(BASE_DIR / '.env')
+
+# Environment detection
+DJANGO_ENV = os.getenv('DJANGO_ENV', 'development')
+IS_PRODUCTION = DJANGO_ENV == 'production'
+ENABLE_SILK = os.getenv('ENABLE_SILK', 'false').lower() in {'1', 'true', 'yes', 'on'}
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'change-me')
@@ -49,7 +55,12 @@ INSTALLED_APPS = [
     'base_feature_app',
     'django_attachments',
     'django_cleanup.apps.CleanupConfig',
+    'dbbackup',
+    'huey.contrib.djhuey',
 ]
+
+if ENABLE_SILK:
+    INSTALLED_APPS.append('silk')
 
 AUTH_USER_MODEL = 'base_feature_app.User'
 
@@ -63,7 +74,10 @@ THUMBNAIL_ALIASES = {
 
 THUMBNAIL_DEFAULT_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
-MIDDLEWARE = [
+MIDDLEWARE = []
+if ENABLE_SILK:
+    MIDDLEWARE.append('silk.middleware.SilkyMiddleware')
+MIDDLEWARE += [
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -149,12 +163,19 @@ WSGI_APPLICATION = 'base_feature_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': os.getenv('DJANGO_DB_ENGINE', 'django.db.backends.sqlite3'),
-        'NAME': os.getenv('DJANGO_DB_NAME', str(BASE_DIR / 'db.sqlite3')),
-    }
+_db_engine = os.getenv('DJANGO_DB_ENGINE', 'django.db.backends.sqlite3')
+_db_config = {
+    'ENGINE': _db_engine,
+    'NAME': os.getenv('DJANGO_DB_NAME', str(BASE_DIR / 'db.sqlite3')),
 }
+if 'sqlite3' not in _db_engine:
+    _db_config.update({
+        'USER': os.getenv('DB_USER', ''),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '3306'),
+    })
+DATABASES = {'default': _db_config}
 
 
 # Password validation
@@ -212,13 +233,18 @@ STORAGES = {
     'staticfiles': {
         'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
     },
+    'dbbackup': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        'OPTIONS': {
+            'location': os.getenv('BACKUP_STORAGE_PATH', '/var/backups/base_feature_project'),
+        },
+    },
 }
 
 # Email configuration (for password reset codes)
-# Using Gmail SMTP
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+EMAIL_HOST = os.getenv('DJANGO_EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('DJANGO_EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('DJANGO_EMAIL_USE_TLS', 'true').lower() in {'1', 'true', 'yes', 'on'}
 EMAIL_HOST_USER = os.getenv('DJANGO_EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('DJANGO_EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DJANGO_DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
@@ -227,3 +253,95 @@ EMAIL_BACKEND = os.getenv('DJANGO_EMAIL_BACKEND') or (
     if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD
     else 'django.core.mail.backends.console.EmailBackend'
 )
+
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+_logs_dir = BASE_DIR / 'logs'
+_logs_dir.mkdir(exist_ok=True)
+
+LOG_LEVEL = os.getenv('DJANGO_LOG_LEVEL', 'INFO')
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} {name} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'backup_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': _logs_dir / 'backups.log',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': LOG_LEVEL,
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': LOG_LEVEL,
+            'propagate': False,
+        },
+        'backups': {
+            'handlers': ['backup_file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+# ---------------------------------------------------------------------------
+# Backups (django-dbbackup)
+# Storage is configured via STORAGES['dbbackup'] above (FileSystemStorage).
+# ---------------------------------------------------------------------------
+DBBACKUP_FILENAME_TEMPLATE = '{datetime}.sql'
+DBBACKUP_MEDIA_FILENAME_TEMPLATE = '{datetime}.tar'
+DBBACKUP_CLEANUP_KEEP = 5
+DBBACKUP_CLEANUP_KEEP_MEDIA = 5
+
+# ---------------------------------------------------------------------------
+# Task Queue (Huey)
+# ---------------------------------------------------------------------------
+HUEY = RedisHuey(
+    name='base_feature_project',
+    url=os.getenv('REDIS_URL', 'redis://localhost:6379/1'),
+    immediate=not IS_PRODUCTION,
+)
+
+# ---------------------------------------------------------------------------
+# Query Profiling (django-silk) — enabled via ENABLE_SILK env var
+# Production-only: DB recording for slow-query and N+1 monitoring.
+# The /silk/ UI is intentionally not exposed (see urls.py).
+# ---------------------------------------------------------------------------
+if ENABLE_SILK:
+    SILKY_ANALYZE_QUERIES = True
+
+    SILKY_MAX_RECORDED_REQUESTS = 10_000
+    SILKY_MAX_RECORDED_REQUESTS_CHECK_PERCENT = 10
+
+    SILKY_IGNORE_PATHS = [
+        '/admin/',
+        '/static/',
+        '/media/',
+    ]
+
+    SILKY_MAX_REQUEST_BODY_SIZE = 0
+    SILKY_MAX_RESPONSE_BODY_SIZE = 0
+
+    def _silk_intercept(request):
+        return request.path.startswith('/api/')
+
+    SILKY_INTERCEPT_FUNC = _silk_intercept
+
+SLOW_QUERY_THRESHOLD_MS = int(os.getenv('SLOW_QUERY_THRESHOLD_MS', '500'))
+N_PLUS_ONE_THRESHOLD = int(os.getenv('N_PLUS_ONE_THRESHOLD', '10'))

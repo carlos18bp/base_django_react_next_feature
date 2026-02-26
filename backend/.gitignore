@@ -69,6 +69,14 @@ celerybeat.pid
 .env.local
 .env.*.local
 *.env
+!*.env.example
+
+# Backups (should not be in repo)
+backups/
+
+# Logs (keep directory structure)
+logs/*.log
+!logs/.gitkeep
 
 # ============================================================================
 # IDE and Editor
