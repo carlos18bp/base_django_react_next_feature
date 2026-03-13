@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 import os
-from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -50,11 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
-    'rest_framework_simplejwt',
-    'easy_thumbnails',
     'base_feature_app',
-    'django_attachments',
-    'django_cleanup.apps.CleanupConfig',
     'dbbackup',
     'huey.contrib.djhuey',
 ]
@@ -64,15 +59,6 @@ if ENABLE_SILK:
 
 AUTH_USER_MODEL = 'base_feature_app.User'
 
-THUMBNAIL_ALIASES = {
-    '': {
-        'small': {'size': (50, 50), 'crop': True},
-        'medium': {'size': (200, 200), 'crop': True},
-        'large': {'size': (500, 500), 'crop': True},
-    },
-}
-
-THUMBNAIL_DEFAULT_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
 MIDDLEWARE = []
 if ENABLE_SILK:
@@ -117,26 +103,9 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ),
-}
-
-GOOGLE_OAUTH_CLIENT_ID = os.getenv('DJANGO_GOOGLE_CLIENT_ID', '').strip()
-
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(
-        minutes=int(os.getenv('DJANGO_JWT_ACCESS_MINUTES', '15'))
-    ),
-    'REFRESH_TOKEN_LIFETIME': timedelta(
-        days=int(os.getenv('DJANGO_JWT_REFRESH_DAYS', '7'))
-    ),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 ROOT_URLCONF = 'base_feature_project.urls'
@@ -253,6 +222,7 @@ EMAIL_BACKEND = os.getenv('DJANGO_EMAIL_BACKEND') or (
     if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD
     else 'django.core.mail.backends.console.EmailBackend'
 )
+CONTACT_NOTIFICATION_EMAIL = os.getenv('CONTACT_NOTIFICATION_EMAIL', DEFAULT_FROM_EMAIL)
 
 # ---------------------------------------------------------------------------
 # Google reCAPTCHA

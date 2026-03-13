@@ -2,12 +2,10 @@
 Email service for handling all outbound email notifications.
 
 Centralizes email logic following the service layer pattern.
-Delegates to utility functions that wrap Django's send_mail.
 """
-from base_feature_app.utils.auth_utils import (
-    send_password_reset_code,
-    send_verification_code,
-)
+
+from django.conf import settings
+from django.core.mail import send_mail
 
 
 class EmailService:
@@ -19,29 +17,38 @@ class EmailService:
     """
 
     @staticmethod
-    def send_password_reset_code(user, code: str) -> bool:
+    def send_contact_notification(name: str, email: str, phone: str, program: str) -> bool:
         """
-        Send a password reset verification code to the user.
+        Send a contact form notification email to the site administrators.
 
         Args:
-            user: User instance with email and first_name attributes.
-            code: 6-digit alphanumeric verification code.
+            name: Full name of the person requesting info.
+            email: Contact email address.
+            phone: Contact phone number.
+            program: Name of the program they are interested in.
 
         Returns:
-            bool: True if the email was sent successfully, False otherwise.
-        """
-        return send_password_reset_code(user, code)
+            bool: True if the email was sent successfully.
 
-    @staticmethod
-    def send_verification_code(email: str, code: str) -> bool:
+        Raises:
+            Exception: If the email fails to send.
         """
-        Send an email verification code to a new user.
+        subject = f'Nueva solicitud de información - {program}'
+        message = (
+            f'Se ha recibido una nueva solicitud de información:\n\n'
+            f'Nombre: {name}\n'
+            f'Correo: {email}\n'
+            f'Teléfono: {phone}\n'
+            f'Programa: {program}\n'
+        )
 
-        Args:
-            email: Recipient email address.
-            code: 6-digit alphanumeric verification code.
+        recipient = getattr(settings, 'CONTACT_NOTIFICATION_EMAIL', settings.DEFAULT_FROM_EMAIL)
 
-        Returns:
-            bool: True if the email was sent successfully, False otherwise.
-        """
-        return send_verification_code(email, code)
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [recipient],
+            fail_silently=False,
+        )
+        return True

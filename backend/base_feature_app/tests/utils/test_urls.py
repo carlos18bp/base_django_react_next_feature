@@ -11,17 +11,11 @@ def test_url_modules_import_and_have_patterns():
     package_urls = importlib.import_module('base_feature_app.urls')
     assert hasattr(package_urls, 'urlpatterns')
 
-    auth_urls = importlib.import_module('base_feature_app.urls.auth')
-    blog_urls = importlib.import_module('base_feature_app.urls.blog')
-    product_urls = importlib.import_module('base_feature_app.urls.product')
-    sale_urls = importlib.import_module('base_feature_app.urls.sale')
-    user_urls = importlib.import_module('base_feature_app.urls.user')
+    captcha_urls = importlib.import_module('base_feature_app.urls.captcha')
+    contact_urls = importlib.import_module('base_feature_app.urls.contact')
 
-    assert any(pattern.name == 'sign_up' for pattern in auth_urls.urlpatterns)
-    assert any(pattern.name == 'blog-list' for pattern in blog_urls.urlpatterns)
-    assert any(pattern.name == 'product-list' for pattern in product_urls.urlpatterns)
-    assert any(pattern.name == 'sale-list' for pattern in sale_urls.urlpatterns)
-    assert any(pattern.name == 'user-list' for pattern in user_urls.urlpatterns)
+    assert any(pattern.name == 'captcha-site-key' for pattern in captcha_urls.urlpatterns)
+    assert any(pattern.name == 'contact-submit' for pattern in contact_urls.urlpatterns)
 
 
 @pytest.mark.django_db
