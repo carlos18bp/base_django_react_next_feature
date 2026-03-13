@@ -143,7 +143,9 @@ export default function Navbar() {
             </div>
 
             <a
-              href="/#contacto"
+              href="https://wa.me/573157766662?text=Hola%2C%20quiero%20m%C3%A1s%20informaci%C3%B3n"
+              target="_blank"
+              rel="noopener noreferrer"
               className={`${linkStyle} ${inactiveClass}`}
               style={{ fontWeight: 600 }}
             >
@@ -226,7 +228,13 @@ export default function Navbar() {
                 )}
               </AnimatePresence>
 
-              <a href="/#contacto" className="text-[#29235C] text-[16px] py-3 border-b border-[#29235C]/5" style={{ fontWeight: 700 }}>
+              <a
+                href="https://wa.me/573157766662?text=Hola%2C%20quiero%20m%C3%A1s%20informaci%C3%B3n"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#29235C] text-[16px] py-3 border-b border-[#29235C]/5"
+                style={{ fontWeight: 700 }}
+              >
                 Contacto
               </a>
 
