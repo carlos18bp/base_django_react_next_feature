@@ -72,7 +72,7 @@ THUMBNAIL_ALIASES = {
     },
 }
 
-THUMBNAIL_DEFAULT_STORAGE = 'django.core.files.storage.FileSystemStorage'
+THUMBNAIL_DEFAULT_STORAGE = 'default'
 
 MIDDLEWARE = []
 if ENABLE_SILK:
@@ -227,9 +227,6 @@ STORAGES = {
     'default': {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
     },
-    'django.core.files.storage.FileSystemStorage': {
-        'BACKEND': 'django.core.files.storage.FileSystemStorage',
-    },
     'staticfiles': {
         'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
     },
@@ -263,8 +260,8 @@ RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY', '')
 # ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
-_logs_dir = BASE_DIR / 'logs'
-_logs_dir.mkdir(exist_ok=True)
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(exist_ok=True)
 
 LOG_LEVEL = os.getenv('DJANGO_LOG_LEVEL', 'INFO')
 LOGGING = {
@@ -283,8 +280,10 @@ LOGGING = {
         },
         'backup_file': {
             'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': _logs_dir / 'backups.log',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'backups.log',
+            'maxBytes': 5 * 1024 * 1024,
+            'backupCount': 3,
             'formatter': 'verbose',
         },
     },
@@ -310,10 +309,11 @@ LOGGING = {
 # Backups (django-dbbackup)
 # Storage is configured via STORAGES['dbbackup'] above (FileSystemStorage).
 # ---------------------------------------------------------------------------
+DBBACKUP_COMPRESS = True
 DBBACKUP_FILENAME_TEMPLATE = '{datetime}.sql'
 DBBACKUP_MEDIA_FILENAME_TEMPLATE = '{datetime}.tar'
-DBBACKUP_CLEANUP_KEEP = 5
-DBBACKUP_CLEANUP_KEEP_MEDIA = 5
+DBBACKUP_CLEANUP_KEEP = 4
+DBBACKUP_CLEANUP_KEEP_MEDIA = 4
 
 # ---------------------------------------------------------------------------
 # Task Queue (Huey)
@@ -332,6 +332,14 @@ HUEY = RedisHuey(
 if ENABLE_SILK:
     SILKY_ANALYZE_QUERIES = True
 
+    SILKY_AUTHENTICATION = True
+    SILKY_AUTHORISATION = True
+
+    def silk_permissions(user):
+        return user.is_staff
+
+    SILKY_PERMISSIONS = silk_permissions
+
     SILKY_MAX_RECORDED_REQUESTS = 10_000
     SILKY_MAX_RECORDED_REQUESTS_CHECK_PERCENT = 10
 
@@ -339,6 +347,7 @@ if ENABLE_SILK:
         '/admin/',
         '/static/',
         '/media/',
+        '/silk/',
     ]
 
     SILKY_MAX_REQUEST_BODY_SIZE = 0
