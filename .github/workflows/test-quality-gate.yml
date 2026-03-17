@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - 'backend/base_feature_app/tests/**'
-      - 'frontend/app/__tests__/**'
+      - 'frontend/src/__tests__/**'
       - 'frontend/e2e/**'
       - 'scripts/test_quality_gate.py'
       - 'scripts/quality/**'
@@ -15,7 +15,7 @@ on:
     branches: [ main, master ]
     paths:
       - 'backend/base_feature_app/tests/**'
-      - 'frontend/app/__tests__/**'
+      - 'frontend/src/__tests__/**'
       - 'frontend/e2e/**'
       - 'scripts/test_quality_gate.py'
       - 'scripts/quality/**'
