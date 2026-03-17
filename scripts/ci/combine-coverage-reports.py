@@ -8,8 +8,8 @@ Reads:
   - frontend-e2e-coverage-report/flow-coverage.json (custom Playwright reporter)
 
 Writes:
-  - coverage-summary.md  (artifact)
-  - $GITHUB_STEP_SUMMARY (if running in GH Actions)
+  - coverage-report.md   (artifact + PR comment body)
+  - $GITHUB_STEP_SUMMARY  (if running in GH Actions)
 """
 
 from __future__ import annotations
@@ -19,6 +19,9 @@ import os
 from pathlib import Path
 
 BAR_WIDTH = 20
+
+
+# ── Helpers ──────────────────────────────────────────────────────────
 
 
 def _read_json(path: Path) -> dict | None:
@@ -53,158 +56,127 @@ def _bar(pct: float, width: int = BAR_WIDTH) -> str:
 
 
 # ── Section builders ─────────────────────────────────────────────────
-# Each returns (table_row: str, details: list[str])
+# Each returns (overview_row: str, details_lines: list[str])
 
 
 def build_backend_section(data: dict | None) -> tuple[str, list[str]]:
-    details: list[str] = []
-
     if data is None:
-        return "| Backend (pytest) | — | — | — | — | ⚠️ No report |", details
+        row = "| Backend (pytest) | ⚠️ — | `—` | No report |"
+        return row, []
 
     totals = data.get("totals", {})
     stmts_pct = totals.get("percent_covered", 0.0)
     num_stmts = totals.get("num_statements", 0)
-    missing = totals.get("missing_lines", 0)
-    branches_pct = 0.0
+    covered_stmts = num_stmts - totals.get("missing_lines", 0)
     num_branches = totals.get("num_branches", 0)
     missing_branches = totals.get("missing_branches", 0)
-    if num_branches > 0:
-        branches_pct = ((num_branches - missing_branches) / num_branches) * 100
+    covered_branches = num_branches - missing_branches
+    branches_pct = ((covered_branches / num_branches) * 100) if num_branches > 0 else 0.0
 
     emoji = _pct_emoji(stmts_pct)
-    row = (
-        f"| Backend (pytest) | {stmts_pct:.1f}% | "
-        f"{branches_pct:.1f}% | {num_stmts} | {missing} | {emoji} |"
-    )
+    details_text = f"{covered_stmts}/{num_stmts} stmts, {branches_pct:.1f}% branches"
+    row = f"| Backend (pytest) | {emoji} {stmts_pct:.1f}% | `{_bar(stmts_pct)}` | {details_text} |"
 
-    # Top uncovered files
-    files_data = data.get("files", {})
-    uncovered = []
-    for fpath, info in files_data.items():
-        summary = info.get("summary", {})
-        file_stmts = summary.get("num_statements", 0)
-        file_missing = summary.get("missing_lines", 0)
-        file_pct = summary.get("percent_covered", 100.0)
-        if file_missing > 0:
-            short = fpath.split("base_feature_app/")[-1] if "base_feature_app/" in fpath else fpath
-            uncovered.append((short, file_stmts, file_missing, file_pct))
-
-    if uncovered:
-        uncovered.sort(key=lambda x: x[3])
-        details.append("")
-        details.append("<details><summary>📋 Backend — Top uncovered files</summary>")
-        details.append("")
-        details.append("| File | Stmts | Miss | Cover | Bar |")
-        details.append("|------|------:|-----:|------:|-----|")
-        for name, stmts, miss, pct in uncovered[:10]:
-            details.append(
-                f"| `{name}` | {stmts} | {miss} | {pct:.1f}% | `{_bar(pct)}` |"
-            )
-        details.append("")
-        details.append("</details>")
+    # Detail section
+    details: list[str] = []
+    details.append("")
+    details.append("<details><summary>Backend Details</summary>")
+    details.append("")
+    details.append("| Metric | Covered | Total | % |")
+    details.append("|--------|--------:|------:|------:|")
+    details.append(f"| Statements | {covered_stmts} | {num_stmts} | {stmts_pct:.1f}% |")
+    details.append(f"| Branches | {covered_branches} | {num_branches} | {branches_pct:.1f}% |")
+    details.append("")
+    details.append("</details>")
 
     return row, details
 
 
 def build_frontend_unit_section(data: dict | None) -> tuple[str, list[str]]:
-    details: list[str] = []
-
     if data is None:
-        return "| Frontend Unit (vitest) | — | — | — | — | ⚠️ No report |", details
+        row = "| Frontend Unit (vitest) | ⚠️ — | `—` | No report |"
+        return row, []
 
     total = data.get("total", {})
     stmts = total.get("statements", {})
     branches = total.get("branches", {})
+    functions = total.get("functions", {})
+    lines = total.get("lines", {})
 
     stmts_pct = stmts.get("pct", 0)
-    branches_pct = branches.get("pct", 0)
     stmts_total = stmts.get("total", 0)
-    stmts_missing = stmts_total - stmts.get("covered", 0)
+    stmts_covered = stmts.get("covered", 0)
+    branches_pct = branches.get("pct", 0)
+    branches_total = branches.get("total", 0)
+    branches_covered = branches.get("covered", 0)
+    funcs_pct = functions.get("pct", 0)
+    funcs_total = functions.get("total", 0)
+    funcs_covered = functions.get("covered", 0)
+    lines_pct = lines.get("pct", 0)
+    lines_total = lines.get("total", 0)
+    lines_covered = lines.get("covered", 0)
 
     emoji = _pct_emoji(stmts_pct)
-    row = (
-        f"| Frontend Unit (vitest) | {stmts_pct:.1f}% | "
-        f"{branches_pct:.1f}% | {stmts_total} | {stmts_missing} | {emoji} |"
+    details_text = (
+        f"{stmts_covered}/{stmts_total} stmts, "
+        f"{branches_pct:.1f}% branches, "
+        f"{funcs_pct:.1f}% funcs"
     )
+    row = f"| Frontend Unit (vitest) | {emoji} {stmts_pct:.1f}% | `{_bar(stmts_pct)}` | {details_text} |"
 
-    # Top uncovered files
-    uncovered = []
-    for fpath, info in data.items():
-        if fpath == "total":
-            continue
-        file_stmts = info.get("statements", {})
-        file_total = file_stmts.get("total", 0)
-        file_covered = file_stmts.get("covered", 0)
-        file_missing = file_total - file_covered
-        file_pct = file_stmts.get("pct", 100)
-        if file_missing > 0:
-            short = fpath.split("/src/")[-1] if "/src/" in fpath else fpath
-            uncovered.append((short, file_total, file_missing, file_pct))
-
-    if uncovered:
-        uncovered.sort(key=lambda x: x[3])
-        details.append("")
-        details.append("<details><summary>📋 Frontend Unit — Top uncovered files</summary>")
-        details.append("")
-        details.append("| File | Stmts | Miss | Cover | Bar |")
-        details.append("|------|------:|-----:|------:|-----|")
-        for name, stmts_t, miss, pct in uncovered[:10]:
-            details.append(
-                f"| `{name}` | {stmts_t} | {miss} | {pct:.1f}% | `{_bar(pct)}` |"
-            )
-        details.append("")
-        details.append("</details>")
+    # Detail section
+    details: list[str] = []
+    details.append("")
+    details.append("<details><summary>Frontend Unit Details</summary>")
+    details.append("")
+    details.append("| Metric | Covered | Total | % |")
+    details.append("|--------|--------:|------:|------:|")
+    details.append(f"| Statements | {stmts_covered} | {stmts_total} | {stmts_pct:.1f}% |")
+    details.append(f"| Branches | {branches_covered} | {branches_total} | {branches_pct:.1f}% |")
+    details.append(f"| Functions | {funcs_covered} | {funcs_total} | {funcs_pct:.1f}% |")
+    details.append(f"| Lines | {lines_covered} | {lines_total} | {lines_pct:.1f}% |")
+    details.append("")
+    details.append("</details>")
 
     return row, details
 
 
 def build_e2e_section(data: dict | None) -> tuple[str, list[str]]:
-    details: list[str] = []
-
     if data is None:
-        return "| Frontend E2E (Playwright) | — | — | — | — | ⚠️ No report |", details
+        row = "| Frontend E2E (Playwright) | ⚠️ — | `—` | No report |"
+        return row, []
 
     summary = data.get("summary", {})
     total_flows = summary.get("total", 0)
     covered = summary.get("covered", 0)
+    partial = summary.get("partial", 0)
     failing = summary.get("failing", 0)
     missing = summary.get("missing", 0)
 
     pct = (covered / total_flows * 100) if total_flows > 0 else 0
     emoji = _pct_emoji(pct)
+    details_text = f"{covered}/{total_flows} flows covered, {failing} failing, {missing} missing"
+    row = f"| Frontend E2E (Playwright) | {emoji} {pct:.1f}% | `{_bar(pct)}` | {details_text} |"
 
-    row = (
-        f"| Frontend E2E (Playwright) | {pct:.1f}% flows | "
-        f"{covered}/{total_flows} covered | "
-        f"{failing} failing | {missing} missing | {emoji} |"
-    )
-
-    # Detail: missing/failing flows
-    flows = data.get("flows", {})
-    problem_flows = []
-    for flow_id, flow_data in flows.items():
-        status = flow_data.get("status", "missing")
-        if status in ("missing", "failing"):
-            priority = flow_data.get("definition", {}).get("priority", "P4")
-            name = flow_data.get("definition", {}).get("name", flow_id)
-            problem_flows.append((flow_id, name, status, priority))
-
-    if problem_flows:
-        problem_flows.sort(key=lambda x: x[3])
-        details.append("")
-        details.append("<details><summary>📋 E2E — Missing/Failing flows</summary>")
-        details.append("")
-        details.append("| Flow ID | Name | Status | Priority |")
-        details.append("|---------|------|--------|----------|")
-        for fid, name, status, priority in problem_flows[:15]:
-            details.append(
-                f"| `{fid}` | {name} | {_status_emoji(status)} {status} | {priority} |"
-            )
-        details.append("")
-        details.append("</details>")
+    # Detail section
+    details: list[str] = []
+    details.append("")
+    details.append("<details><summary>Frontend E2E Flow Details</summary>")
+    details.append("")
+    details.append("| Status | Count |")
+    details.append("|--------|------:|")
+    details.append(f"| ✅ Covered | {covered} |")
+    details.append(f"| ⚠️ Partial | {partial} |")
+    details.append(f"| ❌ Failing | {failing} |")
+    details.append(f"| ⬜ Missing | {missing} |")
+    details.append(f"| **Total** | **{total_flows}** |")
+    details.append("")
+    details.append("</details>")
 
     return row, details
+
+
+# ── Main ─────────────────────────────────────────────────────────────
 
 
 def main() -> None:
@@ -216,7 +188,7 @@ def main() -> None:
     )
     e2e_data = _read_json(reports_dir / "frontend-e2e-coverage-report" / "flow-coverage.json")
 
-    # Build sections — each returns (table_row, details_lines)
+    # Build sections
     backend_row, backend_details = build_backend_section(backend_data)
     frontend_row, frontend_details = build_frontend_unit_section(frontend_unit_data)
     e2e_row, e2e_details = build_e2e_section(e2e_data)
@@ -224,63 +196,32 @@ def main() -> None:
     md: list[str] = []
 
     # ── Title ──
-    md.append("# 📊 Coverage Summary")
+    md.append("# 📊 Coverage Report")
     md.append("")
 
-    # ── Summary table (no details mixed in) ──
-    md.append("## Overview")
-    md.append("")
-    md.append("| Suite | Stmts | Branches | Total | Missing | Status |")
-    md.append("|-------|------:|---------:|------:|--------:|--------|")
+    # ── Overview table ──
+    md.append("| Suite | Coverage | Bar | Details |")
+    md.append("|-------|----------|-----|---------|")
     md.append(backend_row)
     md.append(frontend_row)
     md.append(e2e_row)
     md.append("")
 
-    # ── Overall status ──
-    all_ok = True
-    suites_found = 0
-    if backend_data:
-        suites_found += 1
-        if backend_data.get("totals", {}).get("percent_covered", 0) < 70:
-            all_ok = False
-    if frontend_unit_data:
-        suites_found += 1
-        if frontend_unit_data.get("total", {}).get("statements", {}).get("pct", 0) < 70:
-            all_ok = False
-    if e2e_data:
-        suites_found += 1
-        e2e_summary = e2e_data.get("summary", {})
-        if e2e_summary.get("failing", 0) > 0:
-            all_ok = False
-
-    if suites_found == 0:
-        md.append("> ⚠️ No coverage reports found. Check that the test jobs completed successfully.")
-    elif all_ok:
-        md.append("> ✅ All suites meet minimum coverage thresholds.")
-    else:
-        md.append("> ⚠️ Some suites are below recommended thresholds or have failing tests.")
-
+    # ── Collapsible detail sections ──
+    md.extend(backend_details)
+    md.extend(frontend_details)
+    md.extend(e2e_details)
     md.append("")
 
-    # ── Detail sections (after the table) ──
-    has_details = backend_details or frontend_details or e2e_details
-    if has_details:
-        md.append("---")
-        md.append("")
-        md.append("## Details")
-        md.extend(backend_details)
-        md.extend(frontend_details)
-        md.extend(e2e_details)
-        md.append("")
-
+    # ── Footer ──
     md.append("---")
-    md.append(f"*Generated by CI — {suites_found}/3 suites reported*")
+    md.append("")
+    md.append("*Generated by CI — Coverage Summary*")
 
     report_text = "\n".join(md)
 
     # Write artifact
-    output_path = reports_dir / "coverage-summary.md"
+    output_path = reports_dir / "coverage-report.md"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(report_text, encoding="utf-8")
     print(f"✅ Report written to {output_path}")
