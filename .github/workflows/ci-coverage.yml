@@ -57,6 +57,7 @@ jobs:
             --cov=base_feature_app \
             --cov-report=json:coverage-reports/backend-coverage.json \
             --cov-report=term \
+            --junitxml=coverage-reports/backend-results.xml \
             -v
 
       - name: Upload backend coverage report
@@ -64,7 +65,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-report
-          path: backend/coverage-reports/backend-coverage.json
+          path: |
+            backend/coverage-reports/backend-coverage.json
+            backend/coverage-reports/backend-results.xml
           retention-days: 30
 
   # ──────────────────────────────────────────────────────────────────
@@ -91,14 +94,16 @@ jobs:
         run: npm ci
 
       - name: Run unit tests with coverage
-        run: npx vitest run --coverage
+        run: npx vitest run --coverage --reporter=json --outputFile=coverage/test-results.json
 
       - name: Upload frontend unit coverage report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: frontend-unit-report
-          path: frontend/coverage/coverage-summary.json
+          path: |
+            frontend/coverage/coverage-summary.json
+            frontend/coverage/test-results.json
           retention-days: 30
 
   # ──────────────────────────────────────────────────────────────────

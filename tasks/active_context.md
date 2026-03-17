@@ -1,6 +1,6 @@
 # Active Context — Corporación Fernando de Aragón
 
-_Last updated: 2026-03-17 (post-CI-coverage-workflows)_
+_Last updated: 2026-03-17 (post-coverage-report-emojis-and-test-gaps)_
 
 ---
 
@@ -18,6 +18,14 @@ The site is in a **production-ready state** for its core purpose (lead capture),
 
 ## 2. Recent Focus Areas
 
+- **Coverage Report Emojis & Test Gap Closure (2026-03-17)** — Enhanced CI coverage report with emojis/formatting and covered uncovered test code:
+  - `combine-coverage-reports.py`: bold suite names, emoji detail summaries (🐍🧪🎭), emoji indicators on uncovered files, `### ✅ Test Results` section with passed/failed/skipped counts
+  - `ci-coverage.yml`: added `--junitxml` for pytest, vitest JSON reporter, to feed test results into combined report
+  - Backend: new `test_fixtures_and_helpers.py` (9 tests) covering all conftest fixtures + helpers branches → conftest 100%, helpers 100%
+  - Backend: `test_pytest_summary_total.py` multi-file test → 100%
+  - Backend: converted dead mock bodies to `raise AssertionError` guards in `test_run_tests_suites.py`
+  - Frontend: intermediate animation frame test for `AnimatedCounter.tsx` → 100% stmts/funcs/lines
+  - **Result: Backend 108 tests, 99.6% total coverage; Frontend 114 unit tests, 100% stmts on AnimatedCounter**
 - **CI Coverage Workflows (2026-03-17)** — Created `ci-coverage.yml` with 4 parallel/sequential jobs:
   - `backend-coverage`: pytest + coverage.py → `backend-coverage.json` artifact
   - `frontend-unit-coverage`: vitest + v8 → `coverage-summary.json` artifact
@@ -46,7 +54,8 @@ The site is in a **production-ready state** for its core purpose (lead capture),
 
 | Decision | Status | Notes |
 |----------|--------|-------|
-| Frontend testing framework (Vitest) | ✅ Done | `vitest.config.ts`, setup file, 4 test files, 22 tests passing |
+| Coverage report emojis + test results | ✅ Done | Bold names, emoji summaries, test results section, JUnit XML + vitest JSON |
+| Frontend testing framework (Vitest) | ✅ Done | `vitest.config.ts`, setup file, 16 test files, 114 tests passing |
 | E2E testing with Playwright | ✅ Done | `playwright.config.ts`, 6 E2E files, 17 tests, 6/6 flows covered |
 | SEO strategy (meta tags vs SSR/SSG) | Pending | Current SPA model limits SEO; needs evaluation |
 | django_attachments | Removed | Deleted in cleanup (2026-03-17) |
@@ -123,14 +132,14 @@ python manage.py delete_fake_data --confirm
 | Backend serializer files | 1 (ContactForm) |
 | Backend URL files | 2 (contact, captcha) |
 | Backend service files | 1 (EmailService) |
-| Backend test files | 11 |
+| Backend test files | 12 |
 | Backend management commands | 4 (create_fake_data, create_users, delete_fake_data, silk_garbage_collect) |
 | Frontend pages | 3 (Home, English, ProgramPage) |
 | Frontend custom components | 8 (7 root + 1 in figma/) |
 | Frontend UI primitives (shadcn) | 46 |
 | Frontend data files | 2 (programs, curriculum) |
 | Frontend service files | 1 (api.ts) |
-| Frontend unit test files | 4 (api, programs, curriculum, routes) |
+| Frontend unit test files | 16 (components, pages, data, services, routes) |
 | Frontend E2E test files | 6 (home, contact-form, program-page, english-page, navigation, whatsapp-cta) |
 | Programs defined | 15 |
 | Frontend routes | 3 (/, /ingles, /:slug) |

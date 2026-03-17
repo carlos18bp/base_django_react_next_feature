@@ -344,8 +344,8 @@ def test_run_backend_skips_erase_when_disabled(tmp_path, monkeypatch):
     captured = {}
     (tmp_path / "base_feature_app").mkdir()
 
-    def fake_erase(*_args, **_kwargs):
-        calls.append("called")
+    def fake_erase(*_args, **_kwargs):  # quality: disable NO_DEAD_CODE (guard: must not be called)
+        raise AssertionError("erase should not be called when show_coverage is False")
 
     def fake_run_command(**kwargs):
         captured.update(kwargs)
@@ -723,24 +723,20 @@ def test_main_resume_runs_failed_suites_only(tmp_path, monkeypatch):
     calls = []
     append_logs = []
 
-    def fake_backend(**kwargs):
-        append_logs.append(kwargs["append_log"])
-        calls.append("backend")
-        return make_step_result("backend")
+    def fail_backend(**_kwargs):  # quality: disable NO_DEAD_CODE (guard: must not run)
+        raise AssertionError("backend should not run — status is ok")
 
     def fake_unit(**kwargs):
         append_logs.append(kwargs["append_log"])
         calls.append("frontend-unit")
         return make_step_result("frontend-unit")
 
-    def fake_e2e(**kwargs):
-        append_logs.append(kwargs["append_log"])
-        calls.append("frontend-e2e")
-        return make_step_result("frontend-e2e")
+    def fail_e2e(**_kwargs):  # quality: disable NO_DEAD_CODE (guard: must not run)
+        raise AssertionError("frontend-e2e should not run — status is ok")
 
-    monkeypatch.setattr(run_tests_all_suites, "run_backend", fake_backend)
+    monkeypatch.setattr(run_tests_all_suites, "run_backend", fail_backend)
     monkeypatch.setattr(run_tests_all_suites, "run_frontend_unit", fake_unit)
-    monkeypatch.setattr(run_tests_all_suites, "run_frontend_e2e", fake_e2e)
+    monkeypatch.setattr(run_tests_all_suites, "run_frontend_e2e", fail_e2e)
     monkeypatch.setattr(run_tests_all_suites, "print_final_report", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(
         sys,

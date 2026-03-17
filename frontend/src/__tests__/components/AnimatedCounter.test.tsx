@@ -103,6 +103,43 @@ describe('AnimatedCounter', () => {
     expect(screen.getByText('0')).toBeInTheDocument();
   });
 
+  it('requests another animation frame while progress is less than 1', () => {
+    const now = 1000;
+    vi.setSystemTime(now);
+
+    const rafCallbacks: FrameRequestCallback[] = [];
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+      rafCallbacks.push(cb);
+      return rafCallbacks.length;
+    });
+
+    render(<AnimatedCounter end={100} duration={1000} />);
+
+    act(() => {
+      intersectionCallback(
+        [{ isIntersecting: true } as IntersectionObserverEntry],
+        {} as IntersectionObserver,
+      );
+    });
+
+    expect(rafCallbacks.length).toBe(1);
+
+    // Fire intermediate frame at 50% progress
+    vi.setSystemTime(now + 500);
+    act(() => {
+      rafCallbacks[rafCallbacks.length - 1](now + 500);
+    });
+
+    // Should have queued another requestAnimationFrame since progress < 1
+    expect(rafCallbacks.length).toBe(2);
+
+    // Count should be between 0 and 100 (intermediate eased value)
+    const span = screen.getByText(/^\d+$/);
+    const value = parseInt(span.textContent || '0', 10);
+    expect(value).toBeGreaterThan(0);
+    expect(value).toBeLessThan(100);
+  });
+
   it('does not re-animate on subsequent intersections', () => {
     const now = 1000;
     vi.setSystemTime(now);

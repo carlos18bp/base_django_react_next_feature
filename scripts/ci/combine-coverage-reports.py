@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import os
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 BAR_WIDTH = 20
@@ -87,12 +88,13 @@ def build_backend_section(data: dict | None) -> tuple[str, list[str]]:
 
     emoji = _pct_emoji(stmts_pct)
     details_text = f"{covered_stmts}/{num_stmts} stmts, {branches_pct:.1f}% branches"
-    row = f"| Backend (pytest) | {emoji} {stmts_pct:.1f}% | `{_bar(stmts_pct)}` | {details_text} |"
+    row = f"| **Backend** (pytest) | {emoji} {stmts_pct:.1f}% | `{_bar(stmts_pct)}` | {details_text} |"
 
     # Detail section
     details: list[str] = []
     details.append("")
-    details.append("<details><summary>Backend Details</summary>")
+    details.append("<details>")
+    details.append("<summary><strong>🐍 Backend Details</strong></summary>")
     details.append("")
     details.append("| Metric | Covered | Total | % |")
     details.append("|--------|--------:|------:|------:|")
@@ -123,7 +125,7 @@ def build_backend_section(data: dict | None) -> tuple[str, list[str]]:
         details.append("|--:|------|------:|-----:|------:|-----|")
         for idx, (name, st, ms, pc) in enumerate(uncovered[:10], 1):
             details.append(
-                f"| {idx} | `{name}` | {st} | {ms} | {pc:.1f}% | `{_bar(pc, 10)}` |"
+                f"| {idx} | `{name}` | {st} | {ms} | {_pct_emoji(pc)} {pc:.1f}% | `{_bar(pc, 10)}` |"
             )
 
     details.append("")
@@ -162,12 +164,13 @@ def build_frontend_unit_section(data: dict | None) -> tuple[str, list[str]]:
         f"{branches_pct:.1f}% branches, "
         f"{funcs_pct:.1f}% funcs"
     )
-    row = f"| Frontend Unit (vitest) | {emoji} {stmts_pct:.1f}% | `{_bar(stmts_pct)}` | {details_text} |"
+    row = f"| **Frontend Unit** (vitest) | {emoji} {stmts_pct:.1f}% | `{_bar(stmts_pct)}` | {details_text} |"
 
     # Detail section
     details: list[str] = []
     details.append("")
-    details.append("<details><summary>Frontend Unit Details</summary>")
+    details.append("<details>")
+    details.append("<summary><strong>🧪 Frontend Unit Details</strong></summary>")
     details.append("")
     details.append("| Metric | Covered | Total | % |")
     details.append("|--------|--------:|------:|------:|")
@@ -199,7 +202,7 @@ def build_frontend_unit_section(data: dict | None) -> tuple[str, list[str]]:
         details.append("|--:|------|------:|-----:|------:|-----|")
         for idx, (name, ft, fm, fp) in enumerate(uncovered[:10], 1):
             details.append(
-                f"| {idx} | `{name}` | {ft} | {fm} | {fp:.1f}% | `{_bar(fp, 10)}` |"
+                f"| {idx} | `{name}` | {ft} | {fm} | {_pct_emoji(fp)} {fp:.1f}% | `{_bar(fp, 10)}` |"
             )
 
     details.append("")
@@ -223,12 +226,13 @@ def build_e2e_section(data: dict | None) -> tuple[str, list[str]]:
     pct = (covered / total_flows * 100) if total_flows > 0 else 0
     emoji = _pct_emoji(pct)
     details_text = f"{covered}/{total_flows} flows covered, {failing} failing, {missing} missing"
-    row = f"| Frontend E2E (Playwright) | {emoji} {pct:.1f}% | `{_bar(pct)}` | {details_text} |"
+    row = f"| **Frontend E2E** (Playwright) | {emoji} {pct:.1f}% | `{_bar(pct)}` | {details_text} |"
 
     # Detail section
     details: list[str] = []
     details.append("")
-    details.append("<details><summary>Frontend E2E Flow Details</summary>")
+    details.append("<details>")
+    details.append("<summary><strong>🎭 Frontend E2E Flow Details</strong></summary>")
     details.append("")
     details.append("| Status | Count |")
     details.append("|--------|------:|")
@@ -309,6 +313,106 @@ def build_e2e_section(data: dict | None) -> tuple[str, list[str]]:
     return row, details
 
 
+# ── Test results parsers ─────────────────────────────────────────────
+
+
+def _parse_backend_results(reports_dir: Path) -> dict[str, int] | None:
+    """Parse pytest JUnit XML to extract passed/failed/skipped counts."""
+    path = reports_dir / "backend-report" / "backend-results.xml"
+    if not path.exists():
+        return None
+    try:
+        tree = ET.parse(path)
+        root = tree.getroot()
+        # JUnit XML: <testsuite tests="N" errors="E" failures="F" skipped="S">
+        suite = root if root.tag == "testsuite" else root.find("testsuite")
+        if suite is None:
+            return None
+        tests = int(suite.get("tests", 0))
+        failures = int(suite.get("failures", 0))
+        errors = int(suite.get("errors", 0))
+        skipped = int(suite.get("skipped", 0))
+        passed = tests - failures - errors - skipped
+        return {"passed": passed, "failed": failures + errors, "skipped": skipped, "total": tests}
+    except Exception:
+        return None
+
+
+def _parse_frontend_unit_results(reports_dir: Path) -> dict[str, int] | None:
+    """Parse vitest JSON results to extract passed/failed/skipped counts."""
+    path = reports_dir / "frontend-unit-report" / "test-results.json"
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        passed = data.get("numPassedTests", 0)
+        failed = data.get("numFailedTests", 0)
+        skipped = data.get("numPendingTests", 0)
+        total = data.get("numTotalTests", passed + failed + skipped)
+        return {"passed": passed, "failed": failed, "skipped": skipped, "total": total}
+    except Exception:
+        return None
+
+
+def _parse_e2e_results(reports_dir: Path) -> dict[str, int] | None:
+    """Parse Playwright JSON results to extract passed/failed/skipped counts."""
+    path = reports_dir / "frontend-e2e-report" / "results.json"
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        stats = data.get("stats", {})
+        expected = stats.get("expected", 0)
+        unexpected = stats.get("unexpected", 0)
+        flaky = stats.get("flaky", 0)
+        skipped = stats.get("skipped", 0)
+        passed = expected + flaky
+        total = passed + unexpected + skipped
+        return {"passed": passed, "failed": unexpected, "skipped": skipped, "total": total}
+    except Exception:
+        return None
+
+
+def build_test_results_section(
+    reports_dir: Path,
+) -> list[str]:
+    """Build the ### ✅ Test Results section from available result files."""
+    backend = _parse_backend_results(reports_dir)
+    frontend_unit = _parse_frontend_unit_results(reports_dir)
+    e2e = _parse_e2e_results(reports_dir)
+
+    suites = [
+        ("Backend (pytest)", backend),
+        ("Frontend Unit (vitest)", frontend_unit),
+        ("Frontend E2E (Playwright)", e2e),
+    ]
+
+    # If no result files found at all, skip section
+    if all(r is None for _, r in suites):
+        return []
+
+    total_passed = sum((r or {}).get("passed", 0) for _, r in suites)
+    total_failed = sum((r or {}).get("failed", 0) for _, r in suites)
+    total_all = sum((r or {}).get("total", 0) for _, r in suites)
+
+    status_emoji = "✅" if total_failed == 0 else "❌"
+    lines: list[str] = []
+    lines.append(f"### {status_emoji} Test Results — {total_passed}/{total_all} passed")
+    lines.append("")
+    lines.append("| Suite | Passed | Failed | Skipped | Total |")
+    lines.append("|-------|--------|--------|---------|-------|")
+    for name, result in suites:
+        if result is None:
+            lines.append(f"| {name} | — | — | — | — |")
+        else:
+            lines.append(
+                f"| {name} | {result['passed']} | {result['failed']} "
+                f"| {result['skipped']} | {result['total']} |"
+            )
+    lines.append("")
+    return lines
+
+
 # ── Main ─────────────────────────────────────────────────────────────
 
 
@@ -325,11 +429,12 @@ def main() -> None:
     backend_row, backend_details = build_backend_section(backend_data)
     frontend_row, frontend_details = build_frontend_unit_section(frontend_unit_data)
     e2e_row, e2e_details = build_e2e_section(e2e_data)
+    test_results_lines = build_test_results_section(reports_dir)
 
     md: list[str] = []
 
     # ── Title ──
-    md.append("# 📊 Coverage Report")
+    md.append("## 📊 Coverage Report")
     md.append("")
 
     # ── Overview table ──
@@ -339,6 +444,10 @@ def main() -> None:
     md.append(frontend_row)
     md.append(e2e_row)
     md.append("")
+
+    # ── Test Results ──
+    if test_results_lines:
+        md.extend(test_results_lines)
 
     # ── Collapsible detail sections ──
     md.extend(backend_details)

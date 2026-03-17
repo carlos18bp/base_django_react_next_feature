@@ -117,3 +117,62 @@ def test_pytest_summary_combined_total_shows_percent(summary_output):
     """The combined total line includes the computed percent '76.9%'."""
     combined_line = next(l for l in summary_output if "TOTAL (combined)" in l)
     assert "76.9%" in combined_line
+
+
+def test_pytest_summary_handles_multi_file_report(tmp_path, monkeypatch):
+    """Report with a second non-sample file triggers FakeCoverageData.lines fallback."""
+    multi_file_payload = {
+        "totals": {
+            "num_statements": 15,
+            "missing_lines": 3,
+            "covered_lines": 12,
+            "percent_covered": 80.0,
+            "num_lines": 15,
+            "num_branches": 4,
+            "missing_branches": 1,
+            "covered_branches": 3,
+        },
+        "files": {
+            "sample.py": {
+                "summary": {
+                    "num_statements": 10,
+                    "missing_lines": 2,
+                    "percent_covered": 80.0,
+                }
+            },
+            "other.py": {
+                "summary": {
+                    "num_statements": 5,
+                    "missing_lines": 1,
+                    "percent_covered": 80.0,
+                }
+            },
+        },
+    }
+
+    coverage_file = tmp_path / ".coverage"
+    coverage_file.write_text("data", encoding="utf-8")
+
+    sample_path = tmp_path / "sample.py"
+    sample_path.write_text("def alpha():\n    return 1\n", encoding="utf-8")
+    other_path = tmp_path / "other.py"
+    other_path.write_text("def gamma():\n    return 3\n", encoding="utf-8")
+
+    monkeypatch.setitem(sys.modules, "coverage", _make_fake_coverage(multi_file_payload))
+
+    output: list[str] = []
+
+    class FakeTerminalReporter:
+        def write_sep(self, sep, title=None, **_kwargs):
+            output.append(f"{sep}{title}")
+
+        def write_line(self, message):
+            output.append(message)
+
+    class FakeConfig:
+        rootdir = tmp_path
+
+    backend_conftest.pytest_terminal_summary(FakeTerminalReporter(), 0, FakeConfig())
+
+    combined_lines = [line for line in output if "TOTAL" in line]
+    assert len(combined_lines) >= 1
