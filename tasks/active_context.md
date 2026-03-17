@@ -26,10 +26,10 @@ The site is in a **production-ready state** for its core purpose (lead capture),
   - Backend: converted dead mock bodies to `raise AssertionError` guards in `test_run_tests_suites.py`
   - Frontend: intermediate animation frame test for `AnimatedCounter.tsx` → 100% stmts/funcs/lines
   - **Result: Backend 108 tests, 99.6% total coverage; Frontend 114 unit tests, 100% stmts on AnimatedCounter**
-- **CI Coverage Workflows (2026-03-17)** — Created `ci-coverage.yml` with 4 parallel/sequential jobs:
-  - `backend-coverage`: pytest + coverage.py → `backend-coverage.json` artifact
-  - `frontend-unit-coverage`: vitest + v8 → `coverage-summary.json` artifact
-  - `frontend-e2e-coverage`: Playwright (with Django backend running) → `flow-coverage.json` artifact
+- **CI Coverage Workflows (2026-03-17)** — Created `ci.yml` with 4 parallel/sequential jobs:
+  - `backend`: pytest + coverage.py → `backend-coverage.json` artifact
+  - `frontend-unit`: vitest + v8 → `coverage-summary.json` artifact
+  - `frontend-e2e`: Playwright (with Django backend running) → `flow-coverage.json` artifact
   - `combined-report`: downloads 3 artifacts, runs `scripts/ci/combine-coverage-reports.py`, outputs unified Markdown to GitHub Job Summary
   - Triggers: push/PR to main/master + manual `workflow_dispatch`
 - **E2E flow coverage unification (2026-03-17)** — Reviewed `docs/E2E_FLOW_COVERAGE_REPORT_STANDARD.md` and aligned implementation:
