@@ -152,6 +152,28 @@ jobs:
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq pkg-config default-libmysqlclient-dev
+
+      - name: Create backend venv and install deps
+        working-directory: backend
+        run: |
+          python -m venv venv
+          venv/bin/pip install -r requirements.txt
+
+      - name: Run backend migrations
+        working-directory: backend
+        run: venv/bin/python manage.py migrate --no-input
+
       - name: Install Playwright browsers with system deps
         run: npx playwright install --with-deps chromium
 
