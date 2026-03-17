@@ -103,7 +103,7 @@ describe('BackofficePage', () => {
     render(<BackofficePage />);
 
     expect(
-      await screen.findByText('Could not load backoffice data. Make sure you are signed in with a staff user.')
+      await screen.findByText('Could not load backoffice data. Make sure you are signed in.')
     ).toBeInTheDocument();
   });
 
