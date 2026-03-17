@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { curriculumBySlug, type ProgramCurriculum } from '@/app/data/curriculum'
+import { curriculumBySlug } from '@/app/data/curriculum'
 
 describe('curriculum data', () => {
   const slugs = Object.keys(curriculumBySlug)

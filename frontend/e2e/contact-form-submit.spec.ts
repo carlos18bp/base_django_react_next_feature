@@ -1,10 +1,9 @@
 import { test, expect } from '@playwright/test'
 
-/**
- * @flow:contact-form-submit
- */
 test.describe('Contact Form Submission', () => {
-  test('displays the lead form with all required fields', async ({ page }) => {
+  test('displays the lead form with all required fields', {
+    tag: ['@flow:lead-submit-form'],
+  }, async ({ page }) => {
     await page.goto('/')
 
     await expect(page.getByPlaceholder('Nombre Completo')).toBeVisible({ timeout: 10_000 })
@@ -14,7 +13,9 @@ test.describe('Contact Form Submission', () => {
     await expect(page.getByRole('button', { name: /solicitar información/i })).toBeVisible()
   })
 
-  test('submit button is present and enabled', async ({ page }) => {
+  test('submit button is present and enabled', {
+    tag: ['@flow:lead-submit-form'],
+  }, async ({ page }) => {
     await page.goto('/')
 
     const submitBtn = page.getByRole('button', { name: /solicitar información/i })
@@ -22,7 +23,9 @@ test.describe('Contact Form Submission', () => {
     await expect(submitBtn).toBeEnabled()
   })
 
-  test('form requires fields before submission', async ({ page }) => {
+  test('form requires fields before submission', {
+    tag: ['@flow:lead-submit-form'],
+  }, async ({ page }) => {
     await page.goto('/')
 
     // Try to click submit without filling fields — browser validation should prevent
@@ -31,6 +34,8 @@ test.describe('Contact Form Submission', () => {
     await submitBtn.click()
 
     // Form should still be visible (not navigated away or showing success)
-    await expect(page.getByPlaceholder('Nombre Completo')).toBeVisible()
+    await expect(submitBtn).toBeVisible()
+    // The URL should remain unchanged (no form action redirect)
+    await expect(page).toHaveURL('/')
   })
 })

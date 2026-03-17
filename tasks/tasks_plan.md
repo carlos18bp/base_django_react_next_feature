@@ -25,13 +25,14 @@
 | 19 | Weekly slow query report | ✅ Done | Generates log file report |
 | 20 | Production settings hardening | ✅ Done | `settings_prod.py` with required env vars |
 | 21 | Pre-commit quality gate hook | ✅ Done | Runs on staged test files |
-| 22 | GitHub Actions CI | ✅ Done | `test-quality-gate.yml` |
+| 22 | GitHub Actions CI (quality gate) | ✅ Done | `test-quality-gate.yml` |
+| 31 | GitHub Actions CI (coverage) | ✅ Done | `ci-coverage.yml` — 4 jobs: backend-cov, frontend-unit-cov, frontend-e2e-cov, combined-report |
 | 23 | shadcn/ui component library | ✅ Done | 46 Radix-based UI primitives + 1 figma utility |
 | 24 | Program data files (TypeScript) | ✅ Done | 15 programs in `programs.ts`, curriculum in `curriculum.ts` |
 | 25 | Backend test suite | ✅ Done | 11 test files, 75 tests, 100% coverage on base_feature_app |
 | 26 | Custom coverage report (conftest) | ✅ Done | Per-file breakdown with function coverage |
 | 27 | Frontend unit test suite (Vitest) | ✅ Done | 4 test files, 22 tests (api, programs, curriculum, routes) |
-| 28 | E2E test suite (Playwright) | ✅ Done | 3 test files, 9 tests (home, contact-form, program-page) |
+| 28 | E2E test suite (Playwright) | ✅ Done | 6 test files, 17 tests, 6/6 flows covered |
 | 29 | SEO optimization | ❌ Not started | No meta tags, SSR/SSG, or structured data |
 | 30 | ~~django_attachments integration~~ | Removed | App deleted in cleanup (2026-03-17) |
 
@@ -75,13 +76,16 @@
 | Data | 2 (`programs.test.ts`, `curriculum.test.ts`) | ✅ 13 tests |
 | Routes | 1 (`routes.test.ts`) | ✅ 3 tests |
 
-### Frontend E2E (9 tests)
+### Frontend E2E (17 tests, 6/6 flows covered)
 
 | Category | Test Files | Status |
 |----------|-----------|--------|
-| Home page | 1 (`home-page-load.spec.ts`) | ✅ 3 tests |
-| Contact form | 1 (`contact-form-submit.spec.ts`) | ✅ 3 tests |
-| Program navigation | 1 (`program-page-navigation.spec.ts`) | ✅ 3 tests |
+| Home page | 1 (`home-page-load.spec.ts`) | ✅ 3 tests — `@flow:public-home` |
+| Contact form | 1 (`contact-form-submit.spec.ts`) | ✅ 3 tests — `@flow:lead-submit-form` |
+| Program navigation | 1 (`program-page-navigation.spec.ts`) | ✅ 3 tests — `@flow:public-program-browse` |
+| English page | 1 (`public-english-page.spec.ts`) | ✅ 3 tests — `@flow:public-english-page` |
+| Site navigation | 1 (`public-navigation.spec.ts`) | ✅ 3 tests — `@flow:public-navigation` |
+| WhatsApp CTA | 1 (`lead-whatsapp-cta.spec.ts`) | ✅ 2 tests — `@flow:lead-whatsapp-cta` |
 
 ---
 

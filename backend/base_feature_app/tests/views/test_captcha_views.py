@@ -12,9 +12,9 @@ from base_feature_app.views.captcha_views import verify_recaptcha
 
 
 @pytest.mark.django_db
-def test_get_site_key_returns_configured_key(api_client, settings):
+@override_settings(RECAPTCHA_SITE_KEY='test-site-key')
+def test_get_site_key_returns_configured_key(api_client):
     """Return the reCAPTCHA site key from settings."""
-    settings.RECAPTCHA_SITE_KEY = 'test-site-key'
     url = reverse('captcha-site-key')
     response = api_client.get(url)
 
@@ -23,9 +23,9 @@ def test_get_site_key_returns_configured_key(api_client, settings):
 
 
 @pytest.mark.django_db
-def test_get_site_key_returns_empty_when_unset(api_client, settings):
+@override_settings(RECAPTCHA_SITE_KEY='')
+def test_get_site_key_returns_empty_when_unset(api_client):
     """Return empty string when reCAPTCHA site key is not configured."""
-    settings.RECAPTCHA_SITE_KEY = ''
     url = reverse('captcha-site-key')
     response = api_client.get(url)
 

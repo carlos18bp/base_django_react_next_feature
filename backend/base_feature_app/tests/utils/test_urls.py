@@ -3,6 +3,7 @@ import importlib.util
 from pathlib import Path
 
 import pytest
+from django.test import RequestFactory, override_settings
 
 
 @pytest.mark.django_db
@@ -30,3 +31,30 @@ def test_module_urls_py_is_executable():
     assert hasattr(module, 'urlpatterns')
     names = [pattern.url_patterns for pattern in module.urlpatterns]
     assert len(names) >= 1
+
+
+def test_health_check_returns_json_ok():
+    """GET /api/health/ returns JSON with status 'ok'."""
+    from base_feature_project.urls import health_check
+
+    request = RequestFactory().get('/api/health/')
+    response = health_check(request)
+
+    assert response.status_code == 200
+    assert response['Content-Type'] == 'application/json'
+    import json
+    assert json.loads(response.content) == {'status': 'ok'}
+
+
+@override_settings(DEBUG=True, MEDIA_URL='/media/', MEDIA_ROOT='/tmp/test-media/')
+def test_debug_mode_adds_media_url_pattern():
+    """URL patterns include media serving route when DEBUG is True."""
+    import base_feature_project.urls as urls_module
+
+    importlib.reload(urls_module)
+
+    media_paths = [
+        str(p.pattern) for p in urls_module.urlpatterns
+        if hasattr(p, 'pattern') and 'media' in str(p.pattern)
+    ]
+    assert len(media_paths) >= 1

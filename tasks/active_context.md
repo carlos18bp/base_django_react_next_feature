@@ -1,6 +1,6 @@
 # Active Context — Corporación Fernando de Aragón
 
-_Last updated: 2026-03-17 (post-test-infrastructure)_
+_Last updated: 2026-03-17 (post-CI-coverage-workflows)_
 
 ---
 
@@ -18,6 +18,20 @@ The site is in a **production-ready state** for its core purpose (lead capture),
 
 ## 2. Recent Focus Areas
 
+- **CI Coverage Workflows (2026-03-17)** — Created `ci-coverage.yml` with 4 parallel/sequential jobs:
+  - `backend-coverage`: pytest + coverage.py → `backend-coverage.json` artifact
+  - `frontend-unit-coverage`: vitest + v8 → `coverage-summary.json` artifact
+  - `frontend-e2e-coverage`: Playwright (with Django backend running) → `flow-coverage.json` artifact
+  - `combined-report`: downloads 3 artifacts, runs `scripts/ci/combine-coverage-reports.py`, outputs unified Markdown to GitHub Job Summary
+  - Triggers: push/PR to main/master + manual `workflow_dispatch`
+- **E2E flow coverage unification (2026-03-17)** — Reviewed `docs/E2E_FLOW_COVERAGE_REPORT_STANDARD.md` and aligned implementation:
+  - Unified flow IDs between `flow-definitions.json` and `USER_FLOW_MAP.md` (4 IDs renamed)
+  - Added 2 missing flows: `public-navigation` (P1), `lead-whatsapp-cta` (P2)
+  - Created 3 new E2E spec files: `public-english-page.spec.ts`, `public-navigation.spec.ts`, `lead-whatsapp-cta.spec.ts`
+  - Updated `@flow:` tags in existing 3 spec files to match new canonical IDs
+  - Added JSON reporter to `playwright.config.ts`
+  - Fixed windsurf rule: removed reference to non-existent `generate-coverage.js`
+  - **Result: 6/6 flows covered, 17 E2E tests passing, 0 failures**
 - **Test infrastructure setup (2026-03-17)** — Comprehensive test quality and coverage improvement:
   - Backend: Added `test_email_service.py` (6 tests) covering `EmailService` — `base_feature_app` now at **100% coverage** (75 tests)
   - Frontend unit: Set up Vitest with `@testing-library/react`, created 4 test files (22 tests) covering `api.ts`, `programs.ts`, `curriculum.ts`, `routes.ts`
@@ -33,7 +47,7 @@ The site is in a **production-ready state** for its core purpose (lead capture),
 | Decision | Status | Notes |
 |----------|--------|-------|
 | Frontend testing framework (Vitest) | ✅ Done | `vitest.config.ts`, setup file, 4 test files, 22 tests passing |
-| E2E testing with Playwright | ✅ Done | `playwright.config.ts`, 3 E2E files, 9 tests passing |
+| E2E testing with Playwright | ✅ Done | `playwright.config.ts`, 6 E2E files, 17 tests, 6/6 flows covered |
 | SEO strategy (meta tags vs SSR/SSG) | Pending | Current SPA model limits SEO; needs evaluation |
 | django_attachments | Removed | Deleted in cleanup (2026-03-17) |
 | User authentication for public site | Deferred | Not needed for lead generation scope |
@@ -69,7 +83,8 @@ cd frontend && npm test
 cd frontend && npm run test:coverage
 
 # Frontend E2E tests
-cd frontend && npm run test:e2e
+cd frontend && npm run e2e
+cd frontend && npm run e2e:coverage
 
 # Fake data
 python manage.py create_fake_data
@@ -116,7 +131,7 @@ python manage.py delete_fake_data --confirm
 | Frontend data files | 2 (programs, curriculum) |
 | Frontend service files | 1 (api.ts) |
 | Frontend unit test files | 4 (api, programs, curriculum, routes) |
-| Frontend E2E test files | 3 (home, contact-form, program-page) |
+| Frontend E2E test files | 6 (home, contact-form, program-page, english-page, navigation, whatsapp-cta) |
 | Programs defined | 15 |
 | Frontend routes | 3 (/, /ingles, /:slug) |
 | API endpoints | 4 (health, contact submit, captcha site-key, captcha verify) |

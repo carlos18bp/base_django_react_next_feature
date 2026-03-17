@@ -6,7 +6,7 @@ The site is designed around **one landing page per program** to maximize SEO rel
 
 [![Django](https://img.shields.io/badge/Django-6.0+-092E20?style=flat&logo=django)](https://www.djangoproject.com/)
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=flat&logo=react)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=flat&logo=vite)](https://vitejs.dev/)
+[![Vite](https://img.shields.io/badge/Vite-6.4-646CFF?style=flat&logo=vite)](https://vitejs.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5+-3178C6?style=flat&logo=typescript)](https://www.typescriptlang.org/)
 [![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=flat&logo=python)](https://www.python.org/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4-06B6D4?style=flat&logo=tailwindcss)](https://tailwindcss.com/)
@@ -51,7 +51,7 @@ The site is designed around **one landing page per program** to maximize SEO rel
 - ✅ **Custom User Model** - User with email as identifier and role-based permissions
 - ✅ **Customized Django Admin** - Organized by sections
 - ✅ **Fake Data Generation** - Management commands with Faker
-- ✅ **Tests** - Pytest for models, serializers, views, admin, forms, services, and commands
+- ✅ **Tests** - Pytest for models, serializers, views, admin, forms, services, and commands (100% coverage on `base_feature_app`)
 - ✅ **CORS Configured** - Ready for local development (Vite on port 5173)
 - ✅ **Environment Management** - `python-dotenv` with centralized settings
 
@@ -88,7 +88,9 @@ The site is designed around **one landing page per program** to maximize SEO rel
 ### Frontend
 | Technology | Version | Description |
 |------------|---------|-------------|
-| Vite | 6.3+ | Build tool and dev server |
+| Vite | 6.4+ | Build tool and dev server |
+| Vitest | 4.1+ | Unit testing framework |
+| Playwright | Latest | E2E browser testing |
 | React | 18.3+ | UI library |
 | TypeScript | 5+ | Type-safe JavaScript |
 | React Router | 7.13+ | Client-side routing |
@@ -115,23 +117,20 @@ fernando_aragon_project/
 │   │   ├── urls/                        # URL routing (contact, captcha)
 │   │   ├── forms/                       # Django admin forms (user)
 │   │   ├── services/                    # Business logic (email_service)
-│   │   ├── utils/                       # Shared helpers
 │   │   ├── tests/                       # Tests
 │   │   │   ├── models/                  # Model tests
-│   │   │   ├── serializers/             # Serializer tests
 │   │   │   ├── views/                   # View/endpoint tests
-│   │   │   ├── services/               # Service tests
-│   │   │   ├── commands/               # Management command tests
+│   │   │   ├── services/                # Service tests (EmailService)
+│   │   │   ├── commands/                # Management command tests
 │   │   │   ├── utils/                   # Admin, forms, URL tests
 │   │   │   ├── conftest.py              # App-level fixtures
-│   │   │   └── helpers.py              # Test helper utilities
+│   │   │   └── helpers.py               # Test helper utilities
 │   │   ├── admin.py                     # Custom admin site
 │   │   └── management/commands/         # create_fake_data, create_users, delete_fake_data
 │   ├── base_feature_project/            # Settings and configuration
 │   │   ├── settings.py                  # Base settings
 │   │   ├── urls.py                      # Root URL configuration
 │   │   └── wsgi.py / asgi.py            # Server entry points
-│   ├── django_attachments/              # File management app
 │   ├── conftest.py                      # Root pytest config (coverage report)
 │   ├── pytest.ini                       # Pytest configuration
 │   ├── requirements.txt                 # Python dependencies
@@ -160,13 +159,24 @@ fernando_aragon_project/
 │   │   │   │   └── api.ts              # API client (submitContactForm)
 │   │   │   ├── routes.ts               # React Router route definitions
 │   │   │   └── App.tsx                  # Router provider
-│   │   ├── imports/pasted_text/         # Raw program content (source material)
+│   │   ├── __tests__/                   # Vitest unit tests
+│   │   │   ├── services/api.test.ts     # API client tests
+│   │   │   ├── data/programs.test.ts    # Programs data tests
+│   │   │   ├── data/curriculum.test.ts  # Curriculum data tests
+│   │   │   ├── routes.test.ts           # Router config tests
+│   │   │   └── setup.ts                 # Test setup
 │   │   ├── assets/                      # Static assets (logo, images)
-│   │   ├── styles/                      # Global styles
 │   │   └── main.tsx                     # App entry point
+│   ├── e2e/                             # Playwright E2E tests
+│   │   ├── home-page-load.spec.ts       # Home page tests
+│   │   ├── contact-form-submit.spec.ts  # Contact form tests
+│   │   ├── program-page-navigation.spec.ts # Program page tests
+│   │   └── flow-definitions.json        # E2E flow definitions
 │   ├── index.html                       # HTML entry point
 │   ├── package.json                     # npm dependencies
 │   ├── vite.config.ts                   # Vite configuration
+│   ├── vitest.config.ts                 # Vitest test configuration
+│   ├── playwright.config.ts             # Playwright E2E configuration
 │   ├── tsconfig.json                    # TypeScript configuration
 │   ├── postcss.config.mjs               # PostCSS configuration
 │   └── .env.example                     # Environment variables (example)
@@ -392,13 +402,19 @@ VITE_API_URL=http://localhost:8000/api
 npm run dev                # Vite development server (port 5173)
 npm run build              # Production build
 npm run preview            # Preview production build
+npm test                   # Run Vitest unit tests
+npm run test:watch         # Run Vitest in watch mode
+npm run test:coverage      # Run Vitest with coverage report
+npm run e2e                # Run Playwright E2E tests
+npm run e2e:headed         # Run Playwright E2E tests in headed mode
+npm run e2e:coverage       # Run Playwright E2E tests with flow coverage report
 ```
 
 ---
 
 ## 🧪 Testing
 
-### Backend (Pytest)
+### Backend (Pytest) — 75 tests, 100% coverage
 
 ```bash
 cd backend
@@ -413,18 +429,71 @@ pytest --cov
 # Specific test directories
 pytest base_feature_app/tests/models/ -v
 pytest base_feature_app/tests/views/ -v
-pytest base_feature_app/tests/serializers/ -v
 pytest base_feature_app/tests/services/ -v
 pytest base_feature_app/tests/commands/ -v
 ```
 
+| Category | Test Files | Tests |
+|----------|-----------|-------|
+| Models | `test_user_model.py` | 6 |
+| Views | `test_captcha_views.py`, `test_contact_views.py` | 17 |
+| Services | `test_email_service.py` | 6 |
+| Commands | `test_silk_garbage_collect.py`, `test_tasks.py` | 14 |
+| Utils | `test_admin.py`, `test_forms.py`, `test_urls.py`, `test_pytest_summary_total.py`, `test_run_tests_suites.py` | 32 |
+
+### Frontend Unit (Vitest) — 22 tests
+
+```bash
+cd frontend
+
+# Run unit tests
+npm test
+
+# With coverage
+npm run test:coverage
+
+# Watch mode
+npm run test:watch
+```
+
+| Category | Test File | Tests |
+|----------|----------|-------|
+| Services | `api.test.ts` | 6 |
+| Data | `programs.test.ts`, `curriculum.test.ts` | 13 |
+| Routes | `routes.test.ts` | 3 |
+
+### Frontend E2E (Playwright) — 9 tests
+
+```bash
+cd frontend
+
+# Run E2E tests (headless)
+npm run e2e
+
+# Run E2E tests (headed, for debugging)
+npm run e2e:headed
+
+# Run E2E tests with flow coverage report
+npm run e2e:coverage
+```
+
+| Flow | Test File | Tests |
+|------|----------|-------|
+| Home page load | `home-page-load.spec.ts` | 3 |
+| Contact form | `contact-form-submit.spec.ts` | 3 |
+| Program navigation | `program-page-navigation.spec.ts` | 3 |
+
 ### Quality Gate
 
 ```bash
-# Scoped to modified backend test files
+# Backend quality gate
+python scripts/test_quality_gate.py --repo-root . \
+  --suite backend --semantic-rules strict --external-lint run
+
+# Scoped to specific file
 python scripts/test_quality_gate.py --repo-root . \
   --suite backend --semantic-rules strict --external-lint run \
-  --include-file backend/base_feature_app/tests/views/test_contact.py
+  --include-file backend/base_feature_app/tests/views/test_contact_views.py
 ```
 
 ---
@@ -461,6 +530,8 @@ python scripts/test_quality_gate.py --repo-root . \
 | `backend/pytest.ini` | Pytest configuration |
 | `frontend/.env.example` | Environment variables template (frontend) |
 | `frontend/vite.config.ts` | Vite configuration |
+| `frontend/vitest.config.ts` | Vitest test configuration |
+| `frontend/playwright.config.ts` | Playwright E2E configuration |
 | `frontend/tsconfig.json` | TypeScript configuration |
 | `frontend/postcss.config.mjs` | PostCSS configuration |
 

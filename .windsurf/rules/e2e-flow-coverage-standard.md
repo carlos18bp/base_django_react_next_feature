@@ -47,7 +47,7 @@ Every E2E test MUST have `@flow:<flow-id>` tag(s):
 
 ```javascript
 test('user signs in with email', {
-  tag: ['@flow:auth-login-email'],
+  tag: ['@flow:public-home'],
 }, async ({ page }) => { /* ... */ });
 ```
 
@@ -121,6 +121,5 @@ Auto-generated after every run. Contains `summary`, per-flow `status`/`tests`/`s
 ## Regenerate Coverage
 
 ```bash
-npx playwright test                           # runs tests + generates report
-node frontend/scripts/generate-coverage.js    # regenerates coverage from results
+npx playwright test   # runs tests + generates flow coverage report automatically
 ```

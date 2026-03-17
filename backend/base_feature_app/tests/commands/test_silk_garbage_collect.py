@@ -94,3 +94,41 @@ def test_silk_garbage_collect_reports_zero_when_no_records_match(mock_request_cl
     assert 'Requests to delete: 0' in output
     assert 'Deleted 0 records' in output
     mock_qs.delete.assert_called_once()
+
+
+@patch('silk.models.Request')
+def test_silk_garbage_collect_parser_accepts_days_argument(mock_request_cls):
+    """The --days argument is parsed via add_arguments and forwarded to handle."""
+    mock_qs = MagicMock()
+    mock_qs.count.return_value = 2
+    mock_qs.delete.return_value = (2, {})
+    mock_request_cls.objects.filter.return_value = mock_qs
+
+    out = StringIO()
+    cmd = Command(stdout=out, no_color=True)
+    parser = cmd.create_parser('manage.py', 'silk_garbage_collect')
+    options = parser.parse_args(['--days=14'])
+    cmd.execute(**vars(options))
+
+    output = out.getvalue()
+    assert 'Requests to delete: 2' in output
+    assert 'Deleted 2 records' in output
+    mock_request_cls.objects.filter.assert_called_once()
+
+
+@patch('silk.models.Request')
+def test_silk_garbage_collect_parser_accepts_dry_run_flag(mock_request_cls):
+    """The --dry-run flag is parsed via add_arguments and prevents deletion."""
+    mock_qs = MagicMock()
+    mock_qs.count.return_value = 4
+    mock_request_cls.objects.filter.return_value = mock_qs
+
+    out = StringIO()
+    cmd = Command(stdout=out, no_color=True)
+    parser = cmd.create_parser('manage.py', 'silk_garbage_collect')
+    options = parser.parse_args(['--dry-run'])
+    cmd.execute(**vars(options))
+
+    output = out.getvalue()
+    assert 'DRY RUN' in output
+    mock_qs.delete.assert_not_called()

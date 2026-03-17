@@ -179,7 +179,7 @@ class ExternalLintRunner:
             eslint_bin,
             "--format",
             "json",
-            "--no-error-on-unmatched-pattern",
+            "--no-warn-ignored",
             *[str(path) for path in targets],
         ]
 

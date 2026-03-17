@@ -8,6 +8,8 @@ import types
 from functools import partial
 from pathlib import Path
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parents[4]
 SCRIPT_PATH = REPO_ROOT / "scripts" / "run-tests-all-suites.py"
 
@@ -106,6 +108,7 @@ def test_load_resume_state_returns_none_when_missing(tmp_path):
 
 
 def test_select_suites_for_resume_filters_non_ok():
+    """select_suites_for_resume keeps only suites whose previous status is not 'ok'."""
     suite_runners = [
         ("backend", partial(make_step_result, "backend")),
         ("frontend-unit", partial(make_step_result, "frontend-unit")),
@@ -173,21 +176,8 @@ def test_resolve_backend_source_root_falls_back_to_base_feature_app(tmp_path):
     assert run_tests_all_suites.resolve_backend_coverage_root(backend_root) == base_root
 
 
-def test_read_backend_summary_returns_statements_branches_functions_lines_total(
-    tmp_path,
-    monkeypatch,
-):
-    backend_root = tmp_path / "backend"
-    backend_root.mkdir()
-    coverage_file = backend_root / ".coverage"
-    coverage_file.write_text("data", encoding="utf-8")
-
-    sample_path = backend_root / "base_feature_app" / "sample.py"
-    sample_path.parent.mkdir(parents=True)
-    sample_path.write_text(
-        "def alpha():\n    return 1\n\ndef beta():\n    return 2\n",
-        encoding="utf-8",
-    )
+def _make_fake_coverage_module(sample_path):
+    """Build a fake coverage module for read_backend_coverage_summary tests."""
 
     class FakeNumbers:
         n_statements = 10
@@ -232,26 +222,63 @@ def test_read_backend_summary_returns_statements_branches_functions_lines_total(
         def _get_file_reporter(_filepath):
             return FakeFileReporter()
 
-    fake_module = types.ModuleType("coverage")
-    fake_module.Coverage = FakeCoverage
-    monkeypatch.setitem(sys.modules, "coverage", fake_module)
+    mod = types.ModuleType("coverage")
+    mod.Coverage = FakeCoverage
+    return mod
 
-    lines = run_tests_all_suites.read_backend_coverage_summary(backend_root)
 
-    assert len(lines) == 5
-    assert "Statements:" in lines[0]
-    assert "(8/10)" in lines[0]
-    assert "Branches:" in lines[1]
-    assert "(3/4)" in lines[1]
-    assert "Functions:" in lines[2]
-    assert "(1/2)" in lines[2]
-    assert "Lines:" in lines[3]
-    assert "(8/10)" in lines[3]
-    assert "Total:" in lines[4]
-    assert "78.57%" in lines[4]
+@pytest.fixture
+def backend_summary_lines(tmp_path, monkeypatch):
+    """Run read_backend_coverage_summary with fake coverage, return output lines."""
+    backend_root = tmp_path / "backend"
+    backend_root.mkdir()
+    (backend_root / ".coverage").write_text("data", encoding="utf-8")
+
+    sample_path = backend_root / "base_feature_app" / "sample.py"
+    sample_path.parent.mkdir(parents=True)
+    sample_path.write_text("def alpha():\n    return 1\n\ndef beta():\n    return 2\n", encoding="utf-8")
+
+    monkeypatch.setitem(sys.modules, "coverage", _make_fake_coverage_module(sample_path))
+    return run_tests_all_suites.read_backend_coverage_summary(backend_root)
+
+
+def test_read_backend_summary_returns_five_lines(backend_summary_lines):
+    """read_backend_coverage_summary returns exactly 5 summary lines."""
+    assert len(backend_summary_lines) == 5
+
+
+def test_read_backend_summary_statements_line(backend_summary_lines):
+    """First line reports statements with (8/10)."""
+    assert "Statements:" in backend_summary_lines[0]
+    assert "(8/10)" in backend_summary_lines[0]
+
+
+def test_read_backend_summary_branches_line(backend_summary_lines):
+    """Second line reports branches with (3/4)."""
+    assert "Branches:" in backend_summary_lines[1]
+    assert "(3/4)" in backend_summary_lines[1]
+
+
+def test_read_backend_summary_functions_line(backend_summary_lines):
+    """Third line reports functions with (1/2)."""
+    assert "Functions:" in backend_summary_lines[2]
+    assert "(1/2)" in backend_summary_lines[2]
+
+
+def test_read_backend_summary_lines_line(backend_summary_lines):
+    """Fourth line reports lines with (8/10)."""
+    assert "Lines:" in backend_summary_lines[3]
+    assert "(8/10)" in backend_summary_lines[3]
+
+
+def test_read_backend_summary_total_line(backend_summary_lines):
+    """Fifth line reports total with 78.57%."""
+    assert "Total:" in backend_summary_lines[4]
+    assert "78.57%" in backend_summary_lines[4]
 
 
 def test_read_flow_summary_formats_flow_percent(tmp_path):
+    """read_flow_coverage_summary returns 3 lines with covered/partial/missing counts."""
     summary_path = tmp_path / "e2e-results" / "flow-coverage.json"
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     summary_path.write_text(
@@ -279,6 +306,7 @@ def test_read_flow_summary_formats_flow_percent(tmp_path):
 
 
 def test_run_backend_triggers_erase_when_enabled(tmp_path, monkeypatch):
+    """run_backend erases prior coverage data and adds --cov flags when show_coverage is True."""
     calls = []
     captured = {}
     (tmp_path / "base_feature_app").mkdir()
@@ -311,6 +339,7 @@ def test_run_backend_triggers_erase_when_enabled(tmp_path, monkeypatch):
 
 
 def test_run_backend_skips_erase_when_disabled(tmp_path, monkeypatch):
+    """run_backend skips coverage erasure and --cov flags when show_coverage is False."""
     calls = []
     captured = {}
     (tmp_path / "base_feature_app").mkdir()
@@ -342,6 +371,7 @@ def test_run_backend_skips_erase_when_disabled(tmp_path, monkeypatch):
 
 
 def test_erase_backend_data_invokes_library_erase(tmp_path, monkeypatch):
+    """erase_backend_coverage_data instantiates Coverage with .coverage path and calls erase()."""
     captured = {}
 
     class FakeCoverage:
@@ -371,6 +401,7 @@ def test_build_log_separator_includes_suite_metadata():
 
 
 def test_record_suite_result_writes_resume_file(tmp_path):
+    """record_suite_result persists run_id and suite metadata to the resume JSON file."""
     resume_path = tmp_path / "reports" / run_tests_all_suites.RESUME_FILENAME
     backend_log = tmp_path / "backend.log"
     result_backend = make_step_result("backend", log_path=backend_log)
@@ -416,6 +447,7 @@ def test_run_command_writes_log_separator(tmp_path):
 
 
 def test_extract_backend_report_table_reads_header(tmp_path):
+    """extract_backend_coverage_table extracts the coverage report block from the log file."""
     log_path = tmp_path / "backend.log"
     log_path.write_text(
         "\n".join(

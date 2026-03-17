@@ -1,49 +1,55 @@
 {
-  "flows": [
-    {
-      "id": "home-page-load",
-      "name": "Home Page Load",
-      "description": "User navigates to the home page and sees key content",
-      "priority": "critical",
-      "steps": [
-        "Navigate to /",
-        "Verify page title or heading is visible",
-        "Verify navigation bar is present",
-        "Verify footer is present"
-      ]
+  "version": "1.1.0",
+  "lastUpdated": "2026-03-17",
+  "flows": {
+    "public-home": {
+      "name": "Home Page",
+      "module": "public",
+      "roles": ["visitor"],
+      "priority": "P1",
+      "description": "User navigates to the home page and sees hero, stats, programs, and footer",
+      "expectedSpecs": 1
     },
-    {
-      "id": "program-page-navigation",
-      "name": "Program Page Navigation",
-      "description": "User navigates to a specific program page via slug",
-      "priority": "critical",
-      "steps": [
-        "Navigate to /:slug (e.g. /ingles)",
-        "Verify program name is displayed",
-        "Verify program details section is visible"
-      ]
+    "public-navigation": {
+      "name": "Site Navigation",
+      "module": "public",
+      "roles": ["visitor"],
+      "priority": "P1",
+      "description": "Shared layout with navbar, footer, WhatsApp button; sticky header and mobile hamburger menu",
+      "expectedSpecs": 1
     },
-    {
-      "id": "contact-form-submit",
-      "name": "Contact Form Submission",
-      "description": "User fills and submits the contact/lead form",
-      "priority": "critical",
-      "steps": [
-        "Navigate to a page with the contact form",
-        "Fill in name, email, phone, program fields",
-        "Submit the form",
-        "Verify success or error feedback"
-      ]
+    "public-program-browse": {
+      "name": "Browse Program",
+      "module": "public",
+      "roles": ["visitor"],
+      "priority": "P1",
+      "description": "User navigates to a program page via slug and sees program details",
+      "expectedSpecs": 1
     },
-    {
-      "id": "english-page-load",
-      "name": "English Page Load",
-      "description": "User navigates to the English program page",
-      "priority": "high",
-      "steps": [
-        "Navigate to /ingles",
-        "Verify English-specific content is visible"
-      ]
+    "public-english-page": {
+      "name": "English Program Page",
+      "module": "public",
+      "roles": ["visitor"],
+      "priority": "P2",
+      "description": "User navigates to the dedicated English program landing page",
+      "expectedSpecs": 1
+    },
+    "lead-submit-form": {
+      "name": "Submit Lead Form",
+      "module": "lead-capture",
+      "roles": ["visitor"],
+      "priority": "P1",
+      "description": "User fills and submits the lead capture form on the home page",
+      "expectedSpecs": 1,
+      "knownGaps": ["Does not test actual backend submission (no API mock)"]
+    },
+    "lead-whatsapp-cta": {
+      "name": "WhatsApp CTA",
+      "module": "lead-capture",
+      "roles": ["visitor"],
+      "priority": "P2",
+      "description": "User clicks the floating WhatsApp button to open a pre-filled WhatsApp conversation",
+      "expectedSpecs": 1
     }
-  ]
+  }
 }
