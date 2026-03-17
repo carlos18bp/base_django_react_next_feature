@@ -31,6 +31,19 @@ jobs:
           cache: 'pip'
           cache-dependency-path: backend/requirements.txt
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies (for ast-parser tests)
+        working-directory: frontend
+        run: npm ci
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
       - name: Install system dependencies
         run: |
           sudo apt-get update -qq
@@ -42,8 +55,22 @@ jobs:
       - name: Run migrations
         run: python manage.py migrate --no-input
 
-      - name: Run pytest
-        run: pytest -v --tb=short
+      - name: Run pytest with coverage
+        run: pytest -v --tb=short --junitxml=pytest-results.xml --cov=base_feature_app --cov-branch --cov-report=json:coverage-backend.json --cov-report=xml:coverage-backend.xml
+
+      - name: Backend coverage summary
+        if: always()
+        run: python3 "$GITHUB_WORKSPACE/scripts/ci/backend-job-summary.py" >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Upload backend coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-backend
+          path: |
+            backend/coverage-backend.json
+            backend/pytest-results.xml
+          retention-days: 5
 
   # ───────────────────────────────────────────
   # Frontend — Jest unit & component tests
@@ -70,8 +97,30 @@ jobs:
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
-      - name: Run Jest tests
-        run: npm test -- --ci --forceExit
+      - name: Run Jest tests with coverage
+        run: |
+          NODE_OPTIONS='--no-deprecation' npx jest --config jest.config.cjs --coverage --ci --forceExit --json --outputFile=jest-results.json || true
+          node scripts/coverage-summary.cjs
+          # Fail the step if tests failed
+          node -e "const r=require('./jest-results.json'); if(!r.success) process.exit(1);"
+
+      - name: Copy test results alongside coverage
+        if: always()
+        run: cp jest-results.json coverage/ 2>/dev/null || true
+
+      - name: Frontend unit coverage summary
+        if: always()
+        run: node "$GITHUB_WORKSPACE/scripts/ci/frontend-job-summary.cjs" >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Upload frontend-unit coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-frontend-unit
+          path: |
+            frontend/coverage/coverage-summary.json
+            frontend/coverage/jest-results.json
+          retention-days: 5
 
   # ───────────────────────────────────────────
   # Frontend — Playwright E2E tests (sharded)
@@ -82,7 +131,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: ["1/5", "2/5", "3/5", "4/5", "5/5"]
+        shard: ["1/3", "2/3", "3/3"]
     defaults:
       run:
         working-directory: frontend
@@ -126,4 +175,117 @@ jobs:
           name: playwright-traces-${{ strategy.job-index }}
           path: frontend/test-results/
           retention-days: 7
+
+  # ───────────────────────────────────────────
+  # E2E — Merge sharded results + flow coverage
+  # ───────────────────────────────────────────
+  e2e-merge:
+    if: always()
+    needs: [frontend-e2e-tests]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+      - name: Download all blob reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: playwright-blob-*
+          path: frontend/all-blob-reports
+          merge-multiple: true
+
+      - name: Merge into HTML + JSON report
+        run: npx playwright merge-reports --reporter='json,./e2e/reporters/flow-coverage-reporter.mjs' all-blob-reports
+        env:
+          CI: 'true'
+          PLAYWRIGHT_JSON_OUTPUT_NAME: e2e-results/playwright-results.json
+
+      - name: Upload E2E flow coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-frontend-e2e
+          path: |
+            frontend/e2e-results/flow-coverage.json
+            frontend/e2e-results/playwright-results.json
+          retention-days: 5
+
+  # ───────────────────────────────────────────
+  # Coverage Summary — aggregates all reports
+  # ───────────────────────────────────────────
+  coverage-summary:
+    if: always()
+    needs: [backend-tests, frontend-unit-tests, e2e-merge]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Download backend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-backend
+          path: coverage-artifacts/backend
+        continue-on-error: true
+
+      - name: Download frontend-unit coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-frontend-unit
+          path: coverage-artifacts/frontend-unit
+        continue-on-error: true
+
+      - name: Download frontend-e2e coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-frontend-e2e
+          path: coverage-artifacts/frontend-e2e
+        continue-on-error: true
+
+      - name: Generate coverage summary
+        if: always()
+        id: summary
+        run: node scripts/coverage-summary-ci.cjs
+
+      - name: Write Job Summary
+        run: cat coverage-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report (md)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-md
+          path: coverage-report.md
+          retention-days: 5
+
+      - name: Post PR comment
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: coverage-report.md
 
