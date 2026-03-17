@@ -1,6 +1,6 @@
 ---
 description: Always include these rules.
-trigger: model_decision
+trigger: manual
 ---
 Before every Plan/Architect task ALWAYS do 3 things:
 a. Read the existing documentation in `docs/methodology/` : i. `docs/methodology/architecture.md`, ii. `docs/methodology/product_requirement_docs.md`, iii. `docs/methodology/technical.md`

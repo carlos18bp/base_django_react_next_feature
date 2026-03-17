@@ -1,6 +1,6 @@
 ---
 description: directory structure to follow
-trigger: always_on
+trigger: manual
 ---     
 # Directory Structure
 ```mermaid

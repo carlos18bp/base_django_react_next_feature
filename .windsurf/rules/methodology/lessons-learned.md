@@ -1,5 +1,5 @@
 ---
-trigger: model_decision
+trigger: manual
 description: Project intelligence and lessons learned. Reference for project-specific patterns, preferences, and key insights discovered during development.
 ---
 

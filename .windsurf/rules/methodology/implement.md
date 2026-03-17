@@ -1,6 +1,6 @@
 ---
 description: Always attach when Implementing Code (Act/Code MODE)
-trigger: model_decision
+trigger: manual
 ---
 Before every code implementation/change ALWAYS do 2 things:
 a. Read and understand the documentation in `docs/` and `tasks/`

@@ -1,6 +1,6 @@
 ---
 description: ALWAYS INCLUDE to HAVE Project Context
-trigger: always_on
+trigger: manual
 ---
 # Memory Files Structure
 This outlines the fundamental principles, required files, workflow structure, and essential procedures that govern documentation, and maintaining a memory using file system.

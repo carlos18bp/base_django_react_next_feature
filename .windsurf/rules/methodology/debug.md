@@ -1,6 +1,6 @@
 ---
 description: Always include while DEBUGGING
-trigger: model_decision
+trigger: manual
 ---
 <DEBUGGING>
 Below debugging routine is for persistent errors or incomplete fixes. So use this routine only when got stuck.

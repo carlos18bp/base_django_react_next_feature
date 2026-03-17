@@ -1,6 +1,6 @@
 ---
 description: Instructions to be always followed.
-trigger: always_on
+trigger: manual
 ---
 These should be respected ALWAYS:
 1. Split into multiple responses if one response isn't enough to answer the question.

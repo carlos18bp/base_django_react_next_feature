@@ -1,5 +1,5 @@
 ---
-trigger: model_decision
+trigger: manual
 description: Error documentation and known issues tracking. Reference when debugging, fixing bugs, or encountering recurring issues.
 ---
 
