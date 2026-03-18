@@ -28,13 +28,16 @@ jest.mock('@react-oauth/google', () => ({
 }));
 
 jest.mock('react-google-recaptcha', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require('react');
-  return React.forwardRef(
-    ({ onChange }: { onChange?: (token: string | null) => void }, ref: any) => {
+  const MockRecaptcha = React.forwardRef(
+    ({ onChange: _onChange }: { onChange?: (token: string | null) => void }, ref: any) => {
       React.useImperativeHandle(ref, () => ({ reset: () => {} }));
       return <div data-testid="mock-recaptcha" />;
     },
   );
+  MockRecaptcha.displayName = 'MockRecaptcha';
+  return MockRecaptcha;
 });
 
 jest.mock('../../../lib/services/http', () => ({

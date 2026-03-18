@@ -155,7 +155,7 @@ def test_build_suite_summary_sets_log_path_string(tmp_path):
     assert summary["log_path"] == str(log_path)
 
 
-def test_resolve_backend_coverage_root_prefers_core_app(tmp_path):
+def test_resolve_backend_report_root_prefers_core_app(tmp_path):
     backend_root = tmp_path / "backend"
     core_root = backend_root / "core_app"
     base_root = backend_root / "base_feature_app"
@@ -165,7 +165,7 @@ def test_resolve_backend_coverage_root_prefers_core_app(tmp_path):
     assert run_tests_all_suites.resolve_backend_coverage_root(backend_root) == core_root
 
 
-def test_resolve_backend_coverage_root_falls_back_to_base_feature_app(tmp_path):
+def test_resolve_backend_report_root_fallback_to_base_feature_app(tmp_path):
     backend_root = tmp_path / "backend"
     base_root = backend_root / "base_feature_app"
     base_root.mkdir(parents=True)
@@ -173,14 +173,12 @@ def test_resolve_backend_coverage_root_falls_back_to_base_feature_app(tmp_path):
     assert run_tests_all_suites.resolve_backend_coverage_root(backend_root) == base_root
 
 
-def test_read_backend_summary_returns_statements_branches_functions_lines_total(
-    tmp_path,
-    monkeypatch,
-):
+def _build_backend_summary_lines(tmp_path, monkeypatch):
+    """Set up fake coverage infrastructure and return metric lines."""
     backend_root = tmp_path / "backend"
     backend_root.mkdir()
-    coverage_file = backend_root / ".coverage"
-    coverage_file.write_text("data", encoding="utf-8")
+    cov_file = backend_root / ".coverage"
+    cov_file.write_text("data", encoding="utf-8")
 
     sample_path = backend_root / "base_feature_app" / "sample.py"
     sample_path.parent.mkdir(parents=True)
@@ -236,17 +234,46 @@ def test_read_backend_summary_returns_statements_branches_functions_lines_total(
     fake_module.Coverage = FakeCoverage
     monkeypatch.setitem(sys.modules, "coverage", fake_module)
 
-    lines = run_tests_all_suites.read_backend_coverage_summary(backend_root)
+    return run_tests_all_suites.read_backend_coverage_summary(backend_root)
+
+
+def test_read_backend_summary_returns_five_metric_lines(tmp_path, monkeypatch):
+    lines = _build_backend_summary_lines(tmp_path, monkeypatch)
 
     assert len(lines) == 5
+
+
+def test_read_backend_summary_statements_metric(tmp_path, monkeypatch):
+    lines = _build_backend_summary_lines(tmp_path, monkeypatch)
+
     assert "Statements:" in lines[0]
     assert "(8/10)" in lines[0]
+
+
+def test_read_backend_summary_branches_metric(tmp_path, monkeypatch):
+    lines = _build_backend_summary_lines(tmp_path, monkeypatch)
+
     assert "Branches:" in lines[1]
     assert "(3/4)" in lines[1]
+
+
+def test_read_backend_summary_functions_metric(tmp_path, monkeypatch):
+    lines = _build_backend_summary_lines(tmp_path, monkeypatch)
+
     assert "Functions:" in lines[2]
     assert "(1/2)" in lines[2]
+
+
+def test_read_backend_summary_lines_metric(tmp_path, monkeypatch):
+    lines = _build_backend_summary_lines(tmp_path, monkeypatch)
+
     assert "Lines:" in lines[3]
     assert "(8/10)" in lines[3]
+
+
+def test_read_backend_summary_total_metric(tmp_path, monkeypatch):
+    lines = _build_backend_summary_lines(tmp_path, monkeypatch)
+
     assert "Total:" in lines[4]
     assert "78.57%" in lines[4]
 
@@ -341,7 +368,7 @@ def test_run_backend_skips_erase_when_disabled(tmp_path, monkeypatch):
     assert result.name == "backend"
 
 
-def test_erase_backend_data_uses_coverage_module(tmp_path, monkeypatch):
+def test_erase_backend_data_invokes_report_module(tmp_path, monkeypatch):
     captured = {}
 
     class FakeCoverage:

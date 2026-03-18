@@ -17,7 +17,8 @@ sys.modules[spec.name] = backend_conftest
 spec.loader.exec_module(backend_conftest)
 
 
-def test_pytest_summary_prints_combined_total(tmp_path, monkeypatch):
+def _run_fake_terminal_summary(tmp_path, monkeypatch):
+    """Set up fake coverage infrastructure and return terminal output lines."""
     coverage_file = tmp_path / ".coverage"
     coverage_file.write_text("data", encoding="utf-8")
 
@@ -85,10 +86,15 @@ def test_pytest_summary_prints_combined_total(tmp_path, monkeypatch):
         rootdir = tmp_path
 
     backend_conftest.pytest_terminal_summary(FakeTerminalReporter(), 0, FakeConfig())
+    return output
+
+
+def test_pytest_summary_prints_combined_total(tmp_path, monkeypatch):
+    output = _run_fake_terminal_summary(tmp_path, monkeypatch)
 
     combined_lines = [line for line in output if "TOTAL (combined)" in line]
 
-    assert combined_lines
+    assert len(combined_lines) == 1
     combined_line = combined_lines[0]
     assert "26" in combined_line
     assert "6" in combined_line
