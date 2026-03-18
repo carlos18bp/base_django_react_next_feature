@@ -123,15 +123,11 @@ jobs:
           retention-days: 5
 
   # ───────────────────────────────────────────
-  # Frontend — Playwright E2E tests (sharded)
+  # Frontend — Playwright E2E tests
   # ───────────────────────────────────────────
   frontend-e2e-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 18
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: ["1/3", "2/3", "3/3"]
     defaults:
       run:
         working-directory: frontend
@@ -177,63 +173,8 @@ jobs:
       - name: Install Playwright browsers with system deps
         run: npx playwright install --with-deps chromium
 
-      - name: Run Playwright E2E tests (shard ${{ matrix.shard }})
-        run: npx playwright test --shard=${{ matrix.shard }} --reporter=blob
-        env:
-          CI: 'true'
-
-      - name: Upload blob report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-blob-${{ strategy.job-index }}
-          path: frontend/blob-report/
-          retention-days: 1
-
-      - name: Upload test traces (failures only)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-traces-${{ strategy.job-index }}
-          path: frontend/test-results/
-          retention-days: 7
-
-  # ───────────────────────────────────────────
-  # E2E — Merge sharded results + flow coverage
-  # ───────────────────────────────────────────
-  e2e-merge:
-    if: always()
-    needs: [frontend-e2e-tests]
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-        env:
-          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
-
-      - name: Download all blob reports
-        uses: actions/download-artifact@v4
-        with:
-          pattern: playwright-blob-*
-          path: frontend/all-blob-reports
-          merge-multiple: true
-
-      - name: Merge into HTML + JSON report
-        run: npx playwright merge-reports --reporter='json,./e2e/reporters/flow-coverage-reporter.mjs' all-blob-reports
+      - name: Run Playwright E2E tests
+        run: npx playwright test --reporter='json,./e2e/reporters/flow-coverage-reporter.mjs'
         env:
           CI: 'true'
           PLAYWRIGHT_JSON_OUTPUT_NAME: e2e-results/playwright-results.json
@@ -248,12 +189,20 @@ jobs:
             frontend/e2e-results/playwright-results.json
           retention-days: 5
 
+      - name: Upload test traces (failures only)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: frontend/test-results/
+          retention-days: 7
+
   # ───────────────────────────────────────────
   # Coverage Summary — aggregates all reports
   # ───────────────────────────────────────────
   coverage-summary:
     if: always()
-    needs: [backend-tests, frontend-unit-tests, e2e-merge]
+    needs: [backend-tests, frontend-unit-tests, frontend-e2e-tests]
     runs-on: ubuntu-latest
     permissions:
       contents: read
