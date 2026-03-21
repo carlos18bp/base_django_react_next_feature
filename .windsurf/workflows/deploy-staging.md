@@ -7,7 +7,7 @@ description: Deploy a release branch to the staging server for client UAT
 
 Run these steps on the staging server at `/home/ryzepeck/webapps/base_django_react_next_feature_staging` to deploy a release branch for client testing/UAT.
 
-- **Domain**: https://gmconsultoresjuridicos.projectapp.co
+- **Domain**: https://YOUR_STAGING_DOMAIN
 - **Stack**: Django + Gunicorn + Nginx + MySQL 8 + Redis + Huey
 - **Services**: `base_django_react_next_feature_staging` (Gunicorn), `base_django_react_next_feature-staging-huey` (task queue)
 
@@ -95,7 +95,7 @@ Expected: `active`, `active`.
 // turbo
 10. Verify the staging health endpoint:
 ```bash
-curl -s https://gmconsultoresjuridicos.projectapp.co/api/health/ | python3 -m json.tool
+curl -s https://YOUR_STAGING_DOMAIN/api/health/ | python3 -m json.tool
 ```
 Expected: `{"app": "ok", "database": "ok", "redis": "ok"}` with HTTP 200.
 
@@ -141,7 +141,7 @@ sudo systemctl status base_django_react_next_feature-staging-huey --no-pager -l
 ## Phase 6 — Notify client (optional)
 
 17. Once verification passes, notify the client that the staging environment is ready for UAT at:
-    - **URL**: https://gmconsultoresjuridicos.projectapp.co
+    - **URL**: https://YOUR_STAGING_DOMAIN
     - **Branch deployed**: `$BRANCH`
     - **Date**: (current date)
 
@@ -153,3 +153,5 @@ sudo systemctl status base_django_react_next_feature-staging-huey --no-pager -l
 - After client approval, use `/deploy-and-check` to deploy master to production (after merging the release branch).
 - The branch is specified at invocation time in the chat message — no need to edit this file per release.
 - Staging uses a **separate database and `.env`** from production — client testing will not affect production data.
+
+> ⚠️ **TODO — Update before using**: Replace `YOUR_STAGING_DOMAIN` with the actual staging domain for this project and verify the health endpoint URL (`/api/health/`) is correct.
