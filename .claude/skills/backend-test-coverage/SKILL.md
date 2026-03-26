@@ -1,5 +1,6 @@
 ---
-description: Backend test coverage strategy — analyze and improve pytest coverage
+name: backend-test-coverage
+description: "Backend test coverage strategy — analyze pytest coverage reports and implement tests to reach 100% coverage, prioritizing lowest-coverage highest-impact files."
 ---
 
 # Backend Test Coverage Strategy

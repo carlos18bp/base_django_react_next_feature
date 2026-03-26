@@ -1,5 +1,7 @@
 ---
-description: Agentic debug mode — diagnose and analyze bugs without modifying code
+name: debug
+description: "Agentic debug mode — diagnose and analyze bugs without modifying code. Read-only 4-phase workflow producing diagnosis and recommended fix. Use when the user reports a bug, error, or unexpected behavior."
+argument-hint: "[description of the bug, error message, or unexpected behavior]"
 ---
 
 # Debug Mode

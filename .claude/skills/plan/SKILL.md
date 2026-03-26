@@ -1,5 +1,7 @@
 ---
-description: Planning workflow — read context, clarify requirements, formulate solution
+name: plan
+description: "Planning workflow — read context, clarify requirements, formulate solution. Use when the user asks to plan a feature, design a solution, or think through an approach before coding."
+argument-hint: "[description of the feature or problem to plan]"
 ---
 
 Before starting, ALWAYS do these 3 things:

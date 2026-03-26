@@ -1,5 +1,6 @@
 ---
-description: E2E test coverage strategy — analyze and improve Playwright flow coverage
+name: frontend-e2e-test-coverage
+description: "E2E test coverage strategy — analyze Playwright flow coverage and implement tests for untested user flows, focusing on the contract between frontend and backend."
 ---
 
 # E2E Test Coverage Strategy

@@ -1,5 +1,6 @@
 ---
-description: Checklist for new features — ensures fake data and test coverage are complete
+name: new-feature-checklist
+description: "Checklist for new features — ensures fake data creation follows business rules and test coverage is complete across backend, frontend unit, and E2E layers."
 ---
 
 # New Feature Checklist

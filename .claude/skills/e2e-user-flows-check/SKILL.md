@@ -1,5 +1,6 @@
 ---
-description: E2E coverage audit — enumerate all user flows, map to tests, report gaps
+name: e2e-user-flows-check
+description: "E2E coverage audit — enumerate all user flows from product docs, UI routes, and backend endpoints, map each to existing E2E tests, and report coverage gaps with priorities."
 ---
 
 # E2E User Flows Audit

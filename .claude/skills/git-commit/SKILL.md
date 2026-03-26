@@ -1,5 +1,8 @@
 ---
-description: Create git commit and push
+name: git-commit
+description: "Inspect git changes, generate a professional commit message with FEAT/FIX/DOCS prefix, and execute git add + commit + push."
+disable-model-invocation: true
+allowed-tools: Bash
 ---
 
 Run the following commands to inspect the current Git changes:

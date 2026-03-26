@@ -1,5 +1,6 @@
 ---
-description: Frontend unit test coverage strategy — analyze and improve Jest coverage
+name: frontend-unit-test-coverage
+description: "Frontend unit test coverage strategy — analyze Jest/Vitest coverage reports and implement tests to reach 100% coverage across Pinia stores, composables, and UI components."
 ---
 
 # Frontend Unit Test Coverage Strategy

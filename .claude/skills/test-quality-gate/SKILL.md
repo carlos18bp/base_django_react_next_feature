@@ -1,5 +1,6 @@
 ---
-description: Phased plan to raise the Test Quality Gate score by refactoring a small, high-impact set of backend + frontend tests
+name: test-quality-gate
+description: "Phased plan to raise the Test Quality Gate score by refactoring high-impact backend and frontend tests. Use when the user wants to improve test quality or fix quality gate failures."
 ---
 
 # Test Quality Improvement Strategy

@@ -1,5 +1,7 @@
 ---
-description: Implementation workflow — systematic code protocol with testing
+name: implement
+description: "Implementation workflow — systematic code protocol with dependency analysis, step-by-step changes, and testing. Use when the user asks to build, code, or implement a feature or fix."
+argument-hint: "[description of what to implement]"
 ---
 
 Before starting, ALWAYS do 2 things:
