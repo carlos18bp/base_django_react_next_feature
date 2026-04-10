@@ -31,7 +31,7 @@ type AuthState = {
 export const useAuthStore = create<AuthState>((set, get) => ({
   accessToken: getAccessToken(),
   refreshToken: getRefreshToken(),
-  user: null,
+  user: (() => { try { const d = typeof window !== 'undefined' ? localStorage.getItem('user_data') : null; return d ? JSON.parse(d) : null; } catch { return null; } })(),
   isAuthenticated: Boolean(getAccessToken()),
   
   syncFromCookies: () => {
@@ -51,10 +51,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     
     setTokens({ access, refresh });
+    if (user) localStorage.setItem('user_data', JSON.stringify(user));
     set({ user, isAuthenticated: true });
     get().syncFromCookies();
   },
-  
+
   signUp: async ({ email, password, first_name, last_name, captcha_token }) => {
     const response = await api.post('sign_up/', { 
       email, 
@@ -73,10 +74,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     
     setTokens({ access, refresh });
+    if (user) localStorage.setItem('user_data', JSON.stringify(user));
     set({ user, isAuthenticated: true });
     get().syncFromCookies();
   },
-  
+
   googleLogin: async ({ credential, email, given_name, family_name, picture }) => {
     const response = await api.post('google_login/', {
       credential,
@@ -95,12 +97,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     
     setTokens({ access, refresh });
+    if (user) localStorage.setItem('user_data', JSON.stringify(user));
     set({ user, isAuthenticated: true });
     get().syncFromCookies();
   },
-  
+
   signOut: () => {
     clearTokens();
+    localStorage.removeItem('user_data');
     set({ accessToken: null, refreshToken: null, user: null, isAuthenticated: false });
   },
   

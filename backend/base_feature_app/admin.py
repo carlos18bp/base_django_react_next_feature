@@ -1,11 +1,22 @@
+import json
+import logging
+
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.http import HttpResponse, HttpResponseForbidden
+from django.shortcuts import get_object_or_404
+from django.urls import path, reverse
+from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from .models import Blog, Product, Sale, SoldProduct, User, PasswordCode
+from django_attachments.admin import AttachmentsAdminMixin
+
 from .forms.blog import BlogForm
 from .forms.product import ProductForm
 from .forms.user import UserChangeForm, UserCreationForm
-from django_attachments.admin import AttachmentsAdminMixin
+from .models import Blog, Product, Sale, SoldProduct, User, PasswordCode
+from .utils.auth_utils import generate_auth_tokens
+
+logger = logging.getLogger(__name__)
 
 
 # ============================================================================
@@ -75,7 +86,7 @@ class BaseFeatureUserAdmin(UserAdmin):
     list_filter = ('role', 'is_staff', 'is_active')
     search_fields = ('email', 'first_name', 'last_name')
     fieldsets = (
-        (None, {'fields': ('email', 'password')}),
+        (None, {'fields': ('email', 'password', 'login_as_link')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'phone')}),
         (_('Role'), {'fields': ('role',)}),
         (
@@ -94,8 +105,66 @@ class BaseFeatureUserAdmin(UserAdmin):
         ),
     )
 
-    readonly_fields = ('date_joined',)
+    readonly_fields = ('date_joined', 'login_as_link')
     filter_horizontal = ('groups', 'user_permissions')
+
+    def login_as_link(self, obj):
+        if not obj.pk:
+            return '-'
+        url = reverse('myadmin:base_feature_app_user_login-as', args=[obj.pk])
+        return format_html(
+            '<a href="{}" target="_blank" style="'
+            'background:#417690;color:#fff;padding:5px 15px;'
+            'border-radius:4px;text-decoration:none;font-weight:bold;'
+            '">Login as this user</a>',
+            url,
+        )
+    login_as_link.short_description = _('Impersonate')
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                '<int:user_id>/login-as/',
+                self.admin_site.admin_view(self.login_as_user),
+                name='base_feature_app_user_login-as',
+            ),
+        ]
+        return custom_urls + urls
+
+    def login_as_user(self, request, user_id):
+        if not request.user.is_superuser:
+            return HttpResponseForbidden('Only superusers can use this feature.')
+
+        from django.utils.html import escape as html_escape
+
+        user = get_object_or_404(User, pk=user_id)
+        tokens = generate_auth_tokens(user)
+        access_token = tokens['access']
+        refresh_token = tokens['refresh']
+        user_data = json.dumps(tokens['user'])
+
+        logger.info('Admin %s logged in as %s', request.user.email, user.email)
+
+        safe_email = html_escape(user.email)
+        js_access = json.dumps(access_token).replace('</', '<\\/')
+        js_refresh = json.dumps(refresh_token).replace('</', '<\\/')
+        js_user = user_data.replace('</', '<\\/')
+
+        html = f"""<!DOCTYPE html>
+<html>
+<head><title>Logging in as {safe_email}...</title></head>
+<body>
+<p>Logging in as <strong>{safe_email}</strong>...</p>
+<script>
+document.cookie = "access_token=" + {js_access} + "; path=/; SameSite=Lax";
+document.cookie = "refresh_token=" + {js_refresh} + "; path=/; SameSite=Lax";
+localStorage.setItem("user_data", JSON.stringify({js_user}));
+window.location.href = "/dashboard";
+</script>
+</body>
+</html>"""
+        return HttpResponse(html)
 
 
 class PasswordCodeAdmin(admin.ModelAdmin):
