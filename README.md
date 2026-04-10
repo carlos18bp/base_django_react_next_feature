@@ -1061,16 +1061,22 @@ The project includes complete documentation:
 
 ## 🎯 Reference Projects
 
-Real implementation examples using this base:
+Real implementation examples built on top of this base:
 
-### E-commerce
-- [🕯️ Candle Project](https://github.com/carlos18bp/candle_project) - Artisanal candles store
+### Health & Fitness
+- [💪 KORE Health](https://github.com/carlos18bp/kore_project) — Personalized health platform with subscription billing, biomechanical evaluations (KORE Index), Wompi payments, and role-based access (CUSTOMER / TRAINER / ADMIN)
 
-### Internal tool
-- [⚖️ G&M Project](https://github.com/carlos18bp/gym_projectt) - Law firm management system
+### Social & Adoption
+- [🐾 Mi Huella](https://github.com/carlos18bp/tuhuella_project) — Pet adoption & sponsorship platform with complex multi-role system (Adopter, Shelter Admin, Site Admin), Next.js static export to Django, and Zustand with persist middleware
 
-### Features
-- [🔐 Sign In/Sign On Feature](https://github.com/carlos18bp/signin_signon_feature) - Complete authentication system with registration
+### Portfolio & Interior Design
+- [🏠 TenndaluX](https://github.com/carlos18bp/tenndalux_project) — Interior design portfolio with Next.js static export, SingletonModel pattern for site settings, and gallery management via django-attachments
+
+### Lead Generation
+- [🎓 Fernando Aragón](https://github.com/gustavop-dev/fernando_aragon_project) — Educational lead gen with React 18 + Vite + TypeScript, reCAPTCHA validation, bilingual routes, and 100% backend test coverage *(React + Vite, not Next.js)*
+
+### Also see
+- [🚀 Base Django Vue Feature](https://github.com/carlos18bp/base_django_vue_feature) — Companion template for Django + Vue 3 + Vite projects (Pinia, Vue Router, vue-i18n)
 
 ---
 
