@@ -1,0 +1,9 @@
+# Project-scoped Codex defaults for Base Django React Next Feature.
+# Keep this file small and stable.
+
+approval_policy = "never"
+sandbox_mode = "danger-full-access"
+model = "gpt-5.4"
+model_reasoning_effort = "high"
+project_doc_max_bytes = 65536
+web_search = "live"

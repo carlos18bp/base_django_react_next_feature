@@ -3,7 +3,7 @@ trigger: manual
 description: Error documentation and known issues tracking. Reference when debugging, fixing bugs, or encountering recurring issues.
 ---
 
-# Error Documentation — ProjectApp
+# Error Documentation — Base Django React Next Feature
 
 This file tracks known errors, their context, and resolutions. When a reusable fix or correction is found during development, document it here to avoid repeating the same mistake.
 
