@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 
+import { ROUTES } from '@/lib/constants';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useCartStore } from '@/lib/stores/cartStore';
 
@@ -23,6 +24,9 @@ export default function Header() {
           </Link>
           <Link className="px-2 py-1 rounded hover:bg-gray-100" href="/blogs">
             Blogs
+          </Link>
+          <Link className="px-2 py-1 rounded hover:bg-gray-100" href={ROUTES.MANUAL}>
+            Manual
           </Link>
 
           <Link className="px-2 py-1 rounded hover:bg-gray-100" href="/checkout">

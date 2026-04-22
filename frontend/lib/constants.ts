@@ -8,6 +8,7 @@ export const ROUTES = {
   CATALOG: '/catalog',
   BLOGS: '/blogs',
   CHECKOUT: '/checkout',
+  MANUAL: '/manual',
 } as const;
 
 export const API_ENDPOINTS = {
