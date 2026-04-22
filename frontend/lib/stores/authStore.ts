@@ -24,6 +24,7 @@ type AuthState = {
   googleLogin: (args: { credential?: string; email?: string; given_name?: string; family_name?: string; picture?: string }) => Promise<void>;
   signOut: () => void;
   syncFromCookies: () => void;
+  restoreUser: () => Promise<void>;
   sendPasswordResetCode: (email: string) => Promise<void>;
   resetPassword: (args: { email: string; code: string; new_password: string }) => Promise<void>;
 };
@@ -38,6 +39,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const accessToken = getAccessToken();
     const refreshToken = getRefreshToken();
     set({ accessToken, refreshToken, isAuthenticated: Boolean(accessToken) });
+    if (accessToken && !get().user) {
+      void get().restoreUser();
+    }
   },
   
   signIn: async ({ email, password, captcha_token }) => {
@@ -106,6 +110,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     clearTokens();
     localStorage.removeItem('user_data');
     set({ accessToken: null, refreshToken: null, user: null, isAuthenticated: false });
+  },
+
+  restoreUser: async () => {
+    const token = getAccessToken();
+    if (!token) return;
+
+    try {
+      const response = await api.get('validate_token/');
+      const user = response.data?.user;
+
+      if (user) {
+        localStorage.setItem('user_data', JSON.stringify(user));
+        set({ user, isAuthenticated: true });
+      }
+    } catch {
+      clearTokens();
+      localStorage.removeItem('user_data');
+      set({ accessToken: null, refreshToken: null, user: null, isAuthenticated: false });
+    }
   },
   
   sendPasswordResetCode: async (email: string) => {

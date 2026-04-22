@@ -1,11 +1,14 @@
-import json
 import logging
+from urllib.parse import urlencode
 
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from django.http import HttpResponse, HttpResponseForbidden
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
+from django.contrib import messages
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django_attachments.admin import AttachmentsAdminMixin
@@ -109,14 +112,11 @@ class BaseFeatureUserAdmin(UserAdmin):
     filter_horizontal = ('groups', 'user_permissions')
 
     def login_as_link(self, obj):
-        if not obj.pk:
-            return '-'
-        url = reverse('myadmin:base_feature_app_user_login-as', args=[obj.pk])
+        if not obj or not obj.pk:
+            return '—'
+        url = reverse('myadmin:base_feature_app_user_login_as', args=[obj.pk])
         return format_html(
-            '<a href="{}" target="_blank" style="'
-            'background:#417690;color:#fff;padding:5px 15px;'
-            'border-radius:4px;text-decoration:none;font-weight:bold;'
-            '">Login as this user</a>',
+            '<a class="button" href="{}" style="text-decoration:none" target="_blank" rel="noopener">Login as this user</a>',
             url,
         )
     login_as_link.short_description = _('Impersonate')
@@ -125,46 +125,37 @@ class BaseFeatureUserAdmin(UserAdmin):
         urls = super().get_urls()
         custom_urls = [
             path(
-                '<int:user_id>/login-as/',
-                self.admin_site.admin_view(self.login_as_user),
-                name='base_feature_app_user_login-as',
+                '<int:user_id>/login_as/',
+                self.admin_site.admin_view(self.login_as_user_view),
+                name='base_feature_app_user_login_as',
             ),
         ]
         return custom_urls + urls
 
-    def login_as_user(self, request, user_id):
-        if not request.user.is_superuser:
-            return HttpResponseForbidden('Only superusers can use this feature.')
+    def login_as_user_view(self, request, user_id):
+        if not (request.user.is_active and request.user.is_superuser):
+            raise PermissionDenied('Only active superusers can use Login-as.')
 
-        from django.utils.html import escape as html_escape
+        target = get_object_or_404(User, pk=user_id)
+        change_url = reverse('myadmin:base_feature_app_user_change', args=[user_id])
 
-        user = get_object_or_404(User, pk=user_id)
-        tokens = generate_auth_tokens(user)
-        access_token = tokens['access']
-        refresh_token = tokens['refresh']
-        user_data = json.dumps(tokens['user'])
+        if target.is_superuser and target.pk != request.user.pk:
+            messages.error(request, _('You cannot log in as another superuser.'))
+            return HttpResponseRedirect(change_url)
 
-        logger.info('Admin %s logged in as %s', request.user.email, user.email)
+        if not target.is_active:
+            messages.error(request, _('This user is inactive.'))
+            return HttpResponseRedirect(change_url)
 
-        safe_email = html_escape(user.email)
-        js_access = json.dumps(access_token).replace('</', '<\\/')
-        js_refresh = json.dumps(refresh_token).replace('</', '<\\/')
-        js_user = user_data.replace('</', '<\\/')
+        tokens = generate_auth_tokens(target)
+        logger.info('admin %s logged in as user %s', request.user.email, target.email)
 
-        html = f"""<!DOCTYPE html>
-<html>
-<head><title>Logging in as {safe_email}...</title></head>
-<body>
-<p>Logging in as <strong>{safe_email}</strong>...</p>
-<script>
-document.cookie = "access_token=" + {js_access} + "; path=/; SameSite=Lax";
-document.cookie = "refresh_token=" + {js_refresh} + "; path=/; SameSite=Lax";
-localStorage.setItem("user_data", JSON.stringify({js_user}));
-window.location.href = "/dashboard";
-</script>
-</body>
-</html>"""
-        return HttpResponse(html)
+        query = urlencode({
+            'access': tokens['access'],
+            'refresh': tokens['refresh'],
+            'redirect': '/',
+        })
+        return HttpResponseRedirect(f'{settings.FRONTEND_URL}/admin-login?{query}')
 
 
 class PasswordCodeAdmin(admin.ModelAdmin):

@@ -8,6 +8,7 @@ import { clearTokens, getAccessToken, getRefreshToken, setTokens } from '../../s
 jest.mock('../../services/http', () => ({
   api: {
     post: jest.fn(),
+    get: jest.fn(),
   },
 }));
 
@@ -192,5 +193,48 @@ describe('authStore', () => {
       code: '123456',
       new_password: 'password123',
     });
+  });
+
+  it('restores the current user from validate_token', async () => {
+    mockGetAccessToken.mockReturnValue('access');
+    mockApi.get.mockResolvedValueOnce({
+      data: {
+        user: {
+          id: 7,
+          email: 'restore@example.com',
+          first_name: 'Restore',
+          last_name: 'User',
+          role: 'customer',
+          is_staff: false,
+        },
+      },
+    });
+
+    await act(async () => {
+      await useAuthStore.getState().restoreUser();
+    });
+
+    expect(mockApi.get).toHaveBeenCalledWith('validate_token/');
+    expect(useAuthStore.getState().user?.email).toBe('restore@example.com');
+    expect(useAuthStore.getState().isAuthenticated).toBe(true);
+  });
+
+  it('clears auth state when restoreUser fails', async () => {
+    mockGetAccessToken.mockReturnValue('access');
+    mockApi.get.mockRejectedValueOnce(new Error('boom'));
+    useAuthStore.setState({
+      accessToken: 'access',
+      refreshToken: 'refresh',
+      user: { id: 1, email: 'user@example.com', first_name: 'T', last_name: 'U', role: 'customer', is_staff: false },
+      isAuthenticated: true,
+    });
+
+    await act(async () => {
+      await useAuthStore.getState().restoreUser();
+    });
+
+    expect(mockClearTokens).toHaveBeenCalledTimes(1);
+    expect(useAuthStore.getState().user).toBeNull();
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
   });
 });
