@@ -40,6 +40,7 @@ venv/
 ENV/
 env/
 .venv
+backend/.venv-audit/
 
 # Django
 *.log
