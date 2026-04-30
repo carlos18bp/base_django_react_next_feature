@@ -115,6 +115,24 @@ python3 -m venv .venv-audit
 .venv-audit/bin/pip list --outdated --format json > /tmp/base_django_react_next_feature-pip-outdated.json
 ```
 
+## Post-update results
+
+### Frontend
+- `npm audit` after updates: 3 moderate remaining, all rooted in `next/node_modules/postcss@8.4.31`. The latest `next@16.2.4` (within major) still bundles this `postcss` version. The only `audit fix` path proposed is to downgrade `next` to `9.3.3` (major break) — skipped per rules. Direct `postcss` is up-to-date (`>=8.5.10`). Will be resolved upstream by Next.js.
+- 5 of 8 original frontend CVEs resolved (axios, brace-expansion, flatted, follow-redirects, next-intl, picomatch fully fixed; next CVEs partially mitigated up to 16.2.4 — bundled postcss residual remains).
+- `npm run build`: PASS
+- `npm run test`: PASS (29 suites, 184 tests)
+- `npm run lint`: PRE-EXISTING failures on origin/master (require() imports in `.cjs` scripts) — not introduced by this update.
+
+### Backend
+- `pip-audit -r requirements.txt`: **No known vulnerabilities found** (all 11 CVEs resolved).
+- `python manage.py check`: PASS (0 issues)
+- `pytest`: PASS (191 tests, 98.4% coverage)
+
+## Updates rolled back
+
+None — all selected patch+minor updates applied cleanly.
+
 ## Notes — majors available but skipped
 
 - Frontend
