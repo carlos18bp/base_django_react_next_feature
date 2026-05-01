@@ -57,14 +57,23 @@ describe('AdminLoginPage', () => {
     expect(mockSetTokens).not.toHaveBeenCalled();
   });
 
-  it.each([
-    'https://evil.example.com',
-    '//evil.example.com',
-  ])('falls back to home for unsafe redirect %s', async (redirect) => {
+  it('falls back to home for unsafe absolute redirect', async () => {
     const replace = jest.fn();
     const restoreUser = jest.fn().mockResolvedValue(undefined);
     mockUseRouter.mockReturnValue({ replace });
-    mockUseSearchParams.mockReturnValue(new URLSearchParams(`access=a&refresh=r&redirect=${encodeURIComponent(redirect)}`));
+    mockUseSearchParams.mockReturnValue(new URLSearchParams(`access=a&refresh=r&redirect=${encodeURIComponent('https://evil.example.com')}`));
+    mockGetState.mockReturnValue({ restoreUser });
+
+    render(<AdminLoginPage />);
+
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/'));
+  });
+
+  it('falls back to home for unsafe protocol-relative redirect', async () => {
+    const replace = jest.fn();
+    const restoreUser = jest.fn().mockResolvedValue(undefined);
+    mockUseRouter.mockReturnValue({ replace });
+    mockUseSearchParams.mockReturnValue(new URLSearchParams(`access=a&refresh=r&redirect=${encodeURIComponent('//evil.example.com')}`));
     mockGetState.mockReturnValue({ restoreUser });
 
     render(<AdminLoginPage />);
