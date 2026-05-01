@@ -153,8 +153,10 @@ def test_user_admin_login_as_requires_active_superuser():
 
     admin = BaseFeatureUserAdmin(User, admin_site)
 
-    with pytest.raises(PermissionDenied):
+    with pytest.raises(PermissionDenied) as exc_info:
         admin.login_as_user_view(request, target_user.id)
+
+    assert exc_info.type is PermissionDenied
 
 
 @pytest.mark.django_db
