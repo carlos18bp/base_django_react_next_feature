@@ -2,26 +2,9 @@ name: Test Quality Gate
 
 on:
   pull_request:
-    paths:
-      - 'backend/base_feature_app/tests/**'
-      - 'frontend/app/__tests__/**'
-      - 'frontend/e2e/**'
-      - 'scripts/test_quality_gate.py'
-      - 'scripts/quality/**'
-      - 'frontend/scripts/ast-parser.cjs'
-      - '.pre-commit-config.yaml'
-      - '.github/workflows/test-quality-gate.yml'
+    branches: [main, master]
   push:
-    branches: [ main, master ]
-    paths:
-      - 'backend/base_feature_app/tests/**'
-      - 'frontend/app/__tests__/**'
-      - 'frontend/e2e/**'
-      - 'scripts/test_quality_gate.py'
-      - 'scripts/quality/**'
-      - 'frontend/scripts/ast-parser.cjs'
-      - '.pre-commit-config.yaml'
-      - '.github/workflows/test-quality-gate.yml'
+    branches: [main, master]
 
 jobs:
   test-quality-gate:
