@@ -13,10 +13,12 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django_attachments.admin import AttachmentsAdminMixin
 
+from django.utils import timezone
+
 from .forms.blog import BlogForm
 from .forms.product import ProductForm
 from .forms.user import UserChangeForm, UserCreationForm
-from .models import Blog, Product, Sale, SoldProduct, User, PasswordCode
+from .models import Blog, Product, Sale, SoldProduct, User, PasswordCode, StagingPhaseBanner
 from .utils.auth_utils import generate_auth_tokens
 
 logger = logging.getLogger(__name__)
@@ -163,10 +165,62 @@ class PasswordCodeAdmin(admin.ModelAdmin):
     search_fields = ('user__email', 'code')
     list_filter = ('used', 'created_at')
     readonly_fields = ('created_at',)
-    
+
     def has_add_permission(self, request):
         # Don't allow manual creation from admin
         return False
+
+
+# ============================================================================
+# STAGING PHASE BANNER
+# ============================================================================
+# DO NOT DELETE this admin: it controls the staging review banner shown to
+# clients. Hide via the `is_visible` toggle / "Hide banner" action — never
+# unregister or remove the model. See `pre-staging-cleanup` skill for details.
+
+class StagingPhaseBannerAdmin(admin.ModelAdmin):
+    list_display = ('current_phase', 'is_visible', 'started_at', 'expires_at', 'days_remaining')
+    readonly_fields = ('expires_at', 'days_remaining', 'is_expired', 'updated_at')
+    fieldsets = (
+        (_('Visibility'), {'fields': ('is_visible',)}),
+        (_('Phase'), {'fields': ('current_phase', 'started_at', 'expires_at', 'days_remaining', 'is_expired')}),
+        (_('Durations (calendar days)'), {'fields': ('design_duration_days', 'development_duration_days')}),
+        (_('Contact'), {'fields': ('contact_whatsapp', 'contact_email')}),
+        (_('Audit'), {'fields': ('updated_at',)}),
+    )
+    actions = ['start_design_phase', 'start_development_phase', 'show_banner', 'hide_banner']
+
+    def has_add_permission(self, request):
+        return not StagingPhaseBanner.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def start_design_phase(self, request, queryset):
+        for obj in queryset:
+            obj.current_phase = StagingPhaseBanner.PHASE_DESIGN
+            obj.started_at = timezone.now()
+            obj.save()
+        self.message_user(request, _('Design phase started. Countdown reset.'))
+    start_design_phase.short_description = _('▶ Start design phase (resets countdown)')
+
+    def start_development_phase(self, request, queryset):
+        for obj in queryset:
+            obj.current_phase = StagingPhaseBanner.PHASE_DEVELOPMENT
+            obj.started_at = timezone.now()
+            obj.save()
+        self.message_user(request, _('Development phase started. Countdown reset.'))
+    start_development_phase.short_description = _('▶ Start development phase (resets countdown)')
+
+    def show_banner(self, request, queryset):
+        queryset.update(is_visible=True)
+        self.message_user(request, _('Banner shown.'))
+    show_banner.short_description = _('👁 Show banner')
+
+    def hide_banner(self, request, queryset):
+        queryset.update(is_visible=False)
+        self.message_user(request, _('Banner hidden.'))
+    hide_banner.short_description = _('🙈 Hide banner')
 
 
 # ============================================================================
@@ -216,6 +270,14 @@ class BaseFeatureAdminSite(admin.AdminSite):
                     if model['object_name'] in ['Sale', 'SoldProduct']
                 ]
             },
+            {
+                'name': _('🚧 Staging Phase Banner'),
+                'app_label': 'staging_management',
+                'models': [
+                    model for model in base_app_models
+                    if model['object_name'] in ['StagingPhaseBanner']
+                ]
+            },
         ]
         
         # Filter out empty sections
@@ -238,3 +300,4 @@ admin_site.register(Blog, BlogAdmin)
 admin_site.register(Product, ProductAdmin)
 admin_site.register(Sale, SaleAdmin)
 admin_site.register(SoldProduct, SoldProductAdmin)
+admin_site.register(StagingPhaseBanner, StagingPhaseBannerAdmin)

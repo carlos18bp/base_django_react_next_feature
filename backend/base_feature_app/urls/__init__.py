@@ -7,4 +7,5 @@ urlpatterns = [
     path('', include('base_feature_app.urls.product')),
     path('', include('base_feature_app.urls.sale')),
     path('', include('base_feature_app.urls.user')),
+    path('', include('base_feature_app.urls.staging_phase_banner')),
 ]

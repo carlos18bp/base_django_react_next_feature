@@ -14,13 +14,13 @@ export default function DashboardPage() {
   return (
     <main className="max-w-3xl mx-auto px-6 py-10">
       <h1 className="text-2xl font-semibold">Dashboard</h1>
-      <p className="mt-2 text-gray-600">Protected route (JWT required).</p>
+      <p className="mt-2 text-muted-foreground">Protected route (JWT required).</p>
 
       <div className="mt-6 flex flex-wrap gap-3">
-        <Link className="border border-black rounded px-3 py-2" href="/backoffice">
+        <Link className="border border-border rounded px-3 py-2 hover:bg-accent hover:text-accent-foreground" href="/backoffice">
           Backoffice
         </Link>
-        <button className="bg-black text-white rounded px-3 py-2" type="button" onClick={signOut}>
+        <button className="bg-primary text-primary-foreground rounded px-3 py-2 hover:bg-primary/90" type="button" onClick={signOut}>
           Sign out
         </button>
       </div>

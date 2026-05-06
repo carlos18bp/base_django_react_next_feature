@@ -1,0 +1,3 @@
+interface:
+  display_name: "New Project Setup"
+  short_description: "Persiste el checklist del cliente en docs/release/NN-release-checklist.md y reescribe la identidad del template (CLAUDE.md, README.md, AGENTS.md) por la del nuevo proyecto, sin tocar lógica ni endpoints"

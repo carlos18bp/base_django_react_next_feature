@@ -18,25 +18,25 @@ export default function ProcessCard({ process, locale }: Props) {
   return (
     <article
       id={process.id}
-      className="scroll-mt-24 rounded-2xl border border-gray-200 bg-white p-6"
+      className="scroll-mt-24 rounded-2xl border border-border bg-card p-6"
     >
       <header>
-        <h3 className="text-lg font-semibold text-gray-900">{process.title[locale]}</h3>
-        <p className="mt-1 text-sm text-gray-600">{process.summary[locale]}</p>
+        <h3 className="text-lg font-semibold text-foreground">{process.title[locale]}</h3>
+        <p className="mt-1 text-sm text-muted-foreground">{process.summary[locale]}</p>
       </header>
 
       <section className="mt-4">
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {LABELS.why[locale]}
         </h4>
-        <p className="mt-1 text-sm text-gray-600">{process.why[locale]}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{process.why[locale]}</p>
       </section>
 
       <section className="mt-4">
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {LABELS.steps[locale]}
         </h4>
-        <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm text-gray-600 marker:text-gray-900">
+        <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm text-muted-foreground marker:text-foreground">
           {process.steps[locale].map((step, idx) => (
             <li key={idx}>{step}</li>
           ))}
@@ -45,21 +45,21 @@ export default function ProcessCard({ process, locale }: Props) {
 
       {process.route && (
         <section className="mt-4">
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {LABELS.route[locale]}
           </h4>
-          <code className="mt-1 inline-block rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-900">
+          <code className="mt-1 inline-block rounded-md bg-muted px-2 py-1 text-xs text-foreground">
             {process.route}
           </code>
         </section>
       )}
 
       {process.tips && process.tips[locale].length > 0 && (
-        <section className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+        <section className="mt-4 rounded-xl border border-border bg-muted p-4">
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {LABELS.tips[locale]}
           </h4>
-          <ul className="mt-2 space-y-1 text-sm text-gray-700">
+          <ul className="mt-2 space-y-1 text-sm text-foreground">
             {process.tips[locale].map((tip, idx) => (
               <li key={idx} className="flex gap-2">
                 <span aria-hidden="true">→</span>

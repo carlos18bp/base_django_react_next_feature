@@ -99,14 +99,14 @@ export default function SignInPage() {
 
   return (
     <main className="min-h-[calc(100vh-72px)] flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-md bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+      <div className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-sm">
         <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
-        <p className="mt-1 text-sm text-gray-600">Welcome back. Sign in to continue.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Welcome back. Sign in to continue.</p>
 
         <form className="mt-6 space-y-4" onSubmit={onSubmit}>
           <div>
             <input 
-              className="border border-gray-200 rounded-xl px-3 py-2 w-full bg-white focus:outline-none focus:ring-2 focus:ring-black/10" 
+              className="border border-border rounded-xl px-3 py-2 w-full bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               placeholder="Email" 
               type="email"
               value={email} 
@@ -118,7 +118,7 @@ export default function SignInPage() {
           
           <div>
             <input 
-              className="border border-gray-200 rounded-xl px-3 py-2 w-full bg-white focus:outline-none focus:ring-2 focus:ring-black/10" 
+              className="border border-border rounded-xl px-3 py-2 w-full bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               placeholder="Password" 
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
@@ -139,19 +139,19 @@ export default function SignInPage() {
             </div>
           )}
 
-          <button 
-            className="bg-black text-white rounded-full px-5 py-3 w-full disabled:opacity-50 hover:bg-gray-900" 
-            type="submit" 
+          <button
+            className="bg-primary text-primary-foreground rounded-full px-5 py-3 w-full disabled:opacity-50 hover:bg-primary/90"
+            type="submit"
             disabled={loading}
           >
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
 
-          {error ? <p className="text-red-600 text-sm">{error}</p> : null}
+          {error ? <p className="text-destructive text-sm">{error}</p> : null}
         </form>
 
         <div className="mt-4 text-center">
-          <Link href="/forgot-password" className="text-sm text-gray-700 hover:underline">
+          <Link href="/forgot-password" className="text-sm text-foreground hover:underline">
             Forgot password?
           </Link>
         </div>
@@ -159,10 +159,10 @@ export default function SignInPage() {
         <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
+              <div className="w-full border-t border-border"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              <span className="px-2 bg-card text-muted-foreground">Or continue with</span>
             </div>
           </div>
 
@@ -177,13 +177,13 @@ export default function SignInPage() {
               />
             </div>
           ) : (
-            <p className="mt-6 text-sm text-red-600 text-center">Missing NEXT_PUBLIC_GOOGLE_CLIENT_ID</p>
+            <p className="mt-6 text-sm text-destructive text-center">Missing NEXT_PUBLIC_GOOGLE_CLIENT_ID</p>
           )}
         </div>
 
         <div className="mt-6 text-center text-sm">
-          <span className="text-gray-600">Don't have an account? </span>
-          <Link href="/sign-up" className="text-gray-900 hover:underline">
+          <span className="text-muted-foreground">Don't have an account? </span>
+          <Link href="/sign-up" className="text-foreground hover:underline">
             Sign up
           </Link>
         </div>

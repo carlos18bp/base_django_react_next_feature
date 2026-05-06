@@ -1,0 +1,3 @@
+interface:
+  display_name: "Pre-Staging Cleanup"
+  short_description: "Audita y elimina por fases los residuos del template base (modelos demo, endpoints, stores, vistas, traducciones, docs) antes de promover el proyecto a staging"

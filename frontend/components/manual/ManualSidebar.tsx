@@ -30,7 +30,7 @@ export default function ManualSidebar({ sections, locale }: Props) {
             <button
               type="button"
               onClick={() => toggle(section.id)}
-              className="group flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-100"
+              className="group flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
               aria-expanded={!isCollapsed}
               aria-controls={`manual-section-${section.id}`}
             >
@@ -52,7 +52,7 @@ export default function ManualSidebar({ sections, locale }: Props) {
                     <a
                       href={`#${process.id}`}
                       onClick={() => setMobileOpen(false)}
-                      className="block rounded-md border-l-2 border-transparent px-2 py-1.5 text-sm text-gray-600 transition-colors hover:border-gray-900 hover:bg-gray-100 hover:text-gray-900"
+                      className="block rounded-md border-l-2 border-transparent px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:border-foreground hover:bg-accent hover:text-accent-foreground"
                     >
                       {process.title[locale]}
                     </a>
@@ -72,7 +72,7 @@ export default function ManualSidebar({ sections, locale }: Props) {
         <button
           type="button"
           onClick={() => setMobileOpen((prev) => !prev)}
-          className="flex items-center gap-2 rounded-xl bg-black px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-900"
+          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           aria-expanded={mobileOpen}
         >
           <svg
@@ -91,15 +91,15 @@ export default function ManualSidebar({ sections, locale }: Props) {
           {label}
         </button>
         {mobileOpen && (
-          <div className="mt-2 rounded-2xl border border-gray-200 bg-white p-3 shadow-lg">
+          <div className="mt-2 rounded-2xl border border-border bg-popover text-popover-foreground p-3 shadow-lg">
             {nav}
           </div>
         )}
       </div>
 
       <aside className="hidden lg:block w-72 flex-shrink-0">
-        <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-2xl border border-gray-200 bg-white p-4">
-          <h2 className="mb-3 px-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+        <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-2xl border border-border bg-card p-4">
+          <h2 className="mb-3 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {label}
           </h2>
           {nav}

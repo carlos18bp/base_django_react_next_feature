@@ -5,6 +5,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 
 import { useAuthStore } from '@/lib/stores/authStore';
 import { getAccessToken } from '@/lib/services/tokens';
+import { ThemeProvider } from '@/components/theme-provider';
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -32,13 +33,11 @@ export default function Providers({ children }: ProvidersProps) {
     </>
   );
 
-  if (!googleClientId) {
-    return inner;
-  }
-
-  return (
-    <GoogleOAuthProvider clientId={googleClientId}>
-      {inner}
-    </GoogleOAuthProvider>
+  const withGoogle = googleClientId ? (
+    <GoogleOAuthProvider clientId={googleClientId}>{inner}</GoogleOAuthProvider>
+  ) : (
+    inner
   );
+
+  return <ThemeProvider>{withGoogle}</ThemeProvider>;
 }

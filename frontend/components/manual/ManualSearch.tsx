@@ -12,11 +12,12 @@ type Props = {
 };
 
 const HIGHLIGHT_MS = 1600;
+// Highlight ring uses semantic tokens so it adapts to dark mode.
 const HIGHLIGHT_CLASSES = [
   'ring-2',
-  'ring-gray-900',
+  'ring-ring',
   'ring-offset-2',
-  'ring-offset-white',
+  'ring-offset-background',
 ];
 
 const LABELS = {
@@ -100,8 +101,8 @@ export default function ManualSearch({ locale, sections }: Props) {
 
   return (
     <div className="relative">
-      <label className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 focus-within:border-gray-900 focus-within:ring-2 focus-within:ring-gray-900/10">
-        <Search className="h-4 w-4 text-gray-500" aria-hidden="true" />
+      <label className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/20">
+        <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
         <input
           ref={inputRef}
           type="search"
@@ -111,7 +112,7 @@ export default function ManualSearch({ locale, sections }: Props) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKey}
-          className="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none"
+          className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
         />
         {query && (
           <button
@@ -120,13 +121,13 @@ export default function ManualSearch({ locale, sections }: Props) {
               setQuery('');
               inputRef.current?.focus();
             }}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-muted-foreground hover:text-foreground"
             aria-label={LABELS.clear[locale]}
           >
             <X className="h-4 w-4" />
           </button>
         )}
-        <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[10px] font-medium text-gray-500">
+        <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
           ⌘K
         </kbd>
       </label>
@@ -134,10 +135,10 @@ export default function ManualSearch({ locale, sections }: Props) {
       {isSearching && (
         <div
           role="listbox"
-          className="absolute left-0 right-0 top-full z-40 mt-2 max-h-96 overflow-y-auto rounded-2xl border border-gray-200 bg-white p-2 shadow-xl"
+          className="absolute left-0 right-0 top-full z-40 mt-2 max-h-96 overflow-y-auto rounded-2xl border border-border bg-popover text-popover-foreground p-2 shadow-xl"
         >
           {results.length === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-gray-500">
+            <p className="px-4 py-6 text-center text-sm text-muted-foreground">
               {LABELS.noResults[locale]}
             </p>
           ) : (
@@ -151,17 +152,17 @@ export default function ManualSearch({ locale, sections }: Props) {
                     onMouseEnter={() => setHighlighted(idx)}
                     onClick={() => handleSelect(hit.process.id)}
                     className={`flex w-full flex-col gap-1 rounded-xl px-3 py-2 text-left transition-colors ${
-                      idx === highlighted ? 'bg-gray-100' : 'hover:bg-gray-50'
+                      idx === highlighted ? 'bg-accent text-accent-foreground' : 'hover:bg-muted'
                     }`}
                   >
-                    <span className="text-sm font-medium text-gray-900">
+                    <span className="text-sm font-medium text-foreground">
                       {hit.process.title[locale]}
                     </span>
-                    <span className="text-xs text-gray-600 line-clamp-2">
+                    <span className="text-xs text-muted-foreground line-clamp-2">
                       {hit.process.summary[locale]}
                     </span>
                     {hit.process.route && (
-                      <code className="inline-block w-fit rounded-md bg-gray-100 px-1.5 py-0.5 text-[11px] text-gray-600">
+                      <code className="inline-block w-fit rounded-md bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
                         {hit.process.route}
                       </code>
                     )}

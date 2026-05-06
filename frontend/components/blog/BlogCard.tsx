@@ -9,9 +9,9 @@ export default function BlogCard({ blog }: { blog: Blog }) {
   return (
     <Link
       href={`/blogs/${blog.id}`}
-      className="group block border border-gray-200 rounded-2xl overflow-hidden bg-white hover:shadow-lg hover:-translate-y-0.5 transition"
+      className="group block border border-border rounded-2xl overflow-hidden bg-card hover:shadow-lg hover:-translate-y-0.5 transition"
     >
-      <div className="relative w-full aspect-[16/10] bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="relative w-full aspect-[16/10] bg-gradient-to-br from-muted to-muted">
         {blog.image_url ? (
           <Image
             src={blog.image_url}
@@ -23,7 +23,7 @@ export default function BlogCard({ blog }: { blog: Blog }) {
         ) : null}
       </div>
       <div className="p-4">
-        <p className="text-xs text-gray-500">{blog.category || 'Blog'}</p>
+        <p className="text-xs text-muted-foreground">{blog.category || 'Blog'}</p>
         <h3 className="font-semibold mt-1 leading-tight">{blog.title}</h3>
       </div>
     </Link>

@@ -124,14 +124,14 @@ export default function SignUpPage() {
 
   return (
     <main className="min-h-[calc(100vh-72px)] flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-md bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+      <div className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-sm">
         <h1 className="text-2xl font-semibold tracking-tight">Create account</h1>
-        <p className="mt-1 text-sm text-gray-600">Join and start shopping in minutes.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Join and start shopping in minutes.</p>
 
         <form className="mt-6 space-y-4" onSubmit={onSubmit}>
           <div className="grid grid-cols-2 gap-3">
             <input 
-              className="border border-gray-200 rounded-xl px-3 py-2 w-full bg-white focus:outline-none focus:ring-2 focus:ring-black/10" 
+              className="border border-border rounded-xl px-3 py-2 w-full bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               placeholder="First Name" 
               type="text"
               value={firstName} 
@@ -140,7 +140,7 @@ export default function SignUpPage() {
             />
             
             <input 
-              className="border border-gray-200 rounded-xl px-3 py-2 w-full bg-white focus:outline-none focus:ring-2 focus:ring-black/10" 
+              className="border border-border rounded-xl px-3 py-2 w-full bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               placeholder="Last Name" 
               type="text"
               value={lastName} 
@@ -151,7 +151,7 @@ export default function SignUpPage() {
           
           <div>
             <input 
-              className="border border-gray-200 rounded-xl px-3 py-2 w-full bg-white focus:outline-none focus:ring-2 focus:ring-black/10" 
+              className="border border-border rounded-xl px-3 py-2 w-full bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               placeholder="Email" 
               type="email"
               value={email} 
@@ -163,7 +163,7 @@ export default function SignUpPage() {
           
           <div>
             <input 
-              className="border border-gray-200 rounded-xl px-3 py-2 w-full bg-white focus:outline-none focus:ring-2 focus:ring-black/10" 
+              className="border border-border rounded-xl px-3 py-2 w-full bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               placeholder="Password" 
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
@@ -171,12 +171,12 @@ export default function SignUpPage() {
               autoComplete="new-password"
               required
             />
-            <p className="text-xs text-gray-500 mt-1">Must be at least 8 characters</p>
+            <p className="text-xs text-muted-foreground mt-1">Must be at least 8 characters</p>
           </div>
           
           <div>
             <input 
-              className="border border-gray-200 rounded-xl px-3 py-2 w-full bg-white focus:outline-none focus:ring-2 focus:ring-black/10" 
+              className="border border-border rounded-xl px-3 py-2 w-full bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               placeholder="Confirm Password" 
               value={confirmPassword} 
               onChange={(e) => setConfirmPassword(e.target.value)} 
@@ -197,24 +197,24 @@ export default function SignUpPage() {
             </div>
           )}
 
-          <button 
-            className="bg-black text-white rounded-full px-5 py-3 w-full disabled:opacity-50 hover:bg-gray-900" 
-            type="submit" 
+          <button
+            className="bg-primary text-primary-foreground rounded-full px-5 py-3 w-full disabled:opacity-50 hover:bg-primary/90"
+            type="submit"
             disabled={loading}
           >
             {loading ? 'Creating account...' : 'Create account'}
           </button>
 
-          {error ? <p className="text-red-600 text-sm">{error}</p> : null}
+          {error ? <p className="text-destructive text-sm">{error}</p> : null}
         </form>
 
         <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
+              <div className="w-full border-t border-border"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              <span className="px-2 bg-card text-muted-foreground">Or continue with</span>
             </div>
           </div>
 
@@ -229,13 +229,13 @@ export default function SignUpPage() {
               />
             </div>
           ) : mounted ? (
-            <p className="mt-6 text-sm text-red-600 text-center">Missing NEXT_PUBLIC_GOOGLE_CLIENT_ID</p>
+            <p className="mt-6 text-sm text-destructive text-center">Missing NEXT_PUBLIC_GOOGLE_CLIENT_ID</p>
           ) : null}
         </div>
 
         <div className="mt-6 text-center text-sm">
-          <span className="text-gray-600">Already have an account? </span>
-          <Link href="/sign-in" className="text-gray-900 hover:underline">
+          <span className="text-muted-foreground">Already have an account? </span>
+          <Link href="/sign-in" className="text-foreground hover:underline">
             Sign in
           </Link>
         </div>

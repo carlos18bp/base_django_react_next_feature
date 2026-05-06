@@ -37,16 +37,16 @@ export default function BackofficePage() {
   return (
     <main className="max-w-6xl mx-auto px-6 py-10">
       <h1 className="text-2xl font-semibold">Backoffice</h1>
-      <p className="mt-2 text-gray-600">Protected view. Sign in to see Users and Sales data.</p>
+      <p className="mt-2 text-muted-foreground">Protected view. Sign in to see Users and Sales data.</p>
 
-      {loading ? <p className="mt-4 text-gray-600">Loading...</p> : null}
-      {error ? <p className="mt-4 text-red-600">{error}</p> : null}
+      {loading ? <p className="mt-4 text-muted-foreground">Loading...</p> : null}
+      {error ? <p className="mt-4 text-destructive">{error}</p> : null}
 
       <section className="mt-10">
         <h2 className="text-xl font-semibold">Users</h2>
-        <div className="mt-4 overflow-x-auto border rounded">
+        <div className="mt-4 overflow-x-auto border border-border rounded">
           <table className="min-w-full text-sm">
-            <thead className="bg-gray-50">
+            <thead className="bg-muted">
               <tr>
                 <th className="text-left px-4 py-3">Email</th>
                 <th className="text-left px-4 py-3">Role</th>
@@ -56,7 +56,7 @@ export default function BackofficePage() {
             </thead>
             <tbody>
               {users.map((u) => (
-                <tr key={u.id} className="border-t">
+                <tr key={u.id} className="border-t border-border">
                   <td className="px-4 py-3">{u.email}</td>
                   <td className="px-4 py-3">{u.role || '-'}</td>
                   <td className="px-4 py-3">{u.is_staff ? 'yes' : 'no'}</td>
@@ -64,7 +64,7 @@ export default function BackofficePage() {
                 </tr>
               ))}
               {!users.length ? (
-                <tr className="border-t">
+                <tr className="border-t border-border">
                   <td className="px-4 py-3" colSpan={4}>
                     No data
                   </td>
@@ -77,9 +77,9 @@ export default function BackofficePage() {
 
       <section className="mt-12">
         <h2 className="text-xl font-semibold">Sales</h2>
-        <div className="mt-4 overflow-x-auto border rounded">
+        <div className="mt-4 overflow-x-auto border border-border rounded">
           <table className="min-w-full text-sm">
-            <thead className="bg-gray-50">
+            <thead className="bg-muted">
               <tr>
                 <th className="text-left px-4 py-3">Id</th>
                 <th className="text-left px-4 py-3">Email</th>
@@ -90,7 +90,7 @@ export default function BackofficePage() {
             </thead>
             <tbody>
               {sales.map((s) => (
-                <tr key={s.id} className="border-t">
+                <tr key={s.id} className="border-t border-border">
                   <td className="px-4 py-3">{s.id}</td>
                   <td className="px-4 py-3">{s.email}</td>
                   <td className="px-4 py-3">{s.city}</td>
@@ -99,7 +99,7 @@ export default function BackofficePage() {
                 </tr>
               ))}
               {!sales.length ? (
-                <tr className="border-t">
+                <tr className="border-t border-border">
                   <td className="px-4 py-3" colSpan={5}>
                     No data
                   </td>

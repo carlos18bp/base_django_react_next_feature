@@ -26,13 +26,13 @@ export default function ManualPage() {
 
       <div className="min-w-0 flex-1">
         <header className="mb-6">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {LABELS.eyebrow[locale]}
           </p>
-          <h1 className="mt-1 text-3xl font-bold text-gray-900">
+          <h1 className="mt-1 text-3xl font-bold text-foreground">
             {LABELS.title[locale]}
           </h1>
-          <p className="mt-2 max-w-3xl text-sm text-gray-600">
+          <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
             {LABELS.subtitle[locale]}
           </p>
         </header>
@@ -50,11 +50,11 @@ export default function ManualPage() {
                 id={`section-${section.id}`}
                 className="scroll-mt-24"
               >
-                <header className="mb-4 flex items-center gap-3 border-b border-gray-200 pb-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 text-gray-900">
+                <header className="mb-4 flex items-center gap-3 border-b border-border pb-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-foreground">
                     <Icon className="h-5 w-5" />
                   </span>
-                  <h2 className="text-xl font-semibold text-gray-900">
+                  <h2 className="text-xl font-semibold text-foreground">
                     {section.title[locale]}
                   </h2>
                 </header>
