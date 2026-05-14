@@ -60,6 +60,17 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "timeout 10 bash /home/ryzepeck/webapps/ops/vps/scripts/maintenance/stop-check-user-flows.sh 2>&1 || true"
+          }
+        ]
+      }
     ]
   }
 }

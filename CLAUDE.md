@@ -87,3 +87,20 @@ Al inicio de **cada sesión y antes de editar archivos**, debes invocar la skill
 
 **Importante:** Nunca uses `git pull --force`, `git reset --hard` ni stash automático para "resolver" el sync — usa siempre la skill `git-sync`, que es segura y reproducible.
 <!-- session-start-protocol:end -->
+<!-- e2e-user-flows-protocol:begin -->
+## E2E User Flows Check
+
+Cuando termines de implementar un cambio que afecte un **flujo de usuario en el frontend** — por ejemplo:
+- Crear o editar un formulario (agregar/quitar campos)
+- Nueva ruta, página o vista accesible al usuario
+- Cambios en flujos de autenticación, checkout, onboarding, búsqueda, perfil
+- Modificaciones a `docs/USER_FLOW_MAP.md` o `frontend/e2e/flow-definitions.json`
+
+…debes invocar la skill `e2e-user-flows-check` como **paso final** antes de reportar la implementación como completa. Esa skill audita la cobertura E2E del flujo modificado y reporta brechas/riesgos.
+
+**Por qué:** los flujos de usuario en frontend cambian las assumptions de los tests E2E. Sin auditoría, un campo eliminado deja tests "verdes" pero inválidos, y un form nuevo queda sin cobertura.
+
+**No aplica para:** correcciones aisladas que no cambian el flujo (typos, refactors internos, estilos puros, dependency bumps), ni cambios solo en backend que no alteren UX.
+
+**Recordatorio automático:** un hook `Stop` revisa al cierre del turno si hay cambios uncommitted bajo `frontend/src/`, `frontend/app/`, etc., y te lo inyecta como contexto. El hook es un recordatorio, no bloqueante — la regla aplica igual aunque el hook no dispare.
+<!-- e2e-user-flows-protocol:end -->
