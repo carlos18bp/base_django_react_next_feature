@@ -1,0 +1,5 @@
+interface:
+  display_name: "Human"
+  short_description: "Responde en espanol con estructura escaneable (tablas, listas, categorias)."
+policy:
+  allow_implicit_invocation: true

@@ -1,5 +1,7 @@
 ---
-description: Responde con estructura escaneable (tablas, listas, categorias) — concisa, precisa, con jerga tecnica cuando aporta. Siempre en espanol.
+name: human
+description: "Responde con estructura escaneable (tablas, listas, categorias) — concisa, precisa, con jerga tecnica cuando aporta. Siempre en espanol."
+argument-hint: "[topic or question]"
 ---
 
 ## Que produce
@@ -56,3 +58,7 @@ No todas las respuestas necesitan las 3 secciones — escalar segun el contenido
 ## Idioma
 
 Espanol. Terminos tecnicos en ingles cuando son los nombres canonicos (`commit`, `rebase`, `lifecycle`, `staging`, `chmod`). Definicion inline solo si el termino no es obvio.
+
+## Input
+
+$ARGUMENTS

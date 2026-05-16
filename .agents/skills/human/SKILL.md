@@ -1,5 +1,6 @@
 ---
-description: Responde con estructura escaneable (tablas, listas, categorias) — concisa, precisa, con jerga tecnica cuando aporta. Siempre en espanol.
+name: human
+description: "Responde con estructura escaneable (tablas, listas, categorias) — concisa, precisa, con jerga tecnica cuando aporta. Siempre en espanol."
 ---
 
 ## Que produce
