@@ -388,3 +388,91 @@ No documented errors (clean template).
 
 - Memory Bank based on [rules_template](https://github.com/Bhartendu-Kumar/rules_template)
 - Refresh memory files after adding a new Django app, significant test changes, or when file counts drift >10%
+<!-- git-branch-protocol:begin -->
+## Reglas de trabajo con Git: ramas y commits
+
+**Nunca hagas commits directamente sobre `main` o `master`.** Estas ramas están protegidas y los pushes serán rechazados por GitHub. Antes de cualquier `git commit`, sigue este protocolo:
+
+### 1. Verificar la rama actual
+
+Antes de cualquier operación de escritura (add, commit, etc.), ejecuta:
+
+```bash
+git rev-parse --abbrev-ref HEAD
+```
+
+### 2. Si la rama actual es `main` o `master`
+
+**No pidas permiso, crea automáticamente una nueva rama** y comunícaselo al usuario con un mensaje corto del tipo: "Estás en `main`, voy a crear la rama `<nombre>` antes de commitear." Luego procede.
+
+### 3. Formato obligatorio del nombre de rama
+
+`<prefijo>/<DDMMYYYY>-<descripcion-corta>`
+
+- **`<prefijo>`** según el tipo de cambio:
+  - `feat` — nueva funcionalidad
+  - `fix` — corrección de bug
+  - `docs` — cambios en documentación
+  - `refactor` — refactorización sin cambio funcional
+  - `test` — añadir o modificar tests
+  - `chore` — mantenimiento (dependencias, configs)
+  - `style` — formato/estilo, sin cambio de lógica
+  - `perf` — mejoras de rendimiento
+  - `ci` — cambios en workflows o pipelines
+  - `hotfix` — corrección urgente en producción
+
+- **`<DDMMYYYY>`** debe ser la fecha actual del sistema obtenida con `date +%d%m%Y`. Nunca la asumas ni la inventes.
+
+- **`<descripcion-corta>`** en kebab-case, máximo 5 palabras, en inglés o español según el idioma del proyecto.
+
+### 4. Ejemplos de nombres válidos
+
+- `feat/15052026-login-google-oauth`
+- `fix/15052026-typo-readme`
+- `refactor/15052026-extract-user-service`
+- `docs/15052026-update-deploy-guide`
+- `chore/15052026-bump-django-version`
+
+### 5. Comandos exactos a ejecutar
+
+```bash
+# 1. Obtener la fecha del día (no asumirla)
+TODAY=$(date +%d%m%Y)
+
+# 2. Crear y moverse a la nueva rama
+git checkout -b <prefijo>/${TODAY}-<descripcion-corta>
+
+# 3. Recién entonces hacer add y commit
+git add <archivos>
+git commit -m "<mensaje siguiendo conventional commits>"
+```
+
+### 6. Inferencia del prefijo
+
+Determina el prefijo a partir del contenido de los cambios:
+- Archivos nuevos que añaden features → `feat`
+- Cambios que arreglan comportamiento roto → `fix`
+- Solo cambios en `*.md`, comentarios o JSDoc → `docs`
+- Cambios en `package.json`, `requirements.txt`, configs → `chore`
+- Cambios en `.github/workflows/*` → `ci`
+- Archivos `*test*` / `*spec*` modificados o añadidos → `test`
+- Reorganización sin alterar comportamiento → `refactor`
+
+Si hay ambigüedad, pregunta al usuario una sola vez antes de crear la rama.
+
+### 7. Excepciones
+
+- Operaciones de solo lectura (`git status`, `git log`, `git diff`, `git pull`, `git fetch`) están permitidas en `main`/`master`.
+- Si el usuario explícitamente pide quedarse en `main` para revisar algo sin commitear, respeta esa intención.
+- Si ya estás en una rama feature válida (no `main`/`master`), no crees una nueva — continúa trabajando en ella.
+
+### 8. Mensajes de commit
+
+Sigue Conventional Commits, con el mismo prefijo de la rama cuando aplique:
+
+```
+feat: add Google OAuth login flow
+fix: correct typo in deployment README
+refactor: extract user validation into service
+```
+<!-- git-branch-protocol:end -->
