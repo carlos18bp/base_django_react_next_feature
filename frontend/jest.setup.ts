@@ -18,7 +18,7 @@ jest.mock('next/link', () => ({
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation((query: string) => ({
+  value: jest.fn((query: string) => ({
     matches: false,
     media: query,
     onchange: null,
