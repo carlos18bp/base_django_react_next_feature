@@ -95,7 +95,6 @@ Scan the repository for files that should be deleted, updated, or added to `.git
 - Do not flag Django migrations as obsolete unless they are clearly broken merge migrations.
 - Do not flag `__init__.py` files as empty/unnecessary — they mark Python packages.
 - Verify dead code claims: a file is only "unused" if it has zero imports AND is not referenced in URL configs, management commands, or template tags.
-- **Do not flag the Staging Phase Banner feature as dead code or unused UI**, even if its DB flag is currently `is_visible=False`. The following are intentionally toggled via the `StagingPhaseBanner.is_visible` boolean in Django and must be preserved across cleanups: `backend/base_feature_app/models/staging_phase_banner.py`, `serializers/staging_phase_banner.py`, `views/staging_phase_banner.py`, `urls/staging_phase_banner.py`, `StagingPhaseBannerAdmin` in `admin.py`; `frontend/components/staging/StagingPhaseBanner.tsx`, `StagingExpiredOverlay.tsx`, `StagingGate.tsx`; `frontend/lib/stores/stagingBannerStore.ts`; `frontend/lib/services/staging-banner.ts`.
 - When recommending `.gitignore` updates, show the exact lines to add.
 
 ## Output Contract
