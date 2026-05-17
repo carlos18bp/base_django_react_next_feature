@@ -47,6 +47,7 @@ If missing, fetch from [rules_template](https://github.com/Bhartendu-Kumar/rules
 
 ## Step 3: Deep-Dive Codebase
 
+// turbo
 Run verification commands to get exact counts:
 
 ```bash
@@ -54,37 +55,38 @@ Run verification commands to get exact counts:
 find backend/ -name "*.py" -path "*/models*" ! -name "__init__.py" -not -path "*/venv/*" | wc -l
 
 # Components
-find frontend/components/ -name "*.tsx" -o -name "*.ts" | wc -l
+find frontend/components/ -name "*.vue" | wc -l
 
-# Pages (Next.js App Router)
-find frontend/app/ -name "page.tsx" | wc -l
+# Pages
+find frontend/pages/ -name "*.vue" | wc -l
 
 # Stores
-find frontend/lib/stores/ -name "*.ts" | wc -l
+find frontend/stores/ -name "*.js" ! -path "*/services/*" | wc -l
 
-# Hooks
-find frontend/lib/hooks/ -name "*.ts" 2>/dev/null | wc -l
+# Composables
+find frontend/composables/ -name "*.js" | wc -l
 
 # Backend tests (exclude venv)
 find backend/ -name "test_*.py" -not -path "*/venv/*" | wc -l
 
 # Frontend unit tests
-find frontend/ -name "*.spec.*" -o -name "*.test.*" | grep -v node_modules | grep -v e2e | wc -l
+find frontend/test/ -name "*.spec.*" -o -name "*.test.*" | wc -l
 
 # E2E tests
 find frontend/e2e/ -name "*.spec.*" | wc -l
 
 # URL patterns
-grep -c "path(" backend/base_feature_app/urls.py
+grep -c "path(" backend/content/urls.py
+grep -c "path(" backend/accounts/urls.py 2>/dev/null
 
 # Email templates
-find backend/base_feature_app/templates/emails/ -type f | wc -l
+find backend/content/templates/emails/ -type f | wc -l
 
 # Management commands
 find backend/ -path "*/management/commands/*.py" ! -name "__init__.py" -not -path "*/venv/*" | wc -l
 
 # Service file sizes
-ls -la backend/base_feature_app/services/
+ls -la backend/content/services/
 ```
 
 ## Step 4: Create / Refresh Memory Files

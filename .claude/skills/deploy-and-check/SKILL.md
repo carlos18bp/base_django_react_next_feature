@@ -6,6 +6,27 @@ allowed-tools: Bash
 argument-hint: "[branch-name (opcional — default: rama actual del repo)]"
 ---
 
+## Entorno requerido
+
+**Esta skill SOLO funciona desde un VPS** — necesita `systemctl`, `nginx`, `journalctl`, y paths `/home/ryzepeck/webapps/...`. Si la invocás desde la dev machine, los restarts de servicio fallarán y los logs no estarán disponibles.
+
+**Verificación obligatoria ANTES de cualquier otro paso**:
+
+```bash
+if [[ -d /home/dev-env/repos ]]; then
+  echo "❌ Esta skill no se puede ejecutar desde la dev machine."
+  echo "   SSH primero al VPS destino:"
+  echo "     ssh vps-projectapp   (o vps-gym)"
+  echo "     cd ~/webapps/<proyecto> && claude → /deploy-and-check"
+  exit 2
+fi
+echo "✅ Entorno VPS detectado, procediendo."
+```
+
+Si el bloque aborta con ❌, **NO continuar** con las fases siguientes — SSH al VPS destino y re-invocar la skill allí.
+
+---
+
 # Deploy & Check — Generic
 
 Despliegue del proyecto actual (auto-detectado desde `pwd` + `~/webapps/ops/vps/projects.yml`). Funciona para staging y producción.

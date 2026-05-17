@@ -1,0 +1,6 @@
+interface:
+  display_name: "Git Commit"
+  short_description: "Help with Git Commit tasks"
+
+policy:
+  allow_implicit_invocation: false

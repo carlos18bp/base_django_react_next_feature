@@ -1,5 +1,7 @@
-# Project-scoped Codex defaults for Base Django React Next Feature.
-# Keep this file small and stable.
+# Project-scoped Codex defaults for Base Django+React+Next (scaffold).
+# Sincronizado desde vps-ops-toolkit/workflows/.codex/base/config.toml.tmpl
+# Keep this file small and stable. Override locally con .codex/config.local.toml
+# (no versionado) si necesitas customizacion por proyecto.
 
 approval_policy = "never"
 sandbox_mode = "danger-full-access"
