@@ -16,7 +16,7 @@ instrucciones general, distinto frontmatter/estructura. Sincronizado desde
 
 ## Convencion de lenguaje
 
-- Documentacion, comentarios y mensajes de commit en **espanol**.
+- Documentacion, comentarios y mensajes de commit en **ingles**.
 - Codigo, identificadores y nombres de variable en **ingles**.
 
 ## Skills por-proyecto
