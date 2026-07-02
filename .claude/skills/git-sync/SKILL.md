@@ -1,6 +1,6 @@
 ---
 name: git-sync
-description: "Sync the current branch: inspecciona stashes existentes (marca obsoletos/viejos), detecta PRs abiertos vía gh CLI y elige target de rebase PR-aware (política: máx 1 PR release, máx 2 con error), luego fetch + rebase + conflict resolution. Defaults to vps-ops-toolkit; pass --all para iterar LOCAL_PROJECTS + toolkit."
+description: "Sync the current branch: inspecciona stashes existentes (marca obsoletos/viejos), detecta PRs abiertos vía gh CLI y elige target de rebase PR-aware (política: máx 1 PR release, máx 2 con error), luego fetch + rebase + conflict resolution. Defaults to the current repo (cwd); pass --all para iterar LOCAL_PROJECTS + toolkit."
 allowed-tools: Bash
 argument-hint: "[--all (opcional — itera todos los repos locales del host)]"
 ---
@@ -10,13 +10,14 @@ argument-hint: "[--all (opcional — itera todos los repos locales del host)]"
 Rebase the current branch onto its parent (`main` / `master`) so it picks up work that teammates have merged. Also pulls the current branch's own remote first, handles dirty working trees, and walks through any rebase conflicts.
 
 > **⚠️ How to invoke**:
-> - Sin argumento: `/git-sync` → opera SOLO en `~/webapps/vps-ops-toolkit/`.
+> - Sin argumento: `/git-sync` → opera sobre el repo git ACTUAL (el del
+>   directorio en el que está parado el operador).
 > - Con `--all`: `/git-sync --all` → itera sobre `LOCAL_PROJECTS` del host
 >   + `vps-ops-toolkit`. En un VPS reporta solo los proyectos cuyo `server:`
 >   matchea el hostname; en dev, todos los `status: active`.
 >
-> No acepta nombres de proyecto individuales — si necesitás operar en un
-> repo específico, `cd` primero o invocá git directo.
+> No acepta nombres de proyecto individuales — para operar en un repo
+> específico, `cd` a ese repo e invocá sin argumento.
 
 ---
 
@@ -28,8 +29,15 @@ OPS_ROOT="$HOME/webapps/vps-ops-toolkit"
 
 case "$ARGS_RAW" in
     "")
-        REPOS=("vps-ops-toolkit")
-        MODE_LABEL="default (toolkit only)"
+        # Repo actual — el del directorio donde está parado el operador
+        REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || {
+            echo "❌ ERROR: el directorio actual no es un repo git."
+            echo "   cd al repo a sincronizar, o usá --all para iterar todos."
+            exit 2
+        }
+        REPOS=("$(basename "$REPO_ROOT")")
+        REPO_DIR_OVERRIDE="$REPO_ROOT"
+        MODE_LABEL="default (repo actual: ${REPOS[0]})"
         ;;
     "--all")
         source "$OPS_ROOT/scripts/lib/bootstrap-common.sh"
@@ -39,19 +47,24 @@ case "$ARGS_RAW" in
         ;;
     *)
         echo "❌ ERROR: argumento desconocido '$ARGS_RAW'."
-        echo "   Válido: (vacío) → vps-ops-toolkit  |  --all → todos los locales."
+        echo "   Válido: (vacío) → repo actual  |  --all → todos los locales."
         exit 2
         ;;
 esac
 
-VALID_REPOS=()
-for r in "${REPOS[@]}"; do
-    if [ -d "$HOME/webapps/$r/.git" ]; then
-        VALID_REPOS+=("$r")
-    else
-        echo "⏭️  $r — dir no existe o no es repo git (skip)"
-    fi
-done
+if [ -n "${REPO_DIR_OVERRIDE:-}" ]; then
+    # Modo default: el repo actual ya fue validado por git rev-parse
+    VALID_REPOS=("${REPOS[@]}")
+else
+    VALID_REPOS=()
+    for r in "${REPOS[@]}"; do
+        if [ -d "$HOME/webapps/$r/.git" ]; then
+            VALID_REPOS+=("$r")
+        else
+            echo "⏭️  $r — dir no existe o no es repo git (skip)"
+        fi
+    done
+fi
 
 echo "🔧 Modo: $MODE_LABEL — repos a procesar: ${#VALID_REPOS[@]}"
 printf '   - %s\n' "${VALID_REPOS[@]}"
@@ -65,7 +78,7 @@ Las Phases 1-7 siguientes se ejecutan **una vez por cada repo** en
 `VALID_REPOS`. Antes de empezar cada iteración:
 
 ```bash
-REPO_DIR="$HOME/webapps/$REPO"
+REPO_DIR="${REPO_DIR_OVERRIDE:-$HOME/webapps/$REPO}"
 cd "$REPO_DIR"
 echo ""
 echo "═══════════════════════════════════════════════"
@@ -80,8 +93,8 @@ en el summary final, y **continuar con el siguiente repo**. No abortar el
 loop completo. Si un rebase queda a medio resolver, registrar el repo como
 "⚠️ con conflictos pendientes" y notificar al operador al cierre.
 
-En modo default (sin `--all`), `VALID_REPOS` contiene solo
-`vps-ops-toolkit` y no hay loop real — las phases corren una vez.
+En modo default (sin `--all`), `VALID_REPOS` contiene solo el repo
+actual (resuelto desde el cwd) y no hay loop real — las phases corren una vez.
 
 ---
 
