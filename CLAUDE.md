@@ -28,7 +28,9 @@ Al inicio de **cada sesión y antes de editar archivos**, debes invocar la skill
 <!-- git-branch-protocol:begin -->
 ## Reglas de trabajo con Git: ramas y commits
 
-**Nunca hagas commits directamente sobre `main` o `master`.** Estas ramas están protegidas y los pushes serán rechazados por GitHub. Antes de cualquier `git commit`, sigue este protocolo:
+**Nunca hagas commits directamente sobre `main` o `master`.** Estas ramas están protegidas y los pushes serán rechazados por GitHub.
+
+**El default es REUTILIZAR una rama abierta, no crear una nueva.** La convención del fleet es **máximo 1 PR feature activo por proyecto**: todo el trabajo en curso — aunque sean features o arreglos distintos entre sí — se acumula como **commits sucesivos sobre esa misma rama** hasta que mergee. **Lo que identifica cada pieza de trabajo es el COMMIT, no una rama nueva.** Crear una rama por cada cambio fragmenta el trabajo en PRs paralelos y hace imposible un code review unificado. **Sólo se crea una rama cuando estás en `main`/`master` y NO hay ninguna rama abierta.** Antes de cualquier `git commit`, seguí este protocolo:
 
 ### 1. Verificar la rama actual
 
@@ -38,23 +40,24 @@ Antes de cualquier operación de escritura (add, commit, etc.), ejecuta:
 git rev-parse --abbrev-ref HEAD
 ```
 
-### 2. Si la rama actual es `main` o `master`
+- **Si ya estás en una rama feature** (cualquier rama que no sea `main`/`master`): **quedate ahí y commiteá**, sin importar si el cambio actual es de un feature distinto al que originó la rama. NO crees una rama nueva — pasá directo a la sección 8 (commit).
+- **Si estás en `main`/`master`**: seguí la sección 2 antes de commitear.
 
-Antes de crear una rama nueva, **busca si ya existe una rama feature activa** para este proyecto:
+### 2. Si estás en `main` o `master`: primero buscá una rama abierta para reutilizar
+
+**Antes de siquiera pensar en crear una rama**, buscá si ya hay una rama feature con PR abierto (o trabajo en curso) para este proyecto y reutilizala. Preferí los PRs abiertos — son literalmente "la rama abierta para revisar los cambios":
 
 ```bash
 git fetch --quiet --prune
-# Lista ramas remotas que no son main/master/release-* ni HEAD
+# Fuente preferida: PRs abiertos (rama + URL)
+gh pr list --state open --json headRefName,url -q '.[] | "\(.headRefName)	\(.url)"' 2>/dev/null
+# Fallback si gh no está disponible: ramas remotas que no son main/master/release-*/HEAD
 git branch -r | grep -vE 'origin/(HEAD|main|master|release-)' | sed 's@^[[:space:]]*origin/@@' | sort -u
 ```
 
-- **Si hay UNA rama feature activa** (con PR abierto o trabajo en curso): `git checkout <rama-existente>` y haz pull rebase si está atrás del remote. Commitea ahí. No crees rama nueva.
-- **Si hay VARIAS ramas feature activas**: pregunta al usuario en cuál commitear (no asumas).
-- **Si NO hay ninguna rama feature activa** (todas las que ves están mergeadas/cerradas o son ramas históricas abandonadas): crea rama nueva según el formato de la sección 3.
-
-**Por qué:** la convención del fleet es **máximo 1 PR feature activo simultáneamente** por proyecto. Todos los cambios en curso se acumulan como commits sucesivos sobre esa rama hasta que mergee. Crear ramas paralelas fragmenta el trabajo en múltiples PRs y hace difícil hacer code review unificado.
-
-**No pidas permiso para hacer el checkout** — sólo comunícalo: "Hay rama feature activa `<X>`, voy a commitear ahí."
+- **Si hay UNA rama abierta** (PR abierto o trabajo en curso): `git checkout <rama-existente>`, `git pull --rebase` si está atrás del remote, y **commiteá ahí — aunque tu cambio sea de otra naturaleza que el trabajo previo de esa rama**. No crees rama nueva. **No pidas permiso para el checkout**, sólo comunicalo: "Hay rama feature activa `<X>`, voy a commitear ahí."
+- **Si hay VARIAS ramas abiertas**: preguntá al usuario en cuál commitear (no asumas).
+- **Si NO hay ninguna rama abierta** (todas mergeadas/cerradas, o son ramas históricas abandonadas): recién ahí creá una rama nueva según el formato de la sección 3.
 
 ### 3. Formato obligatorio del nombre de rama
 
@@ -115,7 +118,7 @@ Si hay ambigüedad, pregunta al usuario una sola vez antes de crear la rama.
 
 - Operaciones de solo lectura (`git status`, `git log`, `git diff`, `git pull`, `git fetch`) están permitidas en `main`/`master`.
 - Si el usuario explícitamente pide quedarse en `main` para revisar algo sin commitear, respeta esa intención.
-- Si ya estás en una rama feature válida (no `main`/`master`), no crees una nueva — continúa trabajando en ella. **Esta es la convención por defecto: 1 rama / 1 PR feature activo por proyecto a la vez.**
+- Si ya estás en una rama feature válida (no `main`/`master`), **nunca** crees una rama paralela para un cambio "distinto" — seguí commiteando en la rama actual. Cada cambio es un commit más, no una rama más. **Convención por defecto: 1 rama / 1 PR feature activo por proyecto a la vez.**
 
 ### 8. Mensajes de commit
 
