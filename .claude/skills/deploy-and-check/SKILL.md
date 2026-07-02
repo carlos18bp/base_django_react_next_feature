@@ -16,7 +16,7 @@ argument-hint: "[branch-name (opcional — default: rama actual del repo)]"
 if [[ -d /home/dev-env/webapps ]]; then
   echo "❌ Esta skill no se puede ejecutar desde la dev machine."
   echo "   SSH primero al VPS destino:"
-  echo "     ssh vps-projectapp   (o vps-gym)"
+  echo "     ssh vps-projectapp-staging   (o vps-gym)"
   echo "     cd ~/webapps/<proyecto> && claude → /deploy-and-check"
   exit 2
 fi
