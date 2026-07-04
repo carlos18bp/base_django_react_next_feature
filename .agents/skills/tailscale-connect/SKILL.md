@@ -146,6 +146,11 @@ tailscale status --self --json | grep -q '"https://tailscale.com/cap/ssh"' && ec
 
 Reportar siguiendo [[_output-protocol]]. Plantilla específica de esta skill:
 
+🟢 tailscale-connect OK — <host> conectado (IP 100.x, nodo <nombre>) — todas las celdas ✅
+⏸️ tailscale-connect — pausa manual pendiente — URL de login mostrada, esperando OAuth del operador
+🔴 tailscale-connect — N error(es), revisar arriba — install/daemon falló o verificación no pasó
+⏭️ tailscale-connect — N/A o saltado — `--check`, o ya estaba conectado
+
 | Dimensión | Estado | Detalle |
 |---|---|---|
 | Host / alias | ℹ️ | `hostname -s` + alias resuelto |
