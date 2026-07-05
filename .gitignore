@@ -129,3 +129,6 @@ test-results/test-quality-report.json
 # ============================================================================
 *.bak.*
 *.bak.*/
+
+# Rotated logs (RotatingFileHandler: django.log.1, .2, ...)
+*.log.[0-9]*
