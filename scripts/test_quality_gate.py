@@ -21,6 +21,7 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import json
 import re
 import sys
@@ -44,6 +45,7 @@ from quality import (
     SuiteResult,
     DEFAULT_CONFIG,
     Patterns,
+    load_project_config,
 )
 from quality.backend_analyzer import PythonAnalyzer
 from quality.external_lint import ExternalLintRunResult, ExternalLintRunner
@@ -59,6 +61,13 @@ ALLOW_MARKER_RULE_IDS: dict[str, str] = {
     "allow-fragile-selector": "fragile_locator",
     "allow-serial": "serial_dependency",
     "allow-multi-render": "multi_render",
+    # Junk-test rules. Each opt-out must carry a reason in parentheses; the
+    # report lists active exceptions so they stay visible instead of quietly
+    # becoming the norm.
+    "allow-no-interaction": "no_user_interaction",
+    "allow-deep-link": "deep_link_entry",
+    "allow-render-only": "no_data_assertion",
+    "allow-duplicate": "duplicate_coverage",
 }
 
 ALLOW_MARKER_PATTERNS: dict[str, re.Pattern[str]] = {
@@ -71,13 +80,26 @@ RELAXED_CROSS_ENGINE_RULE_IDS: frozenset[str] = frozenset({"sleep_call", "wait_f
 
 
 def build_config(args: argparse.Namespace) -> Config:
-    """Build configuration from CLI arguments."""
-    return Config(
-        backend_app_name=args.backend_app,
-        max_test_lines=args.max_test_lines,
-        max_assertions_per_test=args.max_assertions,
-        max_patches_per_test=args.max_patches,
-    )
+    """
+    Build configuration for the run.
+
+    Precedence: explicit CLI flag > `.testquality.yml` at the repo root >
+    canonical defaults shipped with the quality core. CLI flags default to None
+    so that "not passed" is distinguishable from "passed the default value" —
+    otherwise every run would silently clobber the project's declared config.
+    """
+    config = load_project_config(args.repo_root)
+
+    overrides = {
+        "backend_app_name": args.backend_app,
+        "frontend_unit_dir": args.frontend_unit_dir,
+        "max_test_lines": args.max_test_lines,
+        "max_assertions_per_test": args.max_assertions,
+        "max_patches_per_test": args.max_patches,
+    }
+    overrides = {key: value for key, value in overrides.items() if value is not None}
+
+    return dataclasses.replace(config, **overrides) if overrides else config
 
 
 class QualityReport:
@@ -151,8 +173,7 @@ class QualityReport:
 
     def _frontend_unit_prefixes(self) -> tuple[str, ...]:
         """Return accepted frontend-unit path prefixes (configured + legacy)."""
-        unit_dir = self.config.frontend_unit_dir.strip('/').replace('\\\\', '/')
-        configured = f"frontend/{unit_dir}/" if unit_dir else "frontend/"
+        configured = f"frontend/{self.config.frontend_unit_dir.strip('/').replace('\\\\', '/')}/"
         prefixes = [configured]
         if configured != "frontend/test/":
             prefixes.append("frontend/test/")
@@ -984,10 +1005,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--report-path", type=Path,
                         default=Path("test-results/test-quality-report.json"),
                         help="JSON report output path")
-    parser.add_argument("--backend-app", default="base_feature_app",
-                        help="Django app name (default: base_feature_app)")
+    parser.add_argument("--backend-app", default=None,
+                        help="Django app name (overrides .testquality.yml)")
     parser.add_argument("--suite", choices=["backend", "frontend-unit", "frontend-e2e"],
                         help="Analyze specific suite only")
+    parser.add_argument("--frontend-unit-dir", default=None,
+                        help="Frontend unit test dir relative to frontend/ (overrides .testquality.yml)")
     parser.add_argument("--verbose", "-v", action="store_true",
                         help="Verbose output")
     parser.add_argument("--strict", action="store_true",
@@ -1044,9 +1067,9 @@ def parse_args() -> argparse.Namespace:
     )
     
     # Threshold overrides
-    parser.add_argument("--max-test-lines", type=int, default=50)
-    parser.add_argument("--max-assertions", type=int, default=7)
-    parser.add_argument("--max-patches", type=int, default=5)
+    parser.add_argument("--max-test-lines", type=int, default=None)
+    parser.add_argument("--max-assertions", type=int, default=None)
+    parser.add_argument("--max-patches", type=int, default=None)
     
     return parser.parse_args()
 

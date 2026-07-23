@@ -45,6 +45,7 @@ CURATED_RUFF_SELECTORS: tuple[str, ...] = (
     "F",
     "I",
     "UP",
+    "D",
 )
 
 
