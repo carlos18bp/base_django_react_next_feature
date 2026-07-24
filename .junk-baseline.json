@@ -1,13 +1,8 @@
 {
   "_comment": "Junk-test findings that predate the rules. These stay warnings under --junk-severity=error so existing debt does not block merges; anything not listed here is a new finding and fails. This file should only ever shrink.",
   "findings": [
-    "frontend/e2e/app/cart.spec.ts::flow_tag_mismatch::should add multiple different products",
-    "frontend/e2e/app/cart.spec.ts::flow_tag_mismatch::should remove product from cart",
-    "frontend/e2e/app/cart.spec.ts::no_user_interaction::should show empty cart message",
     "frontend/e2e/app/checkout.spec.ts::no_user_interaction::should display checkout form fields",
     "frontend/e2e/app/checkout.spec.ts::no_user_interaction::should navigate to checkout page",
-    "frontend/e2e/app/complete-purchase.spec.ts::flow_tag_mismatch::should disable checkout button when cart is empty",
-    "frontend/e2e/app/complete-purchase.spec.ts::flow_tag_mismatch::should handle multiple products in cart during checkout",
     "frontend/e2e/app/user-flows.spec.ts::no_user_interaction::should handle direct URL navigation",
     "frontend/e2e/app/user-flows.spec.ts::no_user_interaction::should navigate between all main sections",
     "frontend/e2e/app/user-flows.spec.ts::no_user_interaction::should show appropriate content for each page type",
@@ -15,23 +10,12 @@
     "frontend/e2e/auth/auth.spec.ts::no_user_interaction::should display sign-in form",
     "frontend/e2e/auth/auth.spec.ts::no_user_interaction::should display sign-up page heading",
     "frontend/e2e/auth/auth.spec.ts::no_user_interaction::should have link to dashboard after sign-in",
-    "frontend/e2e/auth/auth.spec.ts::no_user_interaction::should navigate to backoffice page",
-    "frontend/e2e/auth/auth.spec.ts::no_user_interaction::should navigate to dashboard page",
     "frontend/e2e/auth/auth.spec.ts::no_user_interaction::should navigate to sign-in page",
     "frontend/e2e/auth/auth.spec.ts::no_user_interaction::should show all required sign-up form fields",
     "frontend/e2e/public/blogs.spec.ts::no_data_assertion::should show blog details",
-    "frontend/e2e/public/blogs.spec.ts::no_user_interaction::should display blogs list page",
-    "frontend/e2e/public/navigation.spec.ts::no_data_assertion::should have working footer",
-    "frontend/e2e/public/navigation.spec.ts::no_data_assertion::should have working header navigation",
-    "frontend/e2e/public/navigation.spec.ts::no_user_interaction::should have working footer",
-    "frontend/e2e/public/navigation.spec.ts::no_user_interaction::should have working header navigation",
-    "frontend/e2e/public/navigation.spec.ts::no_user_interaction::should maintain navigation across pages",
-    "frontend/e2e/public/navigation.spec.ts::no_user_interaction::should navigate to home page",
     "frontend/e2e/public/products.spec.ts::no_data_assertion::should display product gallery images",
     "frontend/e2e/public/products.spec.ts::no_data_assertion::should show product details including price",
     "frontend/e2e/public/products.spec.ts::no_user_interaction::should display products catalog page",
-    "frontend/e2e/public/smoke.spec.ts::no_user_interaction::home page loads",
-    "frontend/lib/stores/__tests__/blogStore.test.ts::duplicate_coverage::should handle fetch error",
-    "frontend/lib/stores/__tests__/productStore.test.ts::duplicate_coverage::should handle fetch error"
+    "frontend/e2e/public/smoke.spec.ts::no_user_interaction::home page loads"
   ]
 }
