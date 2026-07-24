@@ -37,24 +37,20 @@ test.describe('Blog Pages', () => {
     }
   });
 
-  test('should show blog details', { tag: [...BLOG_DETAIL_VIEW] }, async ({ page }) => {
-    const blogCards = page.locator('a[href^="/blogs/"]');
-    const count = await blogCards.count();
-    
-    if (count > 0) {
-      // Get blog title from list
-      // quality: allow-fragile-selector (blog list links uniquely scoped by href pattern)
-      const firstCard = blogCards.first();
-      const titleInList = await firstCard.locator('h3').textContent();
-      
-      // Click to go to detail
-      await firstCard.click();
-      await waitForPageLoad(page);
-      
-      // Verify title appears on detail page
-      if (titleInList) {
-        await expect(page.locator(`text=${titleInList}`)).toBeVisible();
-      }
+  test('the blog detail shows the post title from the list', { tag: [...BLOG_DETAIL_VIEW] }, async ({ page }) => {
+    // quality: allow-fragile-selector (blog list links uniquely scoped by href pattern)
+    const firstCard = page.locator('a[href^="/blogs/"]').first();
+    await expect(firstCard).toBeVisible({ timeout: 15000 });
+    const title = ((await firstCard.locator('h3').first().textContent()) ?? '').trim();
+
+    await firstCard.click();
+    await waitForPageLoad(page);
+    await expect(page).toHaveURL(/.*blogs\/\d+/);
+
+    if (title) {
+      await expect(page.getByText(title, { exact: false }).first()).toBeVisible();
+    } else {
+      await expect(page.getByRole('heading').first()).not.toHaveText('');
     }
   });
 

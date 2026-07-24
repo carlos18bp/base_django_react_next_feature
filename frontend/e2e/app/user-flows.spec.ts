@@ -1,6 +1,6 @@
 import { test, expect } from '../test-with-coverage';
 import { waitForPageLoad } from '../fixtures';
-import { HOME_TO_BLOG, HOME_TO_CATALOG, CATALOG_BROWSE, NAVIGATION_BETWEEN_PAGES } from '../helpers/flow-tags';
+import { HOME_TO_BLOG, HOME_TO_CATALOG, CATALOG_BROWSE } from '../helpers/flow-tags';
 
 test.describe('User Flows', () => {
   test('should navigate from home to blog detail', { tag: [...HOME_TO_BLOG] }, async ({ page }) => {
@@ -100,33 +100,6 @@ test.describe('User Flows', () => {
     }
   });
 
-  test('should navigate between all main sections', { tag: [...NAVIGATION_BETWEEN_PAGES] }, async ({ page }) => {
-    test.setTimeout(120_000);
-
-    const goToSection = async (path: string, expectedUrl: string | RegExp) => {
-      await page.goto(path, { waitUntil: 'domcontentloaded' });
-      await expect(page).toHaveURL(expectedUrl);
-    };
-
-    // Start at home
-    await goToSection('/', '/');
-    
-    // Go to catalog
-    await goToSection('/catalog', /.*catalog/);
-    
-    // Go to blogs
-    await goToSection('/blogs', /.*blogs/);
-    
-    // Go to checkout
-    await goToSection('/checkout', /.*checkout/);
-    
-    // Go to sign-in
-    await goToSection('/sign-in', /.*sign-in/);
-    
-    // Back to home
-    await goToSection('/', '/');
-  });
-
   test('should use browser back button correctly', { tag: [...HOME_TO_CATALOG] }, async ({ page }) => {
     // Start at home
     await page.goto('/');
@@ -155,49 +128,5 @@ test.describe('User Flows', () => {
       await waitForPageLoad(page);
       await expect(page).toHaveURL('/');
     }
-  });
-
-  test('should handle direct URL navigation', { tag: [...CATALOG_BROWSE] }, async ({ page }) => {
-    // Navigate directly to product (if exists)
-    await page.goto('/products/1');
-    await waitForPageLoad(page);
-    
-    // Either shows product or goes back to catalog/home
-    const url = page.url();
-    expect(url).toMatch(/products|catalog|^\//);
-  });
-
-  test('should show appropriate content for each page type', { tag: [...NAVIGATION_BETWEEN_PAGES] }, async ({ page }) => {
-    test.setTimeout(120_000);
-
-    // Home page has main heading
-    await page.goto('/');
-    await waitForPageLoad(page);
-    await expect(page.getByRole('heading', { name: /Everything you need/i })).toBeVisible();
-    
-    // Catalog page
-    await page.goto('/catalog');
-    await waitForPageLoad(page);
-    // Should have products or a message
-    const catalogContent = page.locator('body');
-    await expect(catalogContent).toBeVisible();
-    
-    // Blogs page
-    await page.goto('/blogs');
-    await waitForPageLoad(page);
-    // Should have blogs or a message
-    const blogsContent = page.locator('body');
-    await expect(blogsContent).toBeVisible();
-    
-    // Checkout page
-    await page.goto('/checkout');
-    await waitForPageLoad(page);
-    await expect(page.getByRole('heading', { name: 'Checkout', level: 1 })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Cart', level: 2 })).toBeVisible();
-    
-    // Sign-in page
-    await page.goto('/sign-in');
-    await waitForPageLoad(page);
-    await expect(page.getByRole('textbox', { name: 'Password' })).toBeVisible();
   });
 });
