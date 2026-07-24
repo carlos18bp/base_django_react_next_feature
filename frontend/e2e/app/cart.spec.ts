@@ -181,8 +181,7 @@ test.describe('Shopping Cart', () => {
     await page.goto('/checkout');
     await waitForPageLoad(page);
 
-    // quality: allow-fragile-selector (cart item rows have no test id; matched by their layout wrapper)
-    const cartItems = page.locator('[data-testid="cart-item"], .border.rounded.p-4');
-    await expect(cartItems).toHaveCount(2);
+    // Each cart item row renders its own Remove button, so two items => two buttons.
+    await expect(page.getByRole('button', { name: 'Remove' })).toHaveCount(2);
   });
 });
