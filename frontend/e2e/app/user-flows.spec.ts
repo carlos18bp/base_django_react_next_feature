@@ -1,6 +1,6 @@
 import { test, expect } from '../test-with-coverage';
 import { waitForPageLoad } from '../fixtures';
-import { HOME_TO_BLOG, HOME_TO_CATALOG, CATALOG_BROWSE, NAVIGATION_BETWEEN_PAGES } from '../helpers/flow-tags';
+import { HOME_TO_BLOG, HOME_TO_CATALOG, CATALOG_BROWSE } from '../helpers/flow-tags';
 
 test.describe('User Flows', () => {
   test('should navigate from home to blog detail', { tag: [...HOME_TO_BLOG] }, async ({ page }) => {

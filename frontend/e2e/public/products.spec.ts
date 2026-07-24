@@ -50,10 +50,11 @@ test.describe('Product Pages', () => {
     const productCards = page.locator('a[href^="/products/"]');
     await expect(productCards.first()).toBeVisible({ timeout: 15000 });
     await productCards.first().click();
-    await waitForPageLoad(page);
+    await expect(page).toHaveURL(/.*products\/\d+/);
 
+    // Client-side back navigation fires no 'load' event, so rely on the URL
+    // assertion's retry rather than waitForPageLoad.
     await page.goBack();
-    await waitForPageLoad(page);
-    await expect(page).toHaveURL(/.*catalog/);
+    await expect(page).toHaveURL(/.*catalog/, { timeout: 15000 });
   });
 });
