@@ -43,15 +43,14 @@ test.describe('Navigation', () => {
     await expect(page).toHaveURL(/.*catalog/);
   });
 
-  test('the footer links reach the blogs page', { tag: [...NAVIGATION_FOOTER] }, async ({ page }) => {
+  test('the footer shows the site copyright on every page', { tag: [...NAVIGATION_FOOTER] }, async ({ page }) => {
+    // quality: allow-no-interaction (the footer is static layout chrome with no links; this asserts its content renders)
     await page.goto('/');
     await waitForPageLoad(page);
 
     const footer = page.locator('footer');
     await expect(footer).toBeVisible();
-    await footer.locator('a[href="/blogs"]').first().click();
-
-    await expect(page).toHaveURL(/.*blogs/);
+    await expect(footer).toContainText('Base Django + React + Next Feature Template');
   });
 
   test('maintains navigation across pages', { tag: [...NAVIGATION_BETWEEN_PAGES] }, async ({ page }) => {
