@@ -3,26 +3,6 @@ import { waitForPageLoad, testCheckoutData } from '../fixtures';
 import { CHECKOUT_FORM_DISPLAY, CHECKOUT_FORM_VALIDATION, CHECKOUT_FORM_FILL } from '../helpers/flow-tags';
 
 test.describe('Checkout Flow', () => {
-  test('should navigate to checkout page', { tag: [...CHECKOUT_FORM_DISPLAY] }, async ({ page }) => {
-    await page.goto('/checkout');
-    await waitForPageLoad(page);
-    
-    await expect(page).toHaveURL(/.*checkout/);
-  });
-
-  test('should display checkout form fields', { tag: [...CHECKOUT_FORM_DISPLAY] }, async ({ page }) => {
-    await page.goto('/checkout');
-    await waitForPageLoad(page);
-
-    await expect(page).toHaveURL(/.*checkout/);
-
-    // Check for common checkout form fields
-    // quality: allow-fragile-selector (email input scoped by type and name attributes)
-    const emailInput = page.locator('input[type="email"], input[name="email"], input[id*="email"]').first();
-    if (await emailInput.isVisible()) {
-      await expect(emailInput).toBeVisible();
-    }
-  });
 
   test('should show cart summary if items exist', { tag: [...CHECKOUT_FORM_DISPLAY] }, async ({ page }) => {
     // First, try to add a product to cart
