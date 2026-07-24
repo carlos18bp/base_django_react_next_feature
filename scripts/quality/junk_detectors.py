@@ -158,6 +158,18 @@ class TestBlock:
         still caught.
         """
         body = self.body_source()
+        # Replace each string/template literal with a token derived from its
+        # exact content, BEFORE collapsing whitespace. Keeps distinct values
+        # distinct (the whole point) and stops the whitespace collapse below from
+        # turning `''` and `'   '` into the same token — isNonEmpty('') and
+        # isNonEmpty('   ') are different tests, and merging them deletes real
+        # coverage of the whitespace case.
+        body = re.sub(
+            r"(['\"`])((?:\\.|(?!\1).)*)\1",
+            lambda m: "S" + hashlib.md5(m.group(2).encode("utf-8")).hexdigest()[:8],
+            body,
+            flags=re.DOTALL,
+        )
         body = re.sub(r"//[^\n]*", "", body)
         body = re.sub(r"/\*.*?\*/", "", body, flags=re.DOTALL)
         body = re.sub(r"\s+", "", body)
@@ -260,6 +272,19 @@ def extract_test_blocks(source: str, file: str = "") -> list[TestBlock]:
             continue
 
         raw = source[match.start():close_idx]
+
+        # A real test declaration takes a callback. `test.skip(cond, 'reason')`
+        # and `test.slow(cond, 'reason')` are conditional STATEMENTS inside a
+        # test, not declarations — they carry no function, and parsing them as
+        # tests invented a phantom test named after the skip reason, with no
+        # interactions, that then tripped no_user_interaction. (Same shape as
+        # the regex `.test()` case: the token is right, the call is not a test.)
+        # A genuinely skipped test — test.skip('name', () => {...}) — keeps its
+        # callback and is still analysed.
+        masked_raw = masked[match.start():close_idx]
+        if not re.search(r"=>|\bfunction\b", masked_raw):
+            continue
+
         start_line = source.count("\n", 0, match.start()) + 1
         end_line = source.count("\n", 0, close_idx) + 1
 
@@ -616,6 +641,13 @@ _CONTENT_LOCATOR_RE = re.compile(
 
 _WEAK_RE = re.compile(r"\.(toBeTruthy|toBeDefined|toBeAttached)\s*\(\s*\)")
 _TAUTOLOGICAL_COUNT_RE = re.compile(r"\.toBeGreaterThanOrEqual\(\s*0\s*\)")
+# A concrete-value assertion: the matcher pins an actual expected value, so the
+# test can fail. `toBe(false)` counts; `toBeDefined()` does not.
+_STRONG_ASSERTION_RE = re.compile(
+    r"\.(toBe|toEqual|toStrictEqual|toMatchObject|toContain|toContainEqual|"
+    r"toHaveLength|toHaveText|toContainText|toHaveValue|toHaveCount|toHaveURL|"
+    r"toHaveAttribute|toHaveBeenCalledWith|toThrow)\s*\(\s*\S"
+)
 
 
 def detect_weak_assertion(block: TestBlock) -> Finding | None:
@@ -623,6 +655,13 @@ def detect_weak_assertion(block: TestBlock) -> Finding | None:
     weak = sorted(set(_WEAK_RE.findall(block.source)))
     tautological = bool(_TAUTOLOGICAL_COUNT_RE.search(block.source))
     if not weak and not tautological:
+        return None
+
+    # A weak assertion alongside a concrete one is redundant noise, not a junk
+    # test: `expect(route).toBeDefined(); expect(route.path).toBe('/')` verifies
+    # real behavior. Flagging it buries the real findings, so only fire when the
+    # weak assertion is the test's whole check.
+    if _STRONG_ASSERTION_RE.search(block.source):
         return None
 
     detail = ", ".join(f"{w}()" for w in weak)
@@ -672,7 +711,19 @@ def detect_tautological_selector(block: TestBlock) -> Finding | None:
 
 def detect_duplicates(blocks: list[TestBlock]) -> list[Finding]:
     """
-    Group tests that are structurally identical or share a name across files.
+    Group tests whose bodies are structurally identical.
+
+    The signal is the body fingerprint (formatting and comments stripped,
+    literals kept), which catches genuine copy-paste. A shared test NAME is
+    deliberately NOT a signal on its own:
+
+        describe('isValidPassword', () => it('returns false for null', ...isValidPassword(null)))
+        describe('isNonEmpty',      () => it('returns false for null', ...isNonEmpty(null)))
+
+    are different tests of different functions that happen to share a title. An
+    earlier name-collision rule flagged these, and BaseInput/BaseSelect sharing a
+    behavior-contract test name across files — both false positives. If two tests
+    are truly the same, their bodies match and the fingerprint catches them.
 
     Reported on every member but the first, so the survivor is unambiguous.
     """
@@ -699,38 +750,6 @@ def detect_duplicates(blocks: list[TestBlock]) -> list[Finding]:
                 line=dup.start_line,
                 identifier=dup.name,
                 suggestion="Merge into the stronger of the two and delete this one",
-            ))
-
-    # Name collisions count only WITHIN a file. Across files the same name is
-    # normal and healthy: BaseInput and BaseSelect both legitimately have
-    # 'respects size="sm" with smaller padding/text' because they share a
-    # behavior contract, and flagging that pattern produced mostly noise. A test
-    # genuinely copied into another file is caught by the structural
-    # fingerprint above instead.
-    by_name: dict[tuple[str, str], list[TestBlock]] = {}
-    for block in blocks:
-        if not block.name or "duplicate_coverage" in block.allow_markers:
-            continue
-        by_name.setdefault((block.file, block.name.strip().lower()), []).append(block)
-
-    already = {(f.file, f.line) for f in findings}
-    for group in by_name.values():
-        if len(group) < 2:
-            continue
-        keeper = group[0]
-        for dup in group[1:]:
-            if (dup.file, dup.start_line) in already:
-                continue
-            findings.append(Finding(
-                rule_id="duplicate_coverage",
-                message=(
-                    f"duplicated test name in the same file (also at line "
-                    f"{keeper.start_line}) - two tests claiming the same behavior"
-                ),
-                file=dup.file,
-                line=dup.start_line,
-                identifier=dup.name,
-                suggestion="Rename to describe the distinct behavior, or merge the two tests",
             ))
 
     return findings
