@@ -170,6 +170,10 @@ jobs:
         working-directory: backend
         run: venv/bin/python manage.py migrate --no-input
 
+      - name: Seed E2E test data
+        working-directory: backend
+        run: venv/bin/python manage.py create_fake_data 5
+
       - name: Install Playwright browsers with system deps
         run: npx playwright install --with-deps chromium
 

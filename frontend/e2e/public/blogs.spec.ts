@@ -8,19 +8,18 @@ test.describe('Blog Pages', () => {
     await waitForPageLoad(page);
   });
 
-  test('should display blogs list page', { tag: [...BLOG_LIST_VIEW] }, async ({ page }) => {
-    // Check if the page loaded
+  test('reaches the blogs list from the header and shows blog cards', { tag: [...BLOG_LIST_VIEW] }, async ({ page }) => {
+    await page.goto('/');
+    await waitForPageLoad(page);
+
+    // quality: allow-fragile-selector (blogs link appears in header and footer; first nav occurrence)
+    await page.locator('a[href="/blogs"]').first().click();
     await expect(page).toHaveURL(/.*blogs/);
-    
-    // Check for blog cards (if any exist)
+
+    // quality: allow-fragile-selector (blog list links uniquely scoped by href pattern)
     const blogCards = page.locator('a[href^="/blogs/"]');
-    const count = await blogCards.count();
-    
-    if (count > 0) {
-      // Verify first blog card is visible
-      // quality: allow-fragile-selector (blog list links uniquely scoped by href pattern)
-      await expect(blogCards.first()).toBeVisible();
-    }
+    await expect(blogCards.first()).toBeVisible({ timeout: 15000 });
+    await expect(blogCards.first()).toHaveAttribute('href', /\/blogs\/\d+/);
   });
 
   test('should navigate to blog detail page', { tag: [...BLOG_DETAIL_VIEW] }, async ({ page }) => {

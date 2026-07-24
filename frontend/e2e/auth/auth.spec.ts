@@ -81,20 +81,24 @@ test.describe('Authentication', () => {
     await expect(page).toHaveURL('/');
   });
 
-  test('should navigate to dashboard page', { tag: [...AUTH_PROTECTED_REDIRECT] }, async ({ page }) => {
+  test('redirects to sign-in when opening the dashboard without a session', { tag: [...AUTH_PROTECTED_REDIRECT] }, async ({ page }) => {
+    // quality: allow-no-interaction (no UI link to /dashboard when logged out; the guard redirect on direct navigation is the behavior)
+    await page.context().clearCookies();
+    await page.addInitScript(() => localStorage.clear());
     await page.goto('/dashboard');
     await waitForPageLoad(page);
-    
-    // Either redirected to sign-in or the dashboard is shown
-    await expect(page).toHaveURL(/dashboard|sign-in/);
+
+    await expect(page).toHaveURL(/.*sign-in/);
   });
 
-  test('should navigate to backoffice page', { tag: [...AUTH_PROTECTED_REDIRECT] }, async ({ page }) => {
+  test('redirects to sign-in when opening the backoffice without a session', { tag: [...AUTH_PROTECTED_REDIRECT] }, async ({ page }) => {
+    // quality: allow-no-interaction (no UI link to /backoffice when logged out; the guard redirect on direct navigation is the behavior)
+    await page.context().clearCookies();
+    await page.addInitScript(() => localStorage.clear());
     await page.goto('/backoffice');
     await waitForPageLoad(page);
-    
-    // Either redirected to sign-in or the backoffice is shown
-    await expect(page).toHaveURL(/backoffice|sign-in/);
+
+    await expect(page).toHaveURL(/.*sign-in/);
   });
 
   test('should display sign-up page heading', { tag: [...AUTH_SIGN_UP_FORM] }, async ({ page }) => {
