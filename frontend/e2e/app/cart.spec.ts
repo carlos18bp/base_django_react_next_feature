@@ -43,7 +43,8 @@ test.describe('Shopping Cart', () => {
     }
   });
 
-  test('should show empty cart message', { tag: [...CART_EMPTY] }, async ({ page }) => {
+  test('an empty cart shows the empty-cart message', { tag: [...CART_EMPTY] }, async ({ page }) => {
+    // quality: allow-no-interaction (the cart is empty by default after the beforeEach clear; the empty state is what this asserts)
     await page.goto('/checkout');
     await waitForPageLoad(page);
 
@@ -83,36 +84,26 @@ test.describe('Shopping Cart', () => {
     }
   });
 
-  test('should remove product from cart', { tag: [...CART_REMOVE] }, async ({ page }) => {
-    // First add a product
+  test('removes a product from the cart, leaving it empty', { tag: [...CART_REMOVE] }, async ({ page }) => {
     await page.goto('/catalog');
     await waitForPageLoad(page);
-    
+
+    // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
     const productCards = page.locator('a[href^="/products/"]');
-    const count = await productCards.count();
-    
-    if (count > 0) {
-      // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
-      await productCards.first().click();
-      await waitForPageLoad(page);
-      
-      await page.locator('button:has-text("Add to cart")').click();
-      await page.waitForLoadState('load');
-      
-      // Go to checkout
-      await page.goto('/checkout');
-      await waitForPageLoad(page);
-      
-      // Remove item
-      // quality: allow-fragile-selector (Remove button is the only such button in cart item row)
-      const removeBtn = page.locator('button:has-text("Remove")').first();
-      if (await removeBtn.isVisible()) {
-        await removeBtn.click();
-        
-        // Should show empty cart
-        await expect(page.locator('text=Your cart is empty')).toBeVisible();
-      }
-    }
+    await expect(productCards.first()).toBeVisible({ timeout: 15000 });
+    await productCards.first().click();
+    await waitForPageLoad(page);
+
+    await page.locator('button:has-text("Add to cart")').click();
+
+    await page.goto('/checkout');
+    await waitForPageLoad(page);
+    await expect(page.getByText('Your cart is empty.')).toBeHidden();
+
+    // quality: allow-fragile-selector (Remove is the only such button in a cart item row)
+    await page.locator('button:has-text("Remove")').first().click();
+
+    await expect(page.getByText('Your cart is empty.')).toBeVisible();
   });
 
   test('should calculate subtotal correctly', { tag: [...CART_SUBTOTAL] }, async ({ page }) => {
@@ -169,37 +160,29 @@ test.describe('Shopping Cart', () => {
     }
   });
 
-  test('should add multiple different products', { tag: [...CART_MULTIPLE_PRODUCTS] }, async ({ page }) => {
+  test('adds two different products and both appear in the cart', { tag: [...CART_MULTIPLE_PRODUCTS] }, async ({ page }) => {
     await page.goto('/catalog');
     await waitForPageLoad(page);
-    
+
+    // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
     const productCards = page.locator('a[href^="/products/"]');
-    const count = await productCards.count();
-    
-    if (count >= 2) {
-      // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
-      await productCards.nth(0).click();
-      await waitForPageLoad(page);
-      await page.locator('button:has-text("Add to cart")').click();
-      await page.waitForLoadState('load');
-      
-      // Go back and add second product
-      await page.goto('/catalog');
-      await waitForPageLoad(page);
-      
-      // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
-      await productCards.nth(1).click();
-      await waitForPageLoad(page);
-      await page.locator('button:has-text("Add to cart")').click();
-      await page.waitForLoadState('load');
-      
-      // Check cart has 2 items
-      await page.goto('/checkout');
-      await waitForPageLoad(page);
-      
-      const cartItems = page.locator('[data-testid="cart-item"], .border.rounded.p-4');
-      const itemCount = await cartItems.count();
-      expect(itemCount).toBeGreaterThanOrEqual(2);
-    }
+    await expect(productCards.nth(1)).toBeVisible({ timeout: 15000 });
+
+    await productCards.nth(0).click();
+    await waitForPageLoad(page);
+    await page.locator('button:has-text("Add to cart")').click();
+
+    await page.goto('/catalog');
+    await waitForPageLoad(page);
+    await page.locator('a[href^="/products/"]').nth(1).click();
+    await waitForPageLoad(page);
+    await page.locator('button:has-text("Add to cart")').click();
+
+    await page.goto('/checkout');
+    await waitForPageLoad(page);
+
+    // quality: allow-fragile-selector (cart item rows have no test id; matched by their layout wrapper)
+    const cartItems = page.locator('[data-testid="cart-item"], .border.rounded.p-4');
+    await expect(cartItems).toHaveCount(2);
   });
 });
