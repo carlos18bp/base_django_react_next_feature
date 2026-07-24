@@ -1,21 +1,4 @@
 {
   "_comment": "Junk-test findings that predate the rules. These stay warnings under --junk-severity=error so existing debt does not block merges; anything not listed here is a new finding and fails. This file should only ever shrink.",
-  "findings": [
-    "frontend/e2e/app/checkout.spec.ts::no_user_interaction::should display checkout form fields",
-    "frontend/e2e/app/checkout.spec.ts::no_user_interaction::should navigate to checkout page",
-    "frontend/e2e/app/user-flows.spec.ts::no_user_interaction::should handle direct URL navigation",
-    "frontend/e2e/app/user-flows.spec.ts::no_user_interaction::should navigate between all main sections",
-    "frontend/e2e/app/user-flows.spec.ts::no_user_interaction::should show appropriate content for each page type",
-    "frontend/e2e/auth/auth.spec.ts::no_user_interaction::should display forgot password form",
-    "frontend/e2e/auth/auth.spec.ts::no_user_interaction::should display sign-in form",
-    "frontend/e2e/auth/auth.spec.ts::no_user_interaction::should display sign-up page heading",
-    "frontend/e2e/auth/auth.spec.ts::no_user_interaction::should have link to dashboard after sign-in",
-    "frontend/e2e/auth/auth.spec.ts::no_user_interaction::should navigate to sign-in page",
-    "frontend/e2e/auth/auth.spec.ts::no_user_interaction::should show all required sign-up form fields",
-    "frontend/e2e/public/blogs.spec.ts::no_data_assertion::should show blog details",
-    "frontend/e2e/public/products.spec.ts::no_data_assertion::should display product gallery images",
-    "frontend/e2e/public/products.spec.ts::no_data_assertion::should show product details including price",
-    "frontend/e2e/public/products.spec.ts::no_user_interaction::should display products catalog page",
-    "frontend/e2e/public/smoke.spec.ts::no_user_interaction::home page loads"
-  ]
+  "findings": []
 }
