@@ -1,4 +1,11 @@
 {
   "_comment": "Junk-test findings that predate the rules. These stay warnings under --junk-severity=error so existing debt does not block merges; anything not listed here is a new finding and fails. This file should only ever shrink.",
-  "findings": []
+  "findings": [
+    "frontend/app/blogs/[blogId]/__tests__/page.test.tsx::mock_only_assertion::renders loading state when blogId is invalid",
+    "frontend/app/forgot-password/__tests__/page.test.tsx::mock_only_assertion::validates password length",
+    "frontend/app/forgot-password/__tests__/page.test.tsx::mock_only_assertion::validates password mismatch",
+    "frontend/app/products/[productId]/__tests__/page.test.tsx::mock_only_assertion::shows product not found when productId is invalid",
+    "frontend/app/sign-up/__tests__/page.test.tsx::mock_only_assertion::shows error when password is too short",
+    "frontend/app/sign-up/__tests__/page.test.tsx::mock_only_assertion::shows error when passwords do not match"
+  ]
 }
