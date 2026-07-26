@@ -1,3 +1,5 @@
+import os
+
 from django.http import JsonResponse
 from django.urls import path, include
 from django.conf import settings
@@ -8,7 +10,14 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 
 def health_check(request):
-    return JsonResponse({'status': 'ok'})
+    # 'project' (the clone dir name == canonical fleet name) and 'environment'
+    # let external probes verify WHO answered — a dead staging domain can fall
+    # through DNS/nginx to another app (measured: /qa pilot #3, F24).
+    return JsonResponse({
+        'status': 'ok',
+        'project': settings.BASE_DIR.parent.name,
+        'environment': os.getenv('DJANGO_ENV', 'development'),
+    })
 
 
 urlpatterns = [
