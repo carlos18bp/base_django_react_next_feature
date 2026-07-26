@@ -10,13 +10,17 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 
 def health_check(request):
+    # 'environment' reads the SETTING first: DJANGO_ENV lives in backend/.env
+    # (read by the settings module), while systemd only exports
+    # DJANGO_SETTINGS_MODULE — os.getenv alone reports 'development' in
+    # production. The setting is what the app itself believes it is.
     # 'project' (the clone dir name == canonical fleet name) and 'environment'
     # let external probes verify WHO answered — a dead staging domain can fall
     # through DNS/nginx to another app (measured: /qa pilot #3, F24).
     return JsonResponse({
         'status': 'ok',
         'project': settings.BASE_DIR.parent.name,
-        'environment': os.getenv('DJANGO_ENV', 'development'),
+        'environment': getattr(settings, 'DJANGO_ENV', os.getenv('DJANGO_ENV', 'development')),
     })
 
 
