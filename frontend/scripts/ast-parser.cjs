@@ -79,10 +79,12 @@ function textFromLiteral(node) {
 function getMemberChain(callee) {
   const chain = [];
   let current = callee;
+  let rooted = false;
 
   while (current) {
     if (current.type === 'Identifier') {
       chain.unshift(current.name);
+      rooted = true;
       break;
     }
 
@@ -104,6 +106,16 @@ function getMemberChain(callee) {
     }
 
     break;
+  }
+
+  // F44: a chain that never reached an Identifier root hangs off a literal or
+  // dynamic expression — /re/.test(x), 'str'.includes(y), arr[i].test(z). The
+  // walk used to return ['test'] for those, and classifyCall mistook the
+  // member call for a bare test() declaration (phantom test -> false
+  // EMPTY_TEST). The sentinel keeps the member names available to heuristics
+  // while making the root unmatchable to test/it/describe.
+  if (!rooted && chain.length > 0) {
+    chain.unshift('<expr>');
   }
 
   return chain;
