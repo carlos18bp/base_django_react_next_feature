@@ -11,7 +11,7 @@ test.describe('Complete Purchase Flow', () => {
     await page.evaluate(() => localStorage.clear());
   });
 
-  test('should complete full purchase flow from home to checkout', { tag: [...PURCHASE_COMPLETE_FLOW] }, async ({ page }) => {
+  test('should complete full purchase flow from home to checkout', { tag: [...PURCHASE_COMPLETE_FLOW, '@outcome:success'] }, async ({ page }) => {
     // 1. Start at home page
     await page.goto('/');
     await waitForPageLoad(page);
@@ -80,7 +80,7 @@ test.describe('Complete Purchase Flow', () => {
     }
   });
 
-  test('should navigate through product carousel', { tag: [...HOME_PRODUCT_CAROUSEL] }, async ({ page }) => {
+  test('should navigate through product carousel', { tag: [...HOME_PRODUCT_CAROUSEL, '@outcome:display'] }, async ({ page }) => {
     await page.goto('/');
     await waitForPageLoad(page);
     
@@ -100,7 +100,7 @@ test.describe('Complete Purchase Flow', () => {
     }
   });
 
-  test('checkout lists two products and their subtotal', { tag: [...PURCHASE_MULTIPLE_ITEMS] }, async ({ page }) => {
+  test('checkout lists two products and their subtotal', { tag: [...PURCHASE_MULTIPLE_ITEMS, '@outcome:success'] }, async ({ page }) => {
     await page.goto('/catalog');
     await waitForPageLoad(page);
 
@@ -126,7 +126,7 @@ test.describe('Complete Purchase Flow', () => {
     await expect(page.getByText('Subtotal')).toBeVisible();
   });
 
-  test('the complete-checkout button is disabled when the cart is empty', { tag: [...PURCHASE_DISABLED_EMPTY_CART] }, async ({ page }) => {
+  test('the complete-checkout button is disabled when the cart is empty', { tag: [...PURCHASE_DISABLED_EMPTY_CART, '@outcome:display'] }, async ({ page }) => {
     // quality: allow-no-interaction (the cart is empty by default after the beforeEach clear; this asserts the disabled state of that default)
     await page.goto('/checkout');
     await waitForPageLoad(page);

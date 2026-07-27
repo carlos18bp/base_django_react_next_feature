@@ -4,7 +4,7 @@ import { CHECKOUT_FORM_DISPLAY, CHECKOUT_FORM_VALIDATION, CHECKOUT_FORM_FILL } f
 
 test.describe('Checkout Flow', () => {
 
-  test('should show cart summary if items exist', { tag: [...CHECKOUT_FORM_DISPLAY] }, async ({ page }) => {
+  test('should show cart summary if items exist', { tag: [...CHECKOUT_FORM_DISPLAY, '@outcome:display'] }, async ({ page }) => {
     // First, try to add a product to cart
     await page.goto('/catalog');
     await waitForPageLoad(page);
@@ -35,7 +35,7 @@ test.describe('Checkout Flow', () => {
     }
   });
 
-  test('should validate required fields', { tag: [...CHECKOUT_FORM_VALIDATION] }, async ({ page }) => {
+  test('should validate required fields', { tag: [...CHECKOUT_FORM_VALIDATION, '@outcome:display'] }, async ({ page }) => {
     // Clear localStorage to ensure empty cart state
     await page.goto('/checkout');
     await page.evaluate(() => localStorage.clear());
@@ -52,7 +52,7 @@ test.describe('Checkout Flow', () => {
     await expect(submitBtn).toBeDisabled();
   });
 
-  test('should accept valid checkout data', { tag: [...CHECKOUT_FORM_FILL] }, async ({ page }) => {
+  test('should accept valid checkout data', { tag: [...CHECKOUT_FORM_FILL, '@outcome:display'] }, async ({ page }) => {
     await page.goto('/checkout');
     await waitForPageLoad(page);
 

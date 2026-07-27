@@ -8,7 +8,7 @@ test.describe('Product Pages', () => {
     await waitForPageLoad(page);
   });
 
-  test('opens a product from the catalog', { tag: [...CATALOG_PRODUCT_DETAIL] }, async ({ page }) => {
+  test('opens a product from the catalog', { tag: [...CATALOG_PRODUCT_DETAIL, '@outcome:display'] }, async ({ page }) => {
     // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
     const productCards = page.locator('a[href^="/products/"]');
     await expect(productCards.first()).toBeVisible({ timeout: 15000 });
@@ -18,7 +18,7 @@ test.describe('Product Pages', () => {
     await expect(page).toHaveURL(/.*products\/\d+/);
   });
 
-  test('the product detail shows the listed title and its price', { tag: [...CATALOG_PRODUCT_DETAIL] }, async ({ page }) => {
+  test('the product detail shows the listed title and its price', { tag: [...CATALOG_PRODUCT_DETAIL, '@outcome:display'] }, async ({ page }) => {
     // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
     const firstCard = page.locator('a[href^="/products/"]').first();
     await expect(firstCard).toBeVisible({ timeout: 15000 });
@@ -35,7 +35,7 @@ test.describe('Product Pages', () => {
     await expect(page.getByText(/\$\d/).first()).toBeVisible();
   });
 
-  test('the product detail renders a gallery image with a source', { tag: [...CATALOG_PRODUCT_GALLERY] }, async ({ page }) => {
+  test('the product detail renders a gallery image with a source', { tag: [...CATALOG_PRODUCT_GALLERY, '@outcome:display'] }, async ({ page }) => {
     // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
     const productCards = page.locator('a[href^="/products/"]');
     await expect(productCards.first()).toBeVisible({ timeout: 15000 });
@@ -45,7 +45,7 @@ test.describe('Product Pages', () => {
     await expect(page.locator('img').first()).toHaveAttribute('src', /.+/);
   });
 
-  test('navigates back to the catalog from a product', { tag: [...CATALOG_BACK_NAVIGATION] }, async ({ page }) => {
+  test('navigates back to the catalog from a product', { tag: [...CATALOG_BACK_NAVIGATION, '@outcome:success'] }, async ({ page }) => {
     // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
     const productCards = page.locator('a[href^="/products/"]');
     await expect(productCards.first()).toBeVisible({ timeout: 15000 });

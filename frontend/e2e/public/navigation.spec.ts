@@ -3,7 +3,7 @@ import { waitForPageLoad } from '../fixtures';
 import { HOME_LOADS, NAVIGATION_BETWEEN_PAGES, NAVIGATION_HEADER, NAVIGATION_FOOTER } from '../helpers/flow-tags';
 
 test.describe('Navigation', () => {
-  test('home page loads with its hero heading', { tag: [...HOME_LOADS] }, async ({ page }) => {
+  test('home page loads with its hero heading', { tag: [...HOME_LOADS, '@outcome:display'] }, async ({ page }) => {
     // quality: allow-no-interaction (home is the app entry point; there is no prior page to navigate from)
     await page.goto('/');
     await waitForPageLoad(page);
@@ -12,7 +12,7 @@ test.describe('Navigation', () => {
     await expect(page.getByRole('heading', { name: 'Everything you need, in one place' })).toBeVisible();
   });
 
-  test('navigates from home to blogs via the nav link', { tag: [...NAVIGATION_BETWEEN_PAGES] }, async ({ page }) => {
+  test('navigates from home to blogs via the nav link', { tag: [...NAVIGATION_BETWEEN_PAGES, '@outcome:success'] }, async ({ page }) => {
     await page.goto('/');
     await waitForPageLoad(page);
 
@@ -22,7 +22,7 @@ test.describe('Navigation', () => {
     await expect(page).toHaveURL(/.*blogs/);
   });
 
-  test('navigates from home to catalog via the nav link', { tag: [...NAVIGATION_BETWEEN_PAGES] }, async ({ page }) => {
+  test('navigates from home to catalog via the nav link', { tag: [...NAVIGATION_BETWEEN_PAGES, '@outcome:success'] }, async ({ page }) => {
     await page.goto('/');
     await waitForPageLoad(page);
 
@@ -32,7 +32,7 @@ test.describe('Navigation', () => {
     await expect(page).toHaveURL(/.*catalog/);
   });
 
-  test('the header links reach the catalog', { tag: [...NAVIGATION_HEADER] }, async ({ page }) => {
+  test('the header links reach the catalog', { tag: [...NAVIGATION_HEADER, '@outcome:success'] }, async ({ page }) => {
     await page.goto('/');
     await waitForPageLoad(page);
 
@@ -43,7 +43,7 @@ test.describe('Navigation', () => {
     await expect(page).toHaveURL(/.*catalog/);
   });
 
-  test('the footer shows the site copyright on every page', { tag: [...NAVIGATION_FOOTER] }, async ({ page }) => {
+  test('the footer shows the site copyright on every page', { tag: [...NAVIGATION_FOOTER, '@outcome:display'] }, async ({ page }) => {
     // quality: allow-no-interaction (the footer is static layout chrome with no links; this asserts its content renders)
     await page.goto('/');
     await waitForPageLoad(page);
@@ -53,7 +53,7 @@ test.describe('Navigation', () => {
     await expect(footer).toContainText('Base Django + React + Next Feature Template');
   });
 
-  test('maintains navigation across pages', { tag: [...NAVIGATION_BETWEEN_PAGES] }, async ({ page }) => {
+  test('maintains navigation across pages', { tag: [...NAVIGATION_BETWEEN_PAGES, '@outcome:success'] }, async ({ page }) => {
     await page.goto('/');
     await waitForPageLoad(page);
 

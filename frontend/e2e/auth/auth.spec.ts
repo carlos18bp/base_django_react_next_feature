@@ -4,7 +4,7 @@ import { AUTH_SIGN_IN_FORM, AUTH_SIGN_UP_FORM, AUTH_LOGIN_INVALID, AUTH_PROTECTE
 
 test.describe('Authentication', () => {
 
-  test('should show validation on empty form submission', { tag: [...AUTH_SIGN_IN_FORM] }, async ({ page }) => {
+  test('should show validation on empty form submission', { tag: [...AUTH_SIGN_IN_FORM, '@outcome:error'] }, async ({ page }) => {
     await page.goto('/sign-in');
     await waitForPageLoad(page);
     
@@ -16,7 +16,7 @@ test.describe('Authentication', () => {
     await expect(page).toHaveURL(/.*sign-in/);
   });
 
-  test('should accept input in form fields', { tag: [...AUTH_SIGN_IN_FORM] }, async ({ page }) => {
+  test('should accept input in form fields', { tag: [...AUTH_SIGN_IN_FORM, '@outcome:display'] }, async ({ page }) => {
     await page.goto('/sign-in');
     await waitForPageLoad(page);
     
@@ -31,7 +31,7 @@ test.describe('Authentication', () => {
     await expect(passwordInput).toHaveValue('password123');
   });
 
-  test('should handle invalid credentials gracefully', { tag: [...AUTH_LOGIN_INVALID] }, async ({ page }) => {
+  test('should handle invalid credentials gracefully', { tag: [...AUTH_LOGIN_INVALID, '@outcome:error'] }, async ({ page }) => {
     await page.goto('/sign-in');
     await waitForPageLoad(page);
     
@@ -50,7 +50,7 @@ test.describe('Authentication', () => {
     await expect(page).toHaveURL(/.*sign-in/);
   });
 
-  test('redirects to sign-in when opening the dashboard without a session', { tag: [...AUTH_PROTECTED_REDIRECT] }, async ({ page }) => {
+  test('redirects to sign-in when opening the dashboard without a session', { tag: [...AUTH_PROTECTED_REDIRECT, '@outcome:success'] }, async ({ page }) => {
     // quality: allow-no-interaction (no UI link to /dashboard when logged out; the guard redirect on direct navigation is the behavior)
     await page.context().clearCookies();
     await page.addInitScript(() => localStorage.clear());
@@ -60,7 +60,7 @@ test.describe('Authentication', () => {
     await expect(page).toHaveURL(/.*sign-in/);
   });
 
-  test('redirects to sign-in when opening the backoffice without a session', { tag: [...AUTH_PROTECTED_REDIRECT] }, async ({ page }) => {
+  test('redirects to sign-in when opening the backoffice without a session', { tag: [...AUTH_PROTECTED_REDIRECT, '@outcome:success'] }, async ({ page }) => {
     // quality: allow-no-interaction (no UI link to /backoffice when logged out; the guard redirect on direct navigation is the behavior)
     await page.context().clearCookies();
     await page.addInitScript(() => localStorage.clear());
@@ -70,7 +70,7 @@ test.describe('Authentication', () => {
     await expect(page).toHaveURL(/.*sign-in/);
   });
 
-  test('should validate password mismatch on sign-up', { tag: [...AUTH_SIGN_UP_FORM] }, async ({ page }) => {
+  test('should validate password mismatch on sign-up', { tag: [...AUTH_SIGN_UP_FORM, '@outcome:error'] }, async ({ page }) => {
     await page.goto('/sign-up');
     await waitForPageLoad(page);
 
@@ -88,7 +88,7 @@ test.describe('Authentication', () => {
     await expect(page).toHaveURL(/.*sign-up/);
   });
 
-  test('should navigate from sign-in to forgot password', { tag: [...AUTH_FORGOT_PASSWORD_FORM] }, async ({ page }) => {
+  test('should navigate from sign-in to forgot password', { tag: [...AUTH_FORGOT_PASSWORD_FORM, '@outcome:display'] }, async ({ page }) => {
     await page.goto('/sign-in');
     await waitForPageLoad(page);
 

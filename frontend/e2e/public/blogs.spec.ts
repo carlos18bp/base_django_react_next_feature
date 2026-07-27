@@ -8,7 +8,7 @@ test.describe('Blog Pages', () => {
     await waitForPageLoad(page);
   });
 
-  test('reaches the blogs list from the header and shows blog cards', { tag: [...BLOG_LIST_VIEW] }, async ({ page }) => {
+  test('reaches the blogs list from the header and shows blog cards', { tag: [...BLOG_LIST_VIEW, '@outcome:display'] }, async ({ page }) => {
     await page.goto('/');
     await waitForPageLoad(page);
 
@@ -22,7 +22,7 @@ test.describe('Blog Pages', () => {
     await expect(blogCards.first()).toHaveAttribute('href', /\/blogs\/\d+/);
   });
 
-  test('should navigate to blog detail page', { tag: [...BLOG_DETAIL_VIEW] }, async ({ page }) => {
+  test('should navigate to blog detail page', { tag: [...BLOG_DETAIL_VIEW, '@outcome:display'] }, async ({ page }) => {
     // Find and click the first blog card
     // quality: allow-fragile-selector (blog list links uniquely scoped by href pattern)
     const firstBlogCard = page.locator('a[href^="/blogs/"]').first();
@@ -37,7 +37,7 @@ test.describe('Blog Pages', () => {
     }
   });
 
-  test('the blog detail shows the post title from the list', { tag: [...BLOG_DETAIL_VIEW] }, async ({ page }) => {
+  test('the blog detail shows the post title from the list', { tag: [...BLOG_DETAIL_VIEW, '@outcome:display'] }, async ({ page }) => {
     // quality: allow-fragile-selector (blog list links uniquely scoped by href pattern)
     const firstCard = page.locator('a[href^="/blogs/"]').first();
     await expect(firstCard).toBeVisible({ timeout: 15000 });
@@ -54,7 +54,7 @@ test.describe('Blog Pages', () => {
     }
   });
 
-  test('should navigate back to blogs list from detail', { tag: [...BLOG_DETAIL_BACK] }, async ({ page }) => {
+  test('should navigate back to blogs list from detail', { tag: [...BLOG_DETAIL_BACK, '@outcome:success'] }, async ({ page }) => {
     const blogCards = page.locator('a[href^="/blogs/"]');
     const count = await blogCards.count();
     

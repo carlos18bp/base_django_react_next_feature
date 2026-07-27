@@ -12,7 +12,7 @@ test.describe('Shopping Cart', () => {
     await waitForPageLoad(page);
   });
 
-  test('should add product to cart', { tag: [...CART_ADD] }, async ({ page }) => {
+  test('should add product to cart', { tag: [...CART_ADD, '@outcome:success'] }, async ({ page }) => {
     // Go to catalog
     await page.goto('/catalog');
     await waitForPageLoad(page);
@@ -43,7 +43,7 @@ test.describe('Shopping Cart', () => {
     }
   });
 
-  test('an empty cart shows the empty-cart message', { tag: [...CART_EMPTY] }, async ({ page }) => {
+  test('an empty cart shows the empty-cart message', { tag: [...CART_EMPTY, '@outcome:display'] }, async ({ page }) => {
     // quality: allow-no-interaction (the cart is empty by default after the beforeEach clear; the empty state is what this asserts)
     await page.goto('/checkout');
     await waitForPageLoad(page);
@@ -51,7 +51,7 @@ test.describe('Shopping Cart', () => {
     await expect(page.getByText('Your cart is empty.')).toBeVisible();
   });
 
-  test('should update product quantity in cart', { tag: [...CART_UPDATE_QTY] }, async ({ page }) => {
+  test('should update product quantity in cart', { tag: [...CART_UPDATE_QTY, '@outcome:success'] }, async ({ page }) => {
     // First add a product
     await page.goto('/catalog');
     await waitForPageLoad(page);
@@ -84,7 +84,7 @@ test.describe('Shopping Cart', () => {
     }
   });
 
-  test('removes a product from the cart, leaving it empty', { tag: [...CART_REMOVE] }, async ({ page }) => {
+  test('removes a product from the cart, leaving it empty', { tag: [...CART_REMOVE, '@outcome:success'] }, async ({ page }) => {
     await page.goto('/catalog');
     await waitForPageLoad(page);
 
@@ -106,7 +106,7 @@ test.describe('Shopping Cart', () => {
     await expect(page.getByText('Your cart is empty.')).toBeVisible();
   });
 
-  test('should calculate subtotal correctly', { tag: [...CART_SUBTOTAL] }, async ({ page }) => {
+  test('should calculate subtotal correctly', { tag: [...CART_SUBTOTAL, '@outcome:display'] }, async ({ page }) => {
     // Add product to cart
     await page.goto('/catalog');
     await waitForPageLoad(page);
@@ -132,7 +132,7 @@ test.describe('Shopping Cart', () => {
     }
   });
 
-  test('should persist cart across page reloads', { tag: [...CART_PERSIST] }, async ({ page }) => {
+  test('should persist cart across page reloads', { tag: [...CART_PERSIST, '@outcome:display'] }, async ({ page }) => {
     // Add product to cart
     await page.goto('/catalog');
     await waitForPageLoad(page);
@@ -160,7 +160,7 @@ test.describe('Shopping Cart', () => {
     }
   });
 
-  test('adds two different products and both appear in the cart', { tag: [...CART_MULTIPLE_PRODUCTS] }, async ({ page }) => {
+  test('adds two different products and both appear in the cart', { tag: [...CART_MULTIPLE_PRODUCTS, '@outcome:success'] }, async ({ page }) => {
     await page.goto('/catalog');
     await waitForPageLoad(page);
 
