@@ -6,7 +6,7 @@
 
 backend_app_name: base_feature_app
 py_test_file_glob: test_*.py
-frontend_unit_dir: ""
+frontend_unit_dir: "."
 frontend_e2e_dir: e2e
 max_test_lines: 50
 min_test_lines: 3
