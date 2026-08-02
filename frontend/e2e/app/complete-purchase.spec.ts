@@ -161,16 +161,23 @@ test.describe('Complete Purchase Flow', () => {
       await page.locator('input[placeholder="Postal code"]').fill(testCheckoutData.postal_code);
       
       const submitBtn = page.locator('button[type="submit"]');
-      
-      // Click submit and check for loading state (dots)
-      // Note: This test may fail if backend responds too quickly or is not running
+
+      // Hold the sale request in flight so the transient loading state is
+      // observable instead of racing the response — that race is why the
+      // assertion below was originally commented out.
+      await page.route('**/create-sale/', async (route) => {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await route.fulfill({ status: 201, contentType: 'application/json', body: '{}' });
+      });
+
       await submitBtn.click();
-      
-      // Check if button text changes (may be brief)
-      // await expect(submitBtn).toHaveText('...');
-      
-      // Wait for any navigation or URL change after submission
-      await page.waitForURL(/.*/, { timeout: 5000 }).catch(() => {});
+
+      // While the request is in flight the button shows the loading label and
+      // stays disabled. Catches a regression where submit never enters the
+      // loading state and stays clickable, letting the user double-submit and
+      // create a duplicate sale.
+      await expect(submitBtn).toHaveText('...');
+      await expect(submitBtn).toBeDisabled();
     }
   });
 });
