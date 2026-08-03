@@ -6,6 +6,15 @@
     "frontend/app/forgot-password/__tests__/page.test.tsx::mock_only_assertion::validates password mismatch",
     "frontend/app/products/[productId]/__tests__/page.test.tsx::mock_only_assertion::shows product not found when productId is invalid",
     "frontend/app/sign-up/__tests__/page.test.tsx::mock_only_assertion::shows error when password is too short",
-    "frontend/app/sign-up/__tests__/page.test.tsx::mock_only_assertion::shows error when passwords do not match"
+    "frontend/app/sign-up/__tests__/page.test.tsx::mock_only_assertion::shows error when passwords do not match",
+    "frontend/components/blog/__tests__/BlogCard.test.tsx::negation_only_assertion::should not render image when image_url is not provided",
+    "frontend/components/product/__tests__/ProductCard.test.tsx::negation_only_assertion::should not render image when gallery_urls is empty",
+    "frontend/e2e/app/cart.spec.ts::negation_only_assertion::should persist cart across page reloads",
+    "frontend/lib/services/__tests__/tokens.test.ts::negation_only_assertion::returns null when tokens are missing",
+    "frontend/lib/stores/__tests__/blogStore.test.ts::negation_only_assertion::resets error to null when clearError is called",
+    "frontend/lib/stores/__tests__/cartStore.test.ts::negation_only_assertion::should remove a product from cart",
+    "frontend/lib/stores/__tests__/cartStore.test.ts::negation_only_assertion::should remove all items from cart",
+    "frontend/lib/stores/__tests__/cartStore.test.ts::negation_only_assertion::should remove product if quantity is 0",
+    "frontend/lib/stores/__tests__/productStore.test.ts::negation_only_assertion::resets error to null when clearError is called"
   ]
 }
