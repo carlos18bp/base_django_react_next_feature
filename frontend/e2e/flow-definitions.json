@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastUpdated": "2026-02-24",
+  "lastUpdated": "2026-08-13",
   "flows": {
     "home-loads": {
       "name": "Home page loads",
@@ -365,10 +365,10 @@
         "shared"
       ],
       "priority": "P1",
-      "description": "Submit button is disabled when checkout form is empty",
+      "description": "Submitting checkout with required shipping fields left blank is rejected by create-sale/ and does not clear the cart",
       "expectedSpecs": 1,
       "outcomes": [
-        "display"
+        "error"
       ]
     },
     "checkout-form-fill": {

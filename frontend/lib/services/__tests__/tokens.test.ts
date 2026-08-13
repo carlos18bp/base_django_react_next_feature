@@ -47,12 +47,14 @@ describe('tokens service', () => {
     expect(mockCookies.get).toHaveBeenCalledWith('refresh_token');
   });
 
-  it('sets and clears tokens', () => {
+  it('sets both token cookies', () => {
     setTokens({ access: 'token-a', refresh: 'token-r' });
 
     expect(mockCookies.set).toHaveBeenCalledWith('access_token', 'token-a', { sameSite: 'lax' });
     expect(mockCookies.set).toHaveBeenCalledWith('refresh_token', 'token-r', { sameSite: 'lax' });
+  });
 
+  it('clears both token cookies', () => {
     clearTokens();
 
     expect(mockCookies.remove).toHaveBeenCalledWith('access_token');

@@ -99,7 +99,13 @@ def test_staging_banner_exposes_contact_details(api_client, banner):
 
 @pytest.mark.django_db
 def test_staging_banner_does_not_expose_internal_duration_config(api_client, banner):
-    """The banner payload omits the internal phase duration configuration fields."""
+    """The banner payload omits internal duration fields and exposes exactly the public contract.
+
+    A negation-only check on the two internal fields is satisfied by an empty
+    body, so it would miss a regression that dropped the whole payload. Pinning
+    the exact key set catches that, plus any other internal field (present or
+    future) that leaks in alongside `design_duration_days`/`development_duration_days`.
+    """
     url = reverse('staging-banner')
 
     response = api_client.get(url)
@@ -107,3 +113,14 @@ def test_staging_banner_does_not_expose_internal_duration_config(api_client, ban
     body = response.json()
     assert 'design_duration_days' not in body
     assert 'development_duration_days' not in body
+    assert set(body.keys()) == {
+        'is_visible',
+        'current_phase',
+        'phase_labels',
+        'started_at',
+        'expires_at',
+        'days_remaining',
+        'is_expired',
+        'contact_whatsapp',
+        'contact_email',
+    }

@@ -32,21 +32,29 @@ test.describe('Authentication', () => {
   });
 
   test('should handle invalid credentials gracefully', { tag: [...AUTH_LOGIN_INVALID, '@outcome:error'] }, async ({ page }) => {
+    // Catches a regression where the sign-in form stops surfacing the
+    // backend's rejection message (frontend/app/sign-in/page.tsx:55) and
+    // instead fails silently or shows nothing.
+    await page.route('**/sign_in/', (route) =>
+      route.fulfill({ status: 401, contentType: 'application/json', body: '{}' })
+    );
+
     await page.goto('/sign-in');
     await waitForPageLoad(page);
-    
+
     // Fill with invalid credentials (using placeholder)
     const emailInput = page.getByPlaceholder('Email');
     await emailInput.fill('invalid@example.com');
-    
-    const passwordInput = page.locator('input[type="password"]');
+
+    const passwordInput = page.getByPlaceholder('Password');
     await passwordInput.fill('wrongpassword');
-    
+
     // Submit
     const submitBtn = page.locator('button[type="submit"]');
     await submitBtn.click();
-    
-    // Should show error or stay on sign-in page
+
+    // Shows the backend's rejection message and stays on sign-in page
+    await expect(page.getByText('Invalid credentials')).toBeVisible();
     await expect(page).toHaveURL(/.*sign-in/);
   });
 

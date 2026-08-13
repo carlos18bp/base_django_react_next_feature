@@ -32,6 +32,8 @@ describe('BlogsPage', () => {
     expect(screen.getByText('Blogs')).toBeInTheDocument();
     // Bug this catches: shrinking the skeleton loop (Array.from({ length: 9 }))
     // to e.g. length 1 would still pass a bare toBeGreaterThan(0) check.
+    // quality: allow-fragile-selector (skeleton has no testid/role hook; counting
+    // .animate-pulse is the only observable — audit A1 2026-08-13)
     expect(container.querySelectorAll('.animate-pulse')).toHaveLength(9 * 3);
   });
 

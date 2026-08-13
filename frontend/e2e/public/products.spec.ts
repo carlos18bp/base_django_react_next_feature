@@ -23,14 +23,13 @@ test.describe('Product Pages', () => {
     const firstCard = page.locator('a[href^="/products/"]').first();
     await expect(firstCard).toBeVisible({ timeout: 15000 });
     const title = ((await firstCard.locator('h3').first().textContent()) ?? '').trim();
+    expect(title.length).toBeGreaterThan(0);
 
     await firstCard.click();
     await waitForPageLoad(page);
     await expect(page).toHaveURL(/.*products\/\d+/);
 
-    if (title) {
-      await expect(page.getByText(title, { exact: false }).first()).toBeVisible();
-    }
+    await expect(page.getByText(title, { exact: false }).first()).toBeVisible();
     // Price is rendered as $<digits> on the detail page.
     await expect(page.getByText(/\$\d/).first()).toBeVisible();
   });
@@ -57,11 +56,18 @@ test.describe('Product Pages', () => {
   test('the product detail renders a gallery image with a source', { tag: [...CATALOG_PRODUCT_GALLERY, '@outcome:display'] }, async ({ page }) => {
     // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
     const productCards = page.locator('a[href^="/products/"]');
-    await expect(productCards.first()).toBeVisible({ timeout: 15000 });
-    await productCards.first().click();
+    const firstCard = productCards.first();
+    await expect(firstCard).toBeVisible({ timeout: 15000 });
+    const title = ((await firstCard.locator('h3').first().textContent()) ?? '').trim();
+
+    await firstCard.click();
     await waitForPageLoad(page);
 
-    await expect(page.locator('img').first()).toHaveAttribute('src', /.+/);
+    // Scoped by the product's own title (the gallery image's alt text) so
+    // this cannot pass on an unrelated placeholder image.
+    const galleryImage = page.getByRole('img', { name: title }).first();
+    await expect(galleryImage).toBeVisible();
+    await expect(galleryImage).toHaveAttribute('src', /.+/);
   });
 
   test('navigates back to the catalog from a product', { tag: [...CATALOG_BACK_NAVIGATION, '@outcome:success'] }, async ({ page }) => {

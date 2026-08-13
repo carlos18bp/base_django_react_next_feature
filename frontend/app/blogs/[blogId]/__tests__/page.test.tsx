@@ -27,6 +27,9 @@ describe('BlogDetailPage', () => {
   });
 
   it('renders loading state when blogId is invalid', async () => {
+    // quality: allow-mock-only (the guard's only observable effect is the absent fetch; the
+    // UI is identical either way — pending the BlogDetailPage not-found branch, see
+    // tasks/tasks_plan.md backlog)
     const fetchBlog = jest.fn();
     setBlogStoreState({ fetchBlog });
     mockUseParams.mockReturnValue({ blogId: 'abc' });

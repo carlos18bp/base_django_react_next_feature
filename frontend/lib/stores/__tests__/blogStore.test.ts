@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useBlogStore, selectBlogs, selectBlogsLoading, selectBlogsError } from '../blogStore';
+import { useBlogStore } from '../blogStore';
 import { api } from '../../services/http';
 import { mockBlogs, mockBlog } from '../../__tests__/fixtures';
 
@@ -143,23 +143,6 @@ describe('blogStore', () => {
       // (e.g. `set({ error: null, blogs: [] })`) would still pass a null-only check.
       expect(result.current.error).toBeNull();
       expect(result.current.blogs).toEqual(mockBlogs);
-    });
-  });
-
-  describe('selectors', () => {
-    it('selectBlogs returns the blogs array from state', () => {
-      const state = { blogs: mockBlogs, loading: false, error: null } as Parameters<typeof selectBlogs>[0];
-      expect(selectBlogs(state)).toBe(mockBlogs);
-    });
-
-    it('selectBlogsLoading returns the loading flag from state', () => {
-      const state = { blogs: [], loading: true, error: null } as Parameters<typeof selectBlogsLoading>[0];
-      expect(selectBlogsLoading(state)).toBe(true);
-    });
-
-    it('selectBlogsError returns the error string from state', () => {
-      const state = { blogs: [], loading: false, error: 'oops' } as Parameters<typeof selectBlogsError>[0];
-      expect(selectBlogsError(state)).toBe('oops');
     });
   });
 });

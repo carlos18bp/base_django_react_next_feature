@@ -30,18 +30,23 @@ test.describe('Navigation', () => {
     await expect(page).toHaveURL(/.*catalog/);
   });
 
-  test('the header links reach the catalog', { tag: [...NAVIGATION_HEADER, '@outcome:success'] }, async ({ page }) => {
-    await page.goto('/');
+  test('the header exposes links to Blogs and Catalog, and its brand link returns home', { tag: [...NAVIGATION_HEADER, '@outcome:success'] }, async ({ page }) => {
+    // Catches a regression that drops or misroutes a header nav link without
+    // breaking the separate Blogs/Catalog navigation specs, which each click
+    // only one link and never inspect the rest of the banner's inventory.
+    await page.goto('/catalog');
     await waitForPageLoad(page);
 
     const header = page.getByRole('banner');
-    await expect(header).toBeVisible();
-    await header.getByRole('link', { name: 'Catalog' }).click();
+    await expect(header.getByRole('link', { name: 'Blogs' })).toHaveAttribute('href', '/blogs');
+    await expect(header.getByRole('link', { name: 'Catalog' })).toHaveAttribute('href', '/catalog');
 
-    await expect(page).toHaveURL(/.*catalog/);
+    await header.getByRole('link', { name: 'Shop' }).click();
+
+    await expect(page).toHaveURL('/');
   });
 
-  test('the footer shows the site copyright on every page', { tag: [...NAVIGATION_FOOTER, '@outcome:display'] }, async ({ page }) => {
+  test('the footer shows the site copyright on the home page', { tag: [...NAVIGATION_FOOTER, '@outcome:display'] }, async ({ page }) => {
     // quality: allow-no-interaction (the footer is static layout chrome with no links; this asserts its content renders)
     await page.goto('/');
     await waitForPageLoad(page);
@@ -49,17 +54,6 @@ test.describe('Navigation', () => {
     const footer = page.locator('footer');
     await expect(footer).toBeVisible();
     await expect(footer).toContainText('Base Django + React + Next Feature Template');
-  });
-
-  test('maintains navigation across pages', { tag: [...NAVIGATION_BETWEEN_PAGES, '@outcome:success'] }, async ({ page }) => {
-    await page.goto('/');
-    await waitForPageLoad(page);
-
-    await page.getByRole('banner').getByRole('link', { name: 'Blogs' }).click();
-    await expect(page).toHaveURL(/.*blogs/);
-
-    await page.getByRole('banner').getByRole('link', { name: 'Catalog' }).click();
-    await expect(page).toHaveURL(/.*catalog/);
   });
 
   test('returns a 404 status for an unknown route', { tag: [...NAVIGATION_UNKNOWN_ROUTE, '@outcome:failure'] }, async ({ page }) => {

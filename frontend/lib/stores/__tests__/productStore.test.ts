@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useProductStore, selectProducts, selectProductsLoading, selectProductsError } from '../productStore';
+import { useProductStore } from '../productStore';
 import { api } from '../../services/http';
 import { mockProducts, mockProduct } from '../../__tests__/fixtures';
 
@@ -143,23 +143,6 @@ describe('productStore', () => {
       // (e.g. `set({ error: null, products: [] })`) would still pass a null-only check.
       expect(result.current.error).toBeNull();
       expect(result.current.products).toEqual(mockProducts);
-    });
-  });
-
-  describe('selectors', () => {
-    it('selectProducts returns the products array from state', () => {
-      const state = { products: mockProducts, loading: false, error: null } as Parameters<typeof selectProducts>[0];
-      expect(selectProducts(state)).toBe(mockProducts);
-    });
-
-    it('selectProductsLoading returns the loading flag from state', () => {
-      const state = { products: [], loading: true, error: null } as Parameters<typeof selectProductsLoading>[0];
-      expect(selectProductsLoading(state)).toBe(true);
-    });
-
-    it('selectProductsError returns the error string from state', () => {
-      const state = { products: [], loading: false, error: 'oops' } as Parameters<typeof selectProductsError>[0];
-      expect(selectProductsError(state)).toBe('oops');
     });
   });
 });

@@ -13,34 +13,32 @@ test.describe('Shopping Cart', () => {
   });
 
   test('should add product to cart', { tag: [...CART_ADD, '@outcome:success'] }, async ({ page }) => {
+    // Catches a regression where "Add to cart" stops writing to the cart
+    // store (or writes the wrong product), leaving checkout's cart empty.
     // Go to catalog
     await page.goto('/catalog');
     await waitForPageLoad(page);
 
     await expect(page).toHaveURL(/.*catalog/);
 
+    // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
     const productCards = page.locator('a[href^="/products/"]');
-    const count = await productCards.count();
-    
-    if (count > 0) {
-      // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
-      await productCards.first().click();
-      await waitForPageLoad(page);
-      
-      // Add to cart
-      const addToCartBtn = page.locator('button:has-text("Add to cart")');
-      await expect(addToCartBtn).toBeVisible();
-      await addToCartBtn.click();
-      
-      await page.waitForURL('**/catalog', { timeout: 5000 }).catch(() => {});
+    await expect(productCards.first()).toBeVisible({ timeout: 15000 });
+    const title = ((await productCards.first().locator('h3').first().textContent()) ?? '').trim();
 
-      // Navigate to checkout to verify
-      await page.goto('/checkout');
-      await waitForPageLoad(page);
-      
-      // Should see item in cart
-      await expect(page.locator('text=Your cart is empty')).toBeHidden();
-    }
+    await productCards.first().click();
+    await waitForPageLoad(page);
+
+    // Add to cart
+    await page.getByRole('button', { name: 'Add to cart' }).click();
+
+    // Navigate to checkout to verify
+    await page.goto('/checkout');
+    await waitForPageLoad(page);
+
+    // Should see this specific product in cart, not just "something"
+    await expect(page.getByText('Your cart is empty')).toBeHidden();
+    await expect(page.getByText(title)).toBeVisible();
   });
 
   test('an empty cart shows the empty-cart message', { tag: [...CART_EMPTY, '@outcome:display'] }, async ({ page }) => {
@@ -55,33 +53,25 @@ test.describe('Shopping Cart', () => {
     // First add a product
     await page.goto('/catalog');
     await waitForPageLoad(page);
-    
+
+    // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
     const productCards = page.locator('a[href^="/products/"]');
-    const count = await productCards.count();
-    
-    if (count > 0) {
-      // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
-      await productCards.first().click();
-      await waitForPageLoad(page);
-      
-      await page.locator('button:has-text("Add to cart")').click();
-      await page.waitForLoadState('load');
-      
-      // Go to checkout
-      await page.goto('/checkout');
-      await waitForPageLoad(page);
-      
-      // Find quantity input
-      // quality: allow-fragile-selector (number input is the only type="number" field on this page)
-      const qtyInput = page.locator('input[type="number"]').first();
-      if (await qtyInput.isVisible()) {
-        // Update quantity to 3
-        await qtyInput.fill('3');
-        
-        // Verify quantity updated
-        await expect(qtyInput).toHaveValue('3');
-      }
-    }
+    await expect(productCards.first()).toBeVisible({ timeout: 15000 });
+    await productCards.first().click();
+    await waitForPageLoad(page);
+
+    await page.getByRole('button', { name: 'Add to cart' }).click();
+
+    // Go to checkout
+    await page.goto('/checkout');
+    await waitForPageLoad(page);
+
+    // Update quantity to 3
+    const qtyInput = page.getByLabel('Qty');
+    await qtyInput.fill('3');
+
+    // Verify quantity updated
+    await expect(qtyInput).toHaveValue('3');
   });
 
   test('removes the cart item when its quantity is set to zero', { tag: [...CART_QUANTITY_ZERO, '@outcome:failure'] }, async ({ page }) => {
@@ -133,84 +123,88 @@ test.describe('Shopping Cart', () => {
   });
 
   test('should calculate subtotal correctly', { tag: [...CART_SUBTOTAL, '@outcome:display'] }, async ({ page }) => {
-    // Add product to cart
+    // Catches a subtotal regression (wrong price, wrong quantity, or stuck at
+    // $0) by pinning the checkout Subtotal to the exact unit price shown on
+    // the product detail page before it was added (quantity defaults to 1).
     await page.goto('/catalog');
     await waitForPageLoad(page);
-    
+
+    // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
     const productCards = page.locator('a[href^="/products/"]');
-    const count = await productCards.count();
-    
-    if (count > 0) {
-      // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
-      await productCards.first().click();
-      await waitForPageLoad(page);
-      
-      await page.locator('button:has-text("Add to cart")').click();
-      await page.waitForLoadState('load');
-      
-      // Go to checkout
-      await page.goto('/checkout');
-      await waitForPageLoad(page);
-      
-      // Verify subtotal is visible
-      const subtotalLabel = page.locator('text=Subtotal');
-      await expect(subtotalLabel).toBeVisible();
-    }
+    await expect(productCards.first()).toBeVisible({ timeout: 15000 });
+    await productCards.first().click();
+    await waitForPageLoad(page);
+
+    const priceText = ((await page.getByText(/^\$\d+$/).first().textContent()) ?? '').trim();
+    expect(priceText.length).toBeGreaterThan(0);
+
+    await page.getByRole('button', { name: 'Add to cart' }).click();
+
+    // Go to checkout
+    await page.goto('/checkout');
+    await waitForPageLoad(page);
+
+    // Scope to the Subtotal row so the assertion can't match the per-item
+    // price or line total, which render the same amount for quantity 1.
+    const subtotalRow = page.getByText('Subtotal', { exact: true }).locator('..');
+    await expect(subtotalRow.getByText(priceText, { exact: true })).toBeVisible();
   });
 
   test('should persist cart across page reloads', { tag: [...CART_PERSIST, '@outcome:display'] }, async ({ page }) => {
     // Add product to cart
     await page.goto('/catalog');
     await waitForPageLoad(page);
-    
+
+    // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
     const productCards = page.locator('a[href^="/products/"]');
-    const count = await productCards.count();
-    
-    if (count > 0) {
-      // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
-      const firstProduct = productCards.first();
-      const productTitle = ((await firstProduct.locator('h3').first().textContent()) ?? '').trim();
-      await firstProduct.click();
-      await waitForPageLoad(page);
+    await expect(productCards.first()).toBeVisible({ timeout: 15000 });
+    const firstProduct = productCards.first();
+    const productTitle = ((await firstProduct.locator('h3').first().textContent()) ?? '').trim();
+    await firstProduct.click();
+    await waitForPageLoad(page);
 
-      await page.locator('button:has-text("Add to cart")').click();
-      await page.waitForLoadState('load');
+    await page.locator('button:has-text("Add to cart")').click();
 
-      // Reload page
-      await page.reload();
-      await waitForPageLoad(page);
+    // Reload page
+    await page.reload();
+    await waitForPageLoad(page);
 
-      // Cart should still show THIS product, not just "something" — a
-      // zustand-persist partialize bug that leaks a different/stale item
-      // would still pass a bare "not empty" check.
-      await page.goto('/checkout');
-      await waitForPageLoad(page);
+    // Cart should still show THIS product, not just "something" — a
+    // zustand-persist partialize bug that leaks a different/stale item
+    // would still pass a bare "not empty" check.
+    await page.goto('/checkout');
+    await waitForPageLoad(page);
 
-      await expect(page.getByText(productTitle)).toBeVisible();
-    }
+    await expect(page.getByText(productTitle)).toBeVisible();
   });
 
   test('adds two different products and both appear in the cart', { tag: [...CART_MULTIPLE_PRODUCTS, '@outcome:success'] }, async ({ page }) => {
+    // Catches a regression where adding a second product overwrites or drops
+    // the first one instead of appending a second cart line item.
     await page.goto('/catalog');
     await waitForPageLoad(page);
 
     // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
     const productCards = page.locator('a[href^="/products/"]');
     await expect(productCards.nth(1)).toBeVisible({ timeout: 15000 });
+    const firstTitle = ((await productCards.nth(0).locator('h3').first().textContent()) ?? '').trim();
+    const secondTitle = ((await productCards.nth(1).locator('h3').first().textContent()) ?? '').trim();
 
     await productCards.nth(0).click();
     await waitForPageLoad(page);
-    await page.locator('button:has-text("Add to cart")').click();
+    await page.getByRole('button', { name: 'Add to cart' }).click();
 
     await page.goto('/catalog');
     await waitForPageLoad(page);
     await page.locator('a[href^="/products/"]').nth(1).click();
     await waitForPageLoad(page);
-    await page.locator('button:has-text("Add to cart")').click();
+    await page.getByRole('button', { name: 'Add to cart' }).click();
 
     await page.goto('/checkout');
     await waitForPageLoad(page);
 
+    await expect(page.getByText(firstTitle)).toBeVisible();
+    await expect(page.getByText(secondTitle)).toBeVisible();
     // Each cart item row renders its own Remove button, so two items => two buttons.
     await expect(page.getByRole('button', { name: 'Remove' })).toHaveCount(2);
   });
