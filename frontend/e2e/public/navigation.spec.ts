@@ -1,6 +1,6 @@
 import { test, expect } from '../test-with-coverage';
 import { waitForPageLoad } from '../fixtures';
-import { HOME_LOADS, NAVIGATION_BETWEEN_PAGES, NAVIGATION_HEADER, NAVIGATION_FOOTER } from '../helpers/flow-tags';
+import { HOME_LOADS, NAVIGATION_BETWEEN_PAGES, NAVIGATION_HEADER, NAVIGATION_FOOTER, NAVIGATION_UNKNOWN_ROUTE } from '../helpers/flow-tags';
 
 test.describe('Navigation', () => {
   test('home page loads with its hero heading', { tag: [...HOME_LOADS, '@outcome:display'] }, async ({ page }) => {
@@ -16,8 +16,7 @@ test.describe('Navigation', () => {
     await page.goto('/');
     await waitForPageLoad(page);
 
-    // quality: allow-fragile-selector (blogs link appears in header and footer; first nav occurrence)
-    await page.locator('a[href="/blogs"]').first().click();
+    await page.getByRole('banner').getByRole('link', { name: 'Blogs' }).click();
 
     await expect(page).toHaveURL(/.*blogs/);
   });
@@ -26,24 +25,28 @@ test.describe('Navigation', () => {
     await page.goto('/');
     await waitForPageLoad(page);
 
-    // quality: allow-fragile-selector (catalog link appears in header and footer; first nav occurrence)
-    await page.locator('a[href="/catalog"]').first().click();
+    await page.getByRole('banner').getByRole('link', { name: 'Catalog' }).click();
 
     await expect(page).toHaveURL(/.*catalog/);
   });
 
-  test('the header links reach the catalog', { tag: [...NAVIGATION_HEADER, '@outcome:success'] }, async ({ page }) => {
-    await page.goto('/');
+  test('the header exposes links to Blogs and Catalog, and its brand link returns home', { tag: [...NAVIGATION_HEADER, '@outcome:success'] }, async ({ page }) => {
+    // Catches a regression that drops or misroutes a header nav link without
+    // breaking the separate Blogs/Catalog navigation specs, which each click
+    // only one link and never inspect the rest of the banner's inventory.
+    await page.goto('/catalog');
     await waitForPageLoad(page);
 
-    const header = page.locator('header, nav').first();
-    await expect(header).toBeVisible();
-    await header.locator('a[href="/catalog"]').first().click();
+    const header = page.getByRole('banner');
+    await expect(header.getByRole('link', { name: 'Blogs' })).toHaveAttribute('href', '/blogs');
+    await expect(header.getByRole('link', { name: 'Catalog' })).toHaveAttribute('href', '/catalog');
 
-    await expect(page).toHaveURL(/.*catalog/);
+    await header.getByRole('link', { name: 'Shop' }).click();
+
+    await expect(page).toHaveURL('/');
   });
 
-  test('the footer shows the site copyright on every page', { tag: [...NAVIGATION_FOOTER, '@outcome:display'] }, async ({ page }) => {
+  test('the footer shows the site copyright on the home page', { tag: [...NAVIGATION_FOOTER, '@outcome:display'] }, async ({ page }) => {
     // quality: allow-no-interaction (the footer is static layout chrome with no links; this asserts its content renders)
     await page.goto('/');
     await waitForPageLoad(page);
@@ -53,14 +56,13 @@ test.describe('Navigation', () => {
     await expect(footer).toContainText('Base Django + React + Next Feature Template');
   });
 
-  test('maintains navigation across pages', { tag: [...NAVIGATION_BETWEEN_PAGES, '@outcome:success'] }, async ({ page }) => {
-    await page.goto('/');
-    await waitForPageLoad(page);
+  test('returns a 404 status for an unknown route', { tag: [...NAVIGATION_UNKNOWN_ROUTE, '@outcome:failure'] }, async ({ page }) => {
+    // Catches a routing regression (e.g. an accidental catch-all, or a
+    // middleware rewrite) that would make unknown URLs resolve as 200 with a
+    // blank/broken page, or 500, instead of a clean 404.
+    // quality: allow-no-interaction (no UI link to a nonexistent route exists by definition; direct navigation is the only way to reach this behavior)
+    const response = await page.goto('/this-route-does-not-exist-e2e');
 
-    await page.locator('a[href="/blogs"]').first().click();
-    await expect(page).toHaveURL(/.*blogs/);
-
-    await page.locator('a[href="/catalog"]').first().click();
-    await expect(page).toHaveURL(/.*catalog/);
+    expect(response?.status()).toEqual(404);
   });
 });

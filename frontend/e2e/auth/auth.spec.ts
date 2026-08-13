@@ -32,21 +32,29 @@ test.describe('Authentication', () => {
   });
 
   test('should handle invalid credentials gracefully', { tag: [...AUTH_LOGIN_INVALID, '@outcome:error'] }, async ({ page }) => {
+    // Catches a regression where the sign-in form stops surfacing the
+    // backend's rejection message (frontend/app/sign-in/page.tsx:55) and
+    // instead fails silently or shows nothing.
+    await page.route('**/sign_in/', (route) =>
+      route.fulfill({ status: 401, contentType: 'application/json', body: '{}' })
+    );
+
     await page.goto('/sign-in');
     await waitForPageLoad(page);
-    
+
     // Fill with invalid credentials (using placeholder)
     const emailInput = page.getByPlaceholder('Email');
     await emailInput.fill('invalid@example.com');
-    
-    const passwordInput = page.locator('input[type="password"]');
+
+    const passwordInput = page.getByPlaceholder('Password');
     await passwordInput.fill('wrongpassword');
-    
+
     // Submit
     const submitBtn = page.locator('button[type="submit"]');
     await submitBtn.click();
-    
-    // Should show error or stay on sign-in page
+
+    // Shows the backend's rejection message and stays on sign-in page
+    await expect(page.getByText('Invalid credentials')).toBeVisible();
     await expect(page).toHaveURL(/.*sign-in/);
   });
 
@@ -86,6 +94,33 @@ test.describe('Authentication', () => {
     // Should show password mismatch error and stay on sign-up page
     await expect(page.getByText('Passwords do not match')).toBeVisible();
     await expect(page).toHaveURL(/.*sign-up/);
+  });
+
+  test('should accept input in sign-up form fields', { tag: [...AUTH_SIGN_UP_FORM, '@outcome:display'] }, async ({ page }) => {
+    // Catches a broken/removed onChange handler on any sign-up field
+    // (controlled-input wiring regression).
+    await page.goto('/sign-up');
+    await waitForPageLoad(page);
+
+    const firstNameInput = page.getByPlaceholder('First Name');
+    await firstNameInput.fill('Ana');
+    await expect(firstNameInput).toHaveValue('Ana');
+
+    const lastNameInput = page.getByPlaceholder('Last Name');
+    await lastNameInput.fill('Garcia');
+    await expect(lastNameInput).toHaveValue('Garcia');
+
+    const emailInput = page.getByPlaceholder('Email');
+    await emailInput.fill('ana@example.com');
+    await expect(emailInput).toHaveValue('ana@example.com');
+
+    const passwordInput = page.getByPlaceholder('Password', { exact: true });
+    await passwordInput.fill('password123');
+    await expect(passwordInput).toHaveValue('password123');
+
+    const confirmPasswordInput = page.getByPlaceholder('Confirm Password');
+    await confirmPasswordInput.fill('password123');
+    await expect(confirmPasswordInput).toHaveValue('password123');
   });
 
   test('should navigate from sign-in to forgot password', { tag: [...AUTH_FORGOT_PASSWORD_FORM, '@outcome:display'] }, async ({ page }) => {

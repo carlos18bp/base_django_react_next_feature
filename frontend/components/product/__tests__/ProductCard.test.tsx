@@ -48,6 +48,9 @@ describe('ProductCard', () => {
     const productWithoutImage = { ...product, gallery_urls: [] };
     render(<ProductCard product={productWithoutImage} />);
     expect(screen.queryByAltText(product.title)).not.toBeInTheDocument();
+    // Bug this catches: a crash/early-return when gallery_urls is empty would
+    // still pass the negation above (no image either way) but break the card.
+    expect(screen.getByText(productWithoutImage.title)).toBeInTheDocument();
   });
 
   it('should link to product detail page', () => {

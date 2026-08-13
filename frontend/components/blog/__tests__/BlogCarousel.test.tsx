@@ -31,7 +31,11 @@ describe('BlogCarousel', () => {
       expect(fetchBlogs).toHaveBeenCalledTimes(1);
     });
     expect(screen.getByText('Trending blogs')).toBeInTheDocument();
-    expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
+    // Bug this catches: shrinking the skeleton loop (Array.from({ length: 6 }))
+    // to e.g. length 1 would still pass a bare toBeGreaterThan(0) check.
+    // quality: allow-fragile-selector (skeleton has no testid/role hook; counting
+    // .animate-pulse is the only observable — audit A1 2026-08-13)
+    expect(container.querySelectorAll('.animate-pulse')).toHaveLength(6 * 3);
   });
 
   it('renders error state and retries', async () => {

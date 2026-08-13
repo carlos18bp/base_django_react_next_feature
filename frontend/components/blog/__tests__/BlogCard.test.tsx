@@ -43,6 +43,9 @@ describe('BlogCard', () => {
     const blogWithoutImage = { ...blog, image_url: undefined };
     render(<BlogCard blog={blogWithoutImage} />);
     expect(screen.queryByAltText(blog.title)).not.toBeInTheDocument();
+    // Bug this catches: a crash/early-return when image_url is missing would
+    // still pass the negation above (no image either way) but break the card.
+    expect(screen.getByText(blogWithoutImage.title)).toBeInTheDocument();
   });
 
   it('should link to blog detail page', () => {

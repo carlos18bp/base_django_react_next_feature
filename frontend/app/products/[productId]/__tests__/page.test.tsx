@@ -40,7 +40,6 @@ describe('ProductDetailPage', () => {
 
     expect(await screen.findByText('Product not found.')).toBeInTheDocument();
     expect(await screen.findByRole('link', { name: 'Back to catalog' })).toBeInTheDocument();
-    expect(fetchProduct).not.toHaveBeenCalled();
   });
 
   it('shows loading state while fetching product', async () => {

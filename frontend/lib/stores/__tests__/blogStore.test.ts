@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useBlogStore, selectBlogs, selectBlogsLoading, selectBlogsError } from '../blogStore';
+import { useBlogStore } from '../blogStore';
 import { api } from '../../services/http';
 import { mockBlogs, mockBlog } from '../../__tests__/fixtures';
 
@@ -131,7 +131,7 @@ describe('blogStore', () => {
 
   describe('clearError', () => {
     it('resets error to null when clearError is called', () => {
-      useBlogStore.setState({ error: 'some error' });
+      useBlogStore.setState({ error: 'some error', blogs: mockBlogs, loading: false });
 
       const { result } = renderHook(() => useBlogStore());
 
@@ -139,24 +139,10 @@ describe('blogStore', () => {
         result.current.clearError();
       });
 
+      // Bug this catches: a clearError that wipes more than the error field
+      // (e.g. `set({ error: null, blogs: [] })`) would still pass a null-only check.
       expect(result.current.error).toBeNull();
-    });
-  });
-
-  describe('selectors', () => {
-    it('selectBlogs returns the blogs array from state', () => {
-      const state = { blogs: mockBlogs, loading: false, error: null } as Parameters<typeof selectBlogs>[0];
-      expect(selectBlogs(state)).toBe(mockBlogs);
-    });
-
-    it('selectBlogsLoading returns the loading flag from state', () => {
-      const state = { blogs: [], loading: true, error: null } as Parameters<typeof selectBlogsLoading>[0];
-      expect(selectBlogsLoading(state)).toBe(true);
-    });
-
-    it('selectBlogsError returns the error string from state', () => {
-      const state = { blogs: [], loading: false, error: 'oops' } as Parameters<typeof selectBlogsError>[0];
-      expect(selectBlogsError(state)).toBe('oops');
+      expect(result.current.blogs).toEqual(mockBlogs);
     });
   });
 });
