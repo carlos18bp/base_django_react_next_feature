@@ -14,19 +14,18 @@
 | Staging banner/overlay | ✅ estable | único uso de data-testid |
 | i18n EN/ES | ✅ estable | next-intl |
 
-## Estado de testing (medido 2026-08-13, pre-authoring de la corrida /qa)
+## Estado de testing (cierre de la corrida /qa 2026-08-13, rama qa/13082026)
 
-| Layer | Volumen | Read-out del audit |
+| Layer | Volumen | Estado |
 |---|---|---|
-| Backend (pytest, sqlite) | 26 archivos / 197 tests | 0 errores gate; 2 warnings `nondeterministic` (`tests/views/test_staging_banner.py:41,57`) |
-| Frontend unit (Jest 30) | 29 archivos / 184 tests | 18 warnings (6 mock_only, 8 negation_only, 4 querySelectorAll) |
-| E2E (Playwright) | 8 specs / 40 tests | 24 warnings (23 fragile_locator posicional, 1 negation_only) |
-| Flow map | 33 flows (P1=9 P2=17 P3=6 P4=1) | covered=27 · partial=6 · junk_only=0 · missing=0 · outcomes 33/33 |
+| Backend (pytest, sqlite) | 26 archivos / 197 tests | gate 0 errores (clock congelado con freezegun; contrato del banner pinneado a 9 claves) |
+| Frontend unit (Jest 30) | 29 archivos / 179 tests | gate 0 errores; 6 tests no-subject borrados; excepciones documentadas con markers |
+| E2E (Playwright) | 8 specs / 48 tests | gate 0 errores; cero condicionales en bodies (Regla 7); 48/48 verdes en vivo |
+| Flow map | 36 flows | **36 covered · 0 partial · 0 missing · 0 junk-only** |
 
-Gaps de flows (los cierra la corrida /qa en curso):
-- Partial P1: `auth-sign-up-form` (falta display), `catalog-browse` (failure), `catalog-product-detail` (failure).
-- Partial P2/P3: `blog-list-view`, `home-product-carousel`, `purchase-loading-state`.
-- `negative_case_gaps=3`: módulos `cart`, `checkout`, `navigation` sin ningún flow error/failure declarado.
+`.junk-baseline.json`: **0 entradas** (era 15; 14 sanadas + 1 convertida en excepción documentada `allow-mock-only`).
+
+Gaps cerrados por la corrida 2026-08-13: los 6 partial (auth-sign-up-form, catalog-browse, catalog-product-detail, blog-list-view, home-product-carousel, purchase-loading-state), los 3 módulos sin clases negativas (flows nuevos: checkout-submit-failure P1, cart-quantity-zero-removes-item P2, navigation-unknown-route P3), y 12 false-greens e2e cuyas aserciones vivían tras guards condicionales.
 
 ## Known issues (residuos y drift detectados 2026-08-13)
 
@@ -36,10 +35,19 @@ Gaps de flows (los cierra la corrida /qa en curso):
 4. Scripts `e2e:mobile` / `e2e:tablet` huérfanos: los projects Mobile/Tablet están comentados en `playwright.config.ts`.
 5. `CLAUDE.md` (raíz) describe una app `content/` que no existe — la app real es `base_feature_app` (drift del template).
 6. pytest instalado a nivel usuario (8.3.2) difiere del pin (9.0.3); usar SIEMPRE `backend/venv`.
+7. **BlogDetailPage sin rama not-found** (bug de producto): con un blogId inválido el usuario queda en "Loading..." para siempre — a diferencia de ProductDetailPage. El test unit correspondiente quedó KEEP con marker `allow-mock-only` hasta ese fix.
+8. **Footer.tsx huérfano**: `components/layout/Footer.tsx` no se monta en ningún lado (`app/layout.tsx` inlinea su propio footer). Decisión de producto pendiente: cablearlo o borrarlo (su test `layout.test.tsx::renders footer copy` testea código muerto).
+9. **Selectores muertos**: `selectBlogs*`/`selectProducts*` (blogStore.ts:44-46, productStore.ts:44-46) no tienen consumidores — candidatos a remoción de producto.
+10. **Deuda pydocstyle latente**: ~153 findings D (ruff select curado del gate toolkit) en 24 archivos de test backend. El CI está verde sólo porque su job de gate no instala ruff; si se agrega `pip install`, master pasa a rojo. Burn-down antes de tocar ese workflow.
+11. **~19 selectores posicionales e2e bounded**: seleccionar cards de listas seedeadas requiere un hook estable (`data-testid` per-card en ProductCard/BlogCard) — cambio de producto que destrabaría los warnings fragile_locator restantes.
 
 ## Backlog
 
-- [ ] Corrida /qa --apply 2026-08-13: cerrar partial flows + clases negativas + rewrites de weak findings (EN CURSO — ver active_context).
+- [x] Corrida /qa --apply 2026-08-13: partial flows + clases negativas + purga de junk (25 rewrites, 6 deletes, 2 merges) + baseline a 0 — COMPLETADA (rama qa/13082026).
+- [ ] Producto: rama not-found en BlogDetailPage (issue 7) → habilita rewrite del test marcado.
+- [ ] Producto: decidir destino de Footer.tsx (issue 8) y remover selectores muertos (issue 9).
+- [ ] Producto: `data-testid` per-card en ProductCard/BlogCard (issue 11).
+- [ ] Burn-down de docstrings backend (issue 10) — patrón D212: summary en la línea de apertura.
 - [ ] Refrescar `docs/USER_FLOW_MAP.md` desde el código real (qa-analyst) cuando el flow map se toque.
 - [ ] repo-cleanup: eliminar `base_feature_app/urls.py` shadowed y scripts e2e huérfanos.
 - [ ] Corregir la sección Directory Structure de `CLAUDE.md` (content/ → base_feature_app/).
