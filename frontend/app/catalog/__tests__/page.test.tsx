@@ -21,32 +21,54 @@ describe('CatalogPage', () => {
     jest.clearAllMocks();
   });
 
-  it('renders loading state and triggers fetch', async () => {
+  it('triggers fetch on mount', async () => {
+    const fetchProducts = jest.fn();
+    setProductStoreState({ products: [], loading: true, error: null, fetchProducts });
+
+    render(<CatalogPage />);
+
+    // Bug this catches: removing the mount `useEffect(() => { void fetchProducts() })`
+    // in catalog/page.tsx:14-16 would leave fetchProducts uncalled.
+    await waitFor(() => {
+      expect(fetchProducts).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('renders loading state', () => {
     const fetchProducts = jest.fn();
     setProductStoreState({ products: [], loading: true, error: null, fetchProducts });
 
     const { container } = render(<CatalogPage />);
 
-    await waitFor(() => {
-      expect(fetchProducts).toHaveBeenCalledTimes(1);
-    });
     expect(screen.getByText('Catalog')).toBeInTheDocument();
     // Bug this catches: shrinking the skeleton loop (Array.from({ length: 12 }))
     // to e.g. length 1 would still pass a bare toBeGreaterThan(0) check.
-    // quality: allow-fragile-selector (skeleton has no testid/role hook; counting
-    // .animate-pulse is the only observable — audit A1 2026-08-13)
+    // quality: allow-fragile-selector (skeleton has no testid/role hook; counting .animate-pulse is the only observable — audit A1 2026-08-13)
     expect(container.querySelectorAll('.animate-pulse')).toHaveLength(12 * 4);
   });
 
-  it('renders error state and retries', async () => {
+  it('renders error state', () => {
     const fetchProducts = jest.fn();
     setProductStoreState({ products: [], loading: false, error: 'Network error', fetchProducts });
 
     render(<CatalogPage />);
 
     expect(screen.getByText('Catalog unavailable')).toBeInTheDocument();
+    // Bug this catches: deleting the `{error}` interpolation (catalog/page.tsx:44)
+    // would drop the store's error message from the DOM while this stayed green.
+    expect(screen.getByText('Network error')).toBeInTheDocument();
+  });
+
+  it('refetches when Retry is clicked', async () => {
+    const fetchProducts = jest.fn();
+    setProductStoreState({ products: [], loading: false, error: 'Network error', fetchProducts });
+
+    render(<CatalogPage />);
+
     await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
 
+    // Bug this catches: a Retry button whose onClick stops calling fetchProducts
+    // would leave the count at 1 (the mount effect) instead of 2.
     expect(fetchProducts).toHaveBeenCalledTimes(2);
   });
 
