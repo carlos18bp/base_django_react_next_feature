@@ -21,24 +21,33 @@ describe('ProductCarousel', () => {
     jest.clearAllMocks();
   });
 
-  it('renders loading state', async () => {
+  it('triggers fetch on mount', async () => {
+    const fetchProducts = jest.fn();
+    setProductStoreState({ products: [], loading: true, error: null, fetchProducts });
+
+    render(<ProductCarousel />);
+
+    // Bug this catches: removing the mount `useEffect(() => { void fetchProducts() })`
+    // in ProductCarousel.tsx:15-17 would leave fetchProducts uncalled.
+    await waitFor(() => {
+      expect(fetchProducts).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('renders loading state', () => {
     const fetchProducts = jest.fn();
     setProductStoreState({ products: [], loading: true, error: null, fetchProducts });
 
     const { container } = render(<ProductCarousel />);
 
-    await waitFor(() => {
-      expect(fetchProducts).toHaveBeenCalledTimes(1);
-    });
     expect(screen.getByText('Trending products')).toBeInTheDocument();
     // Bug this catches: shrinking the skeleton loop (Array.from({ length: 8 }))
     // to e.g. length 1 would still pass a bare toBeGreaterThan(0) check.
-    // quality: allow-fragile-selector (skeleton has no testid/role hook; counting
-    // .animate-pulse is the only observable — audit A1 2026-08-13)
+    // quality: allow-fragile-selector (skeleton has no testid/role hook; counting .animate-pulse is the only observable — audit A1 2026-08-13)
     expect(container.querySelectorAll('.animate-pulse')).toHaveLength(8 * 4);
   });
 
-  it('renders error state and retries', async () => {
+  it('renders error state', () => {
     const fetchProducts = jest.fn();
     setProductStoreState({ products: [], loading: false, error: 'Network error', fetchProducts });
 
@@ -46,9 +55,18 @@ describe('ProductCarousel', () => {
 
     expect(screen.getByText('Products unavailable')).toBeInTheDocument();
     expect(screen.getByText('Network error')).toBeInTheDocument();
+  });
+
+  it('refetches when Retry is clicked', async () => {
+    const fetchProducts = jest.fn();
+    setProductStoreState({ products: [], loading: false, error: 'Network error', fetchProducts });
+
+    render(<ProductCarousel />);
 
     await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
 
+    // Bug this catches: a Retry button whose onClick stops calling fetchProducts
+    // would leave the count at 1 (the mount effect) instead of 2.
     expect(fetchProducts).toHaveBeenCalledTimes(2);
   });
 
@@ -69,5 +87,17 @@ describe('ProductCarousel', () => {
 
     expect(screen.getByText(mockProducts[0].title)).toBeInTheDocument();
     expect(screen.getByText(mockProducts[1].title)).toBeInTheDocument();
+  });
+
+  it('caps rendered product cards at 8 when more than 8 are available', () => {
+    const fetchProducts = jest.fn();
+    setProductStoreState({ products: mockProducts, loading: false, error: null, fetchProducts });
+
+    render(<ProductCarousel />);
+
+    // Bug this catches: deleting `products.slice(0, 8)` (ProductCarousel.tsx:19)
+    // would render all 9 fixture products instead of stopping at the 8th.
+    expect(screen.getByText(mockProducts[7].title)).toBeInTheDocument();
+    expect(screen.queryByText(mockProducts[8].title)).not.toBeInTheDocument();
   });
 });
