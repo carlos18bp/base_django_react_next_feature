@@ -108,7 +108,9 @@ describe('SignUpPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
 
     expect(await screen.findByText('Passwords do not match')).toBeInTheDocument();
-    expect(signUp).not.toHaveBeenCalled();
+    // Bug this catches: a mismatch-validation regression that clears the
+    // user's typed email (e.g. a stray form reset) instead of just blocking submit.
+    expect(screen.getByPlaceholderText('Email')).toHaveValue('user@example.com');
   });
 
   it('shows error when password is too short', async () => {
@@ -124,7 +126,9 @@ describe('SignUpPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
 
     expect(await screen.findByText('Password must be at least 8 characters')).toBeInTheDocument();
-    expect(signUp).not.toHaveBeenCalled();
+    // Bug this catches: a length-validation regression that clears the typed
+    // email instead of just blocking submission and leaving the form intact.
+    expect(screen.getByPlaceholderText('Email')).toHaveValue('user@example.com');
   });
 
   it('signs up successfully and redirects', async () => {

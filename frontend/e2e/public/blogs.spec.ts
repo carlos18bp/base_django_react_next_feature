@@ -12,14 +12,29 @@ test.describe('Blog Pages', () => {
     await page.goto('/');
     await waitForPageLoad(page);
 
-    // quality: allow-fragile-selector (blogs link appears in header and footer; first nav occurrence)
-    await page.locator('a[href="/blogs"]').first().click();
+    await page.getByRole('banner').getByRole('link', { name: 'Blogs' }).click();
     await expect(page).toHaveURL(/.*blogs/);
 
     // quality: allow-fragile-selector (blog list links uniquely scoped by href pattern)
     const blogCards = page.locator('a[href^="/blogs/"]');
     await expect(blogCards.first()).toBeVisible({ timeout: 15000 });
     await expect(blogCards.first()).toHaveAttribute('href', /\/blogs\/\d+/);
+  });
+
+  test('shows the blogs error state when the blog list request fails', { tag: [...BLOG_LIST_VIEW, '@outcome:failure'] }, async ({ page }) => {
+    // Catches a regression that leaves the blogs page stuck on its loading
+    // skeleton (or crashes) instead of showing the error+retry affordance
+    // when the blog list request fails.
+    // quality: allow-no-interaction (the error state renders automatically from the failed background fetch on page mount; there is no prior user action that triggers it)
+    await page.route('**/blogs/', (route) =>
+      route.fulfill({ status: 500, contentType: 'application/json', body: '{}' })
+    );
+
+    await page.goto('/blogs');
+    await waitForPageLoad(page);
+
+    await expect(page.getByText('Blogs unavailable')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Retry' })).toBeVisible();
   });
 
   test('should navigate to blog detail page', { tag: [...BLOG_DETAIL_VIEW, '@outcome:display'] }, async ({ page }) => {

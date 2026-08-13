@@ -30,6 +30,7 @@ export const BLOG_DETAIL_BACK = ['@flow:blog-detail-back', '@module:blog', '@pri
 export const NAVIGATION_BETWEEN_PAGES = ['@flow:navigation-between-pages', '@module:navigation', '@priority:P2'];
 export const NAVIGATION_HEADER = ['@flow:navigation-header', '@module:navigation', '@priority:P3'];
 export const NAVIGATION_FOOTER = ['@flow:navigation-footer', '@module:navigation', '@priority:P4'];
+export const NAVIGATION_UNKNOWN_ROUTE = ['@flow:navigation-unknown-route', '@module:navigation', '@priority:P3'];
 
 // ── Catalog ──
 export const CATALOG_BROWSE = ['@flow:catalog-browse', '@module:catalog', '@priority:P1'];
@@ -45,11 +46,13 @@ export const CART_REMOVE = ['@flow:cart-remove', '@module:cart', '@priority:P2']
 export const CART_SUBTOTAL = ['@flow:cart-subtotal', '@module:cart', '@priority:P2'];
 export const CART_PERSIST = ['@flow:cart-persist', '@module:cart', '@priority:P2'];
 export const CART_MULTIPLE_PRODUCTS = ['@flow:cart-multiple-products', '@module:cart', '@priority:P2'];
+export const CART_QUANTITY_ZERO = ['@flow:cart-quantity-zero-removes-item', '@module:cart', '@priority:P2'];
 
 // ── Checkout ──
 export const CHECKOUT_FORM_DISPLAY = ['@flow:checkout-form-display', '@module:checkout', '@priority:P2'];
 export const CHECKOUT_FORM_VALIDATION = ['@flow:checkout-form-validation', '@module:checkout', '@priority:P1'];
 export const CHECKOUT_FORM_FILL = ['@flow:checkout-form-fill', '@module:checkout', '@priority:P2'];
+export const CHECKOUT_SUBMIT_FAILURE = ['@flow:checkout-submit-failure', '@module:checkout', '@priority:P1'];
 
 // ── Purchase ──
 export const PURCHASE_COMPLETE_FLOW = ['@flow:purchase-complete-flow', '@module:purchase', '@priority:P1'];

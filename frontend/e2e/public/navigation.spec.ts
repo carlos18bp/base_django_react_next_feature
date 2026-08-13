@@ -1,6 +1,6 @@
 import { test, expect } from '../test-with-coverage';
 import { waitForPageLoad } from '../fixtures';
-import { HOME_LOADS, NAVIGATION_BETWEEN_PAGES, NAVIGATION_HEADER, NAVIGATION_FOOTER } from '../helpers/flow-tags';
+import { HOME_LOADS, NAVIGATION_BETWEEN_PAGES, NAVIGATION_HEADER, NAVIGATION_FOOTER, NAVIGATION_UNKNOWN_ROUTE } from '../helpers/flow-tags';
 
 test.describe('Navigation', () => {
   test('home page loads with its hero heading', { tag: [...HOME_LOADS, '@outcome:display'] }, async ({ page }) => {
@@ -16,8 +16,7 @@ test.describe('Navigation', () => {
     await page.goto('/');
     await waitForPageLoad(page);
 
-    // quality: allow-fragile-selector (blogs link appears in header and footer; first nav occurrence)
-    await page.locator('a[href="/blogs"]').first().click();
+    await page.getByRole('banner').getByRole('link', { name: 'Blogs' }).click();
 
     await expect(page).toHaveURL(/.*blogs/);
   });
@@ -26,8 +25,7 @@ test.describe('Navigation', () => {
     await page.goto('/');
     await waitForPageLoad(page);
 
-    // quality: allow-fragile-selector (catalog link appears in header and footer; first nav occurrence)
-    await page.locator('a[href="/catalog"]').first().click();
+    await page.getByRole('banner').getByRole('link', { name: 'Catalog' }).click();
 
     await expect(page).toHaveURL(/.*catalog/);
   });
@@ -36,9 +34,9 @@ test.describe('Navigation', () => {
     await page.goto('/');
     await waitForPageLoad(page);
 
-    const header = page.locator('header, nav').first();
+    const header = page.getByRole('banner');
     await expect(header).toBeVisible();
-    await header.locator('a[href="/catalog"]').first().click();
+    await header.getByRole('link', { name: 'Catalog' }).click();
 
     await expect(page).toHaveURL(/.*catalog/);
   });
@@ -57,10 +55,20 @@ test.describe('Navigation', () => {
     await page.goto('/');
     await waitForPageLoad(page);
 
-    await page.locator('a[href="/blogs"]').first().click();
+    await page.getByRole('banner').getByRole('link', { name: 'Blogs' }).click();
     await expect(page).toHaveURL(/.*blogs/);
 
-    await page.locator('a[href="/catalog"]').first().click();
+    await page.getByRole('banner').getByRole('link', { name: 'Catalog' }).click();
     await expect(page).toHaveURL(/.*catalog/);
+  });
+
+  test('returns a 404 status for an unknown route', { tag: [...NAVIGATION_UNKNOWN_ROUTE, '@outcome:failure'] }, async ({ page }) => {
+    // Catches a routing regression (e.g. an accidental catch-all, or a
+    // middleware rewrite) that would make unknown URLs resolve as 200 with a
+    // blank/broken page, or 500, instead of a clean 404.
+    // quality: allow-no-interaction (no UI link to a nonexistent route exists by definition; direct navigation is the only way to reach this behavior)
+    const response = await page.goto('/this-route-does-not-exist-e2e');
+
+    expect(response?.status()).toEqual(404);
   });
 });

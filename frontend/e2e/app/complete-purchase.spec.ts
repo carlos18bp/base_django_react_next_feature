@@ -100,6 +100,22 @@ test.describe('Complete Purchase Flow', () => {
     }
   });
 
+  test('shows the carousel error state when the product list request fails', { tag: [...HOME_PRODUCT_CAROUSEL, '@outcome:failure'] }, async ({ page }) => {
+    // Catches the same class of regression as the catalog page's error state,
+    // but for the home page's ProductCarousel — a different render path off
+    // the same store/endpoint that must be verified independently.
+    // quality: allow-no-interaction (the error state renders automatically from the failed background fetch on page mount; there is no prior user action that triggers it)
+    await page.route('**/products/', (route) =>
+      route.fulfill({ status: 500, contentType: 'application/json', body: '{}' })
+    );
+
+    await page.goto('/');
+    await waitForPageLoad(page);
+
+    await expect(page.getByText('Products unavailable')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Retry' })).toBeVisible();
+  });
+
   test('checkout lists two products and their subtotal', { tag: [...PURCHASE_MULTIPLE_ITEMS, '@outcome:success'] }, async ({ page }) => {
     await page.goto('/catalog');
     await waitForPageLoad(page);
@@ -135,7 +151,7 @@ test.describe('Complete Purchase Flow', () => {
     await expect(page.locator('button:has-text("Complete checkout")')).toBeDisabled();
   });
 
-  test('should show loading state during form submission', { tag: [...PURCHASE_LOADING_STATE] }, async ({ page }) => {
+  test('should show loading state during form submission', { tag: [...PURCHASE_LOADING_STATE, '@outcome:success'] }, async ({ page }) => {
     // Add a product first
     await page.goto('/catalog');
     await waitForPageLoad(page);
@@ -179,5 +195,44 @@ test.describe('Complete Purchase Flow', () => {
       await expect(submitBtn).toHaveText('...');
       await expect(submitBtn).toBeDisabled();
     }
+  });
+
+  test('re-enables the submit button after the sale request fails', { tag: [...PURCHASE_LOADING_STATE, '@outcome:failure'] }, async ({ page }) => {
+    // Catches a failed sale request that leaves the submit button permanently
+    // stuck on "..."/disabled, locking the user out of retrying.
+    await page.goto('/catalog');
+    await waitForPageLoad(page);
+
+    const productCards = page.locator('a[href^="/products/"]');
+    // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
+    await expect(productCards.first()).toBeVisible({ timeout: 15000 });
+    await productCards.first().click();
+    await waitForPageLoad(page);
+    await page.locator('button:has-text("Add to cart")').click();
+
+    await page.goto('/checkout');
+    await waitForPageLoad(page);
+
+    await page.locator('input[placeholder="Email"]').fill(testCheckoutData.email);
+    await page.locator('input[placeholder="Address"]').fill(testCheckoutData.address);
+    await page.locator('input[placeholder="City"]').fill(testCheckoutData.city);
+    await page.locator('input[placeholder="State"]').fill(testCheckoutData.state);
+    await page.locator('input[placeholder="Postal code"]').fill(testCheckoutData.postal_code);
+
+    const submitBtn = page.locator('button[type="submit"]');
+
+    // Same in-flight technique as the success test above, but resolving with
+    // a server error — this is the transition the bug lives in.
+    await page.route('**/create-sale/', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await route.fulfill({ status: 500, contentType: 'application/json', body: '{}' });
+    });
+
+    await submitBtn.click();
+    await expect(submitBtn).toHaveText('...');
+
+    await expect(page.getByText('Could not complete checkout.')).toBeVisible();
+    await expect(submitBtn).toHaveText('Complete checkout');
+    await expect(submitBtn).toBeEnabled();
   });
 });

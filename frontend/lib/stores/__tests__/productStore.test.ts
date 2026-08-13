@@ -131,7 +131,7 @@ describe('productStore', () => {
 
   describe('clearError', () => {
     it('resets error to null when clearError is called', () => {
-      useProductStore.setState({ error: 'some error' });
+      useProductStore.setState({ error: 'some error', products: mockProducts, loading: false });
 
       const { result } = renderHook(() => useProductStore());
 
@@ -139,7 +139,10 @@ describe('productStore', () => {
         result.current.clearError();
       });
 
+      // Bug this catches: a clearError that wipes more than the error field
+      // (e.g. `set({ error: null, products: [] })`) would still pass a null-only check.
       expect(result.current.error).toBeNull();
+      expect(result.current.products).toEqual(mockProducts);
     });
   });
 

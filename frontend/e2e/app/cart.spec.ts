@@ -1,6 +1,6 @@
 import { test, expect } from '../test-with-coverage';
 import { waitForPageLoad } from '../fixtures';
-import { CART_ADD, CART_EMPTY, CART_UPDATE_QTY, CART_REMOVE, CART_SUBTOTAL, CART_PERSIST, CART_MULTIPLE_PRODUCTS } from '../helpers/flow-tags';
+import { CART_ADD, CART_EMPTY, CART_UPDATE_QTY, CART_REMOVE, CART_SUBTOTAL, CART_PERSIST, CART_MULTIPLE_PRODUCTS, CART_QUANTITY_ZERO } from '../helpers/flow-tags';
 
 test.describe('Shopping Cart', () => {
   test.beforeEach(async ({ page }) => {
@@ -84,6 +84,32 @@ test.describe('Shopping Cart', () => {
     }
   });
 
+  test('removes the cart item when its quantity is set to zero', { tag: [...CART_QUANTITY_ZERO, '@outcome:failure'] }, async ({ page }) => {
+    // Catches an updateQuantity regression (e.g. the `quantity > 0` filter
+    // changed to `quantity >= 0`, or removed) that would leave a ghost $0
+    // line item in the cart instead of removing it.
+    await page.goto('/catalog');
+    await waitForPageLoad(page);
+
+    // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
+    const productCards = page.locator('a[href^="/products/"]');
+    await expect(productCards.first()).toBeVisible({ timeout: 15000 });
+    await productCards.first().click();
+    await waitForPageLoad(page);
+
+    await page.locator('button:has-text("Add to cart")').click();
+
+    await page.goto('/checkout');
+    await waitForPageLoad(page);
+
+    // quality: allow-fragile-selector (number input is the only type="number" field on this page)
+    const qtyInput = page.locator('input[type="number"]').first();
+    await expect(qtyInput).toBeVisible();
+    await qtyInput.fill('0');
+
+    await expect(page.getByText('Your cart is empty.')).toBeVisible();
+  });
+
   test('removes a product from the cart, leaving it empty', { tag: [...CART_REMOVE, '@outcome:success'] }, async ({ page }) => {
     await page.goto('/catalog');
     await waitForPageLoad(page);
@@ -142,21 +168,25 @@ test.describe('Shopping Cart', () => {
     
     if (count > 0) {
       // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
-      await productCards.first().click();
+      const firstProduct = productCards.first();
+      const productTitle = ((await firstProduct.locator('h3').first().textContent()) ?? '').trim();
+      await firstProduct.click();
       await waitForPageLoad(page);
-      
+
       await page.locator('button:has-text("Add to cart")').click();
       await page.waitForLoadState('load');
-      
+
       // Reload page
       await page.reload();
       await waitForPageLoad(page);
-      
-      // Cart should still have item
+
+      // Cart should still show THIS product, not just "something" — a
+      // zustand-persist partialize bug that leaks a different/stale item
+      // would still pass a bare "not empty" check.
       await page.goto('/checkout');
       await waitForPageLoad(page);
-      
-      await expect(page.locator('text=Your cart is empty')).toBeHidden();
+
+      await expect(page.getByText(productTitle)).toBeVisible();
     }
   });
 

@@ -31,7 +31,9 @@ describe('CatalogPage', () => {
       expect(fetchProducts).toHaveBeenCalledTimes(1);
     });
     expect(screen.getByText('Catalog')).toBeInTheDocument();
-    expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
+    // Bug this catches: shrinking the skeleton loop (Array.from({ length: 12 }))
+    // to e.g. length 1 would still pass a bare toBeGreaterThan(0) check.
+    expect(container.querySelectorAll('.animate-pulse')).toHaveLength(12 * 4);
   });
 
   it('renders error state and retries', async () => {

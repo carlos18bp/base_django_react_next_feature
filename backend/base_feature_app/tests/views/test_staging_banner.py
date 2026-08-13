@@ -1,8 +1,11 @@
+"""Tests for the public staging phase banner endpoint."""
+
 from datetime import timedelta
 
 import pytest
 from django.urls import reverse
 from django.utils import timezone
+from freezegun import freeze_time
 from rest_framework import status
 
 from base_feature_app.models import StagingPhaseBanner
@@ -10,12 +13,14 @@ from base_feature_app.models import StagingPhaseBanner
 
 @pytest.fixture
 def banner(db):
+    """Provide the singleton staging banner row with its default field values."""
     instance, _ = StagingPhaseBanner.objects.get_or_create(pk=1)
     return instance
 
 
 @pytest.mark.django_db
 def test_staging_banner_endpoint_returns_200(api_client, banner):
+    """The staging banner endpoint answers an anonymous GET with 200 OK."""
     url = reverse('staging-banner')
 
     response = api_client.get(url)
@@ -25,6 +30,7 @@ def test_staging_banner_endpoint_returns_200(api_client, banner):
 
 @pytest.mark.django_db
 def test_staging_banner_inactive_when_started_at_is_null(api_client, banner):
+    """A banner without started_at reports no countdown and is not expired."""
     banner.started_at = None
     banner.save()
     url = reverse('staging-banner')
@@ -38,7 +44,13 @@ def test_staging_banner_inactive_when_started_at_is_null(api_client, banner):
 
 
 @pytest.mark.django_db
+@freeze_time('2026-01-15 10:00:00')
 def test_staging_banner_active_design_phase_returns_remaining_days(api_client, banner):
+    """Report days_remaining equal to design_duration_days under a frozen clock.
+
+    Catches an off-by-one in the ceil()'d day math that a live clock could mask
+    between the test's and the model's independent timezone.now() reads.
+    """
     banner.current_phase = StagingPhaseBanner.PHASE_DESIGN
     banner.started_at = timezone.now()
     banner.save()
@@ -54,7 +66,13 @@ def test_staging_banner_active_design_phase_returns_remaining_days(api_client, b
 
 
 @pytest.mark.django_db
+@freeze_time('2026-01-15 10:00:00')
 def test_staging_banner_expired_when_phase_window_elapsed(api_client, banner):
+    """Resolve is_expired and days_remaining against the frozen started_at instant.
+
+    Catches a day-math regression in is_expired that a live clock could mask
+    between the test's and the model's independent timezone.now() reads.
+    """
     banner.current_phase = StagingPhaseBanner.PHASE_DEVELOPMENT
     banner.started_at = timezone.now() - timedelta(days=banner.development_duration_days + 1)
     banner.save()
@@ -69,6 +87,7 @@ def test_staging_banner_expired_when_phase_window_elapsed(api_client, banner):
 
 @pytest.mark.django_db
 def test_staging_banner_exposes_contact_details(api_client, banner):
+    """The banner payload exposes the public WhatsApp and email contact details."""
     url = reverse('staging-banner')
 
     response = api_client.get(url)
@@ -80,6 +99,7 @@ def test_staging_banner_exposes_contact_details(api_client, banner):
 
 @pytest.mark.django_db
 def test_staging_banner_does_not_expose_internal_duration_config(api_client, banner):
+    """The banner payload omits the internal phase duration configuration fields."""
     url = reverse('staging-banner')
 
     response = api_client.get(url)

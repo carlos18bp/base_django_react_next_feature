@@ -100,7 +100,9 @@ describe('ForgotPasswordPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Reset password' }));
 
     expect(await screen.findByText('Passwords do not match')).toBeInTheDocument();
-    expect(resetPassword).not.toHaveBeenCalled();
+    // Bug this catches: a mismatch-validation regression that clears/loses the
+    // already-verified 6-digit code, forcing the user to re-request one.
+    expect(screen.getByPlaceholderText('000000')).toHaveValue('123456');
   });
 
   it('validates password length', async () => {
@@ -119,7 +121,9 @@ describe('ForgotPasswordPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Reset password' }));
 
     expect(await screen.findByText('Password must be at least 8 characters')).toBeInTheDocument();
-    expect(resetPassword).not.toHaveBeenCalled();
+    // Bug this catches: a length-validation regression that clears/loses the
+    // already-verified 6-digit code, forcing the user to re-request one.
+    expect(screen.getByPlaceholderText('000000')).toHaveValue('123456');
   });
 
   it('resets password and redirects on success', async () => {

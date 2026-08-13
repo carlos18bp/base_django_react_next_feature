@@ -88,6 +88,33 @@ test.describe('Authentication', () => {
     await expect(page).toHaveURL(/.*sign-up/);
   });
 
+  test('should accept input in sign-up form fields', { tag: [...AUTH_SIGN_UP_FORM, '@outcome:display'] }, async ({ page }) => {
+    // Catches a broken/removed onChange handler on any sign-up field
+    // (controlled-input wiring regression).
+    await page.goto('/sign-up');
+    await waitForPageLoad(page);
+
+    const firstNameInput = page.getByPlaceholder('First Name');
+    await firstNameInput.fill('Ana');
+    await expect(firstNameInput).toHaveValue('Ana');
+
+    const lastNameInput = page.getByPlaceholder('Last Name');
+    await lastNameInput.fill('Garcia');
+    await expect(lastNameInput).toHaveValue('Garcia');
+
+    const emailInput = page.getByPlaceholder('Email');
+    await emailInput.fill('ana@example.com');
+    await expect(emailInput).toHaveValue('ana@example.com');
+
+    const passwordInput = page.getByPlaceholder('Password', { exact: true });
+    await passwordInput.fill('password123');
+    await expect(passwordInput).toHaveValue('password123');
+
+    const confirmPasswordInput = page.getByPlaceholder('Confirm Password');
+    await confirmPasswordInput.fill('password123');
+    await expect(confirmPasswordInput).toHaveValue('password123');
+  });
+
   test('should navigate from sign-in to forgot password', { tag: [...AUTH_FORGOT_PASSWORD_FORM, '@outcome:display'] }, async ({ page }) => {
     await page.goto('/sign-in');
     await waitForPageLoad(page);

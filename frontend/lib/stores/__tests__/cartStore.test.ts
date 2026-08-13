@@ -108,6 +108,9 @@ describe('cartStore', () => {
       });
 
       expect(result.current.items).toHaveLength(0);
+      // Bug this catches: subtotal() reads state independently — a stale-closure
+      // or memoization bug could leave items empty while subtotal() stays non-zero.
+      expect(result.current.subtotal()).toBe(0);
     });
 
     it('should only remove specified product', () => {
@@ -147,6 +150,9 @@ describe('cartStore', () => {
       });
 
       expect(result.current.items).toHaveLength(0);
+      // Bug this catches: subtotal() reads state independently — a stale-closure
+      // or memoization bug could leave items empty while subtotal() stays non-zero.
+      expect(result.current.subtotal()).toBe(0);
     });
   });
 
@@ -161,6 +167,9 @@ describe('cartStore', () => {
       });
 
       expect(result.current.items).toHaveLength(0);
+      // Bug this catches: subtotal() reads state independently — a stale-closure
+      // or memoization bug could leave items empty while subtotal() stays non-zero.
+      expect(result.current.subtotal()).toBe(0);
     });
   });
 

@@ -40,6 +40,11 @@ describe('tokens service', () => {
 
     expect(getAccessToken()).toBeNull();
     expect(getRefreshToken()).toBeNull();
+    // Bug this catches: a typo'd cookie key in tokens.ts (e.g. renaming
+    // ACCESS_TOKEN_KEY) would still read undefined and pass the toBeNull
+    // checks above; pinning the queried keys catches that.
+    expect(mockCookies.get).toHaveBeenCalledWith('access_token');
+    expect(mockCookies.get).toHaveBeenCalledWith('refresh_token');
   });
 
   it('sets and clears tokens', () => {

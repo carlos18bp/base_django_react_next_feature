@@ -100,6 +100,22 @@ test.describe('User Flows', () => {
     }
   });
 
+  test('shows the catalog error state when the product list request fails', { tag: [...CATALOG_BROWSE, '@outcome:failure'] }, async ({ page }) => {
+    // Catches a regression that leaves the catalog page stuck on its loading
+    // skeleton (or crashes) instead of showing the error+retry affordance
+    // when the product list request fails.
+    // quality: allow-no-interaction (the error state renders automatically from the failed background fetch on page mount; there is no prior user action that triggers it)
+    await page.route('**/products/', (route) =>
+      route.fulfill({ status: 500, contentType: 'application/json', body: '{}' })
+    );
+
+    await page.goto('/catalog');
+    await waitForPageLoad(page);
+
+    await expect(page.getByText('Catalog unavailable')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Retry' })).toBeVisible();
+  });
+
   test('should use browser back button correctly', { tag: [...HOME_TO_CATALOG, '@outcome:success'] }, async ({ page }) => {
     // Start at home
     await page.goto('/');

@@ -35,6 +35,25 @@ test.describe('Product Pages', () => {
     await expect(page.getByText(/\$\d/).first()).toBeVisible();
   });
 
+  test('shows a not-found state when the product detail request fails', { tag: [...CATALOG_PRODUCT_DETAIL, '@outcome:failure'] }, async ({ page }) => {
+    // Catches a regression where a failed detail fetch leaves `loading` stuck
+    // true forever (page never resolves past "Loading...") instead of
+    // falling back to the not-found UI.
+    // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
+    const productCards = page.locator('a[href^="/products/"]');
+    await expect(productCards.first()).toBeVisible({ timeout: 15000 });
+
+    // Glob is scoped to a detail id (`*`) so the catalog's own list request,
+    // used above to render the cards, is never intercepted.
+    await page.route('**/products/*/', (route) =>
+      route.fulfill({ status: 500, contentType: 'application/json', body: '{}' })
+    );
+    await productCards.first().click();
+
+    await expect(page.getByText('Product not found.')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Back to catalog' })).toBeVisible();
+  });
+
   test('the product detail renders a gallery image with a source', { tag: [...CATALOG_PRODUCT_GALLERY, '@outcome:display'] }, async ({ page }) => {
     // quality: allow-fragile-selector (product list links uniquely scoped by href pattern)
     const productCards = page.locator('a[href^="/products/"]');

@@ -1,6 +1,6 @@
 import { test, expect } from '../test-with-coverage';
 import { waitForPageLoad, testCheckoutData } from '../fixtures';
-import { CHECKOUT_FORM_DISPLAY, CHECKOUT_FORM_VALIDATION, CHECKOUT_FORM_FILL } from '../helpers/flow-tags';
+import { CHECKOUT_FORM_DISPLAY, CHECKOUT_FORM_VALIDATION, CHECKOUT_FORM_FILL, CHECKOUT_SUBMIT_FAILURE } from '../helpers/flow-tags';
 
 test.describe('Checkout Flow', () => {
 
@@ -89,5 +89,39 @@ test.describe('Checkout Flow', () => {
     if (await postalCodeInput.isVisible()) {
       await postalCodeInput.fill(testCheckoutData.postal_code);
     }
+  });
+
+  test('preserves the cart and re-enables submission when the sale request fails', { tag: [...CHECKOUT_SUBMIT_FAILURE, '@outcome:failure'] }, async ({ page }) => {
+    // Catches a checkout submit handler that calls clearCart() even when the
+    // sale request fails (losing the user's cart), or that leaves the submit
+    // button permanently stuck disabled/"...", blocking a retry.
+    await page.goto('/catalog');
+    await waitForPageLoad(page);
+
+    // quality: allow-fragile-selector (dynamic seeded product list, no stable per-card hook)
+    const productCards = page.locator('a[href^="/products/"]');
+    await expect(productCards.first()).toBeVisible({ timeout: 15000 });
+    await productCards.first().click();
+    await waitForPageLoad(page);
+
+    await page.getByRole('button', { name: 'Add to cart' }).click();
+
+    await page.goto('/checkout');
+    await waitForPageLoad(page);
+
+    await page.getByPlaceholder('Email').fill(testCheckoutData.email);
+    await page.getByPlaceholder('Address').fill(testCheckoutData.address);
+    await page.getByPlaceholder('City').fill(testCheckoutData.city);
+    await page.getByPlaceholder('State').fill(testCheckoutData.state);
+    await page.getByPlaceholder('Postal code').fill(testCheckoutData.postal_code);
+
+    await page.route('**/create-sale/', (route) =>
+      route.fulfill({ status: 500, contentType: 'application/json', body: '{}' })
+    );
+    await page.getByRole('button', { name: 'Complete checkout' }).click();
+
+    await expect(page.getByText('Could not complete checkout.')).toBeVisible();
+    await expect(page.getByText('Your cart is empty.')).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Complete checkout' })).toBeVisible();
   });
 });

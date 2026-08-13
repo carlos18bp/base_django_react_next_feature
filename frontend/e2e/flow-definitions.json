@@ -174,6 +174,19 @@
         "display"
       ]
     },
+    "navigation-unknown-route": {
+      "name": "Unknown route returns 404",
+      "module": "navigation",
+      "roles": [
+        "shared"
+      ],
+      "priority": "P3",
+      "description": "Navigating to an undefined URL returns an HTTP 404 status instead of a broken 200/500",
+      "expectedSpecs": 1,
+      "outcomes": [
+        "failure"
+      ]
+    },
     "catalog-browse": {
       "name": "Browse product catalog",
       "module": "catalog",
@@ -319,6 +332,19 @@
         "success"
       ]
     },
+    "cart-quantity-zero-removes-item": {
+      "name": "Cart quantity set to zero removes the item",
+      "module": "cart",
+      "roles": [
+        "shared"
+      ],
+      "priority": "P2",
+      "description": "User sets a cart item's quantity input to 0 and the item is removed, leaving the cart empty",
+      "expectedSpecs": 1,
+      "outcomes": [
+        "failure"
+      ]
+    },
     "checkout-form-display": {
       "name": "Checkout form display",
       "module": "checkout",
@@ -356,6 +382,19 @@
       "expectedSpecs": 1,
       "outcomes": [
         "display"
+      ]
+    },
+    "checkout-submit-failure": {
+      "name": "Checkout submission server failure",
+      "module": "checkout",
+      "roles": [
+        "shared"
+      ],
+      "priority": "P1",
+      "description": "User submits a filled checkout form and the sale request fails server-side; cart and form are preserved for retry",
+      "expectedSpecs": 1,
+      "outcomes": [
+        "failure"
       ]
     },
     "purchase-complete-flow": {
