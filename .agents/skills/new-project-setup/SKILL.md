@@ -1,7 +1,6 @@
 ---
-name: new-project-setup
+name: "new-project-setup"
 description: "New project setup — persiste el checklist de requerimientos del cliente bajo docs/release/NN-release-checklist.md y reescribe la identidad del template (CLAUDE.md, README.md, AGENTS.md) por la del nuevo proyecto, sin tocar lógica, endpoints ni estructuras."
-argument-hint: "<contenido completo del checklist .md del cliente, pegado verbatim>"
 ---
 
 # New Project Setup — Bootstrap del Nuevo Proyecto sobre el Template
@@ -283,16 +282,16 @@ Al terminar, entregar:
 3. **Archivos modificados** — lista con sha de commit por archivo (`CLAUDE.md`, `README.md`, `AGENTS.md`).
 4. **Referencias residuales** (output S6) — tabla resumen.
 5. **Próximos pasos sugeridos**:
-   - `/methodology-setup` para inicializar Memory Bank (`docs/methodology/`, `tasks/`).
+   - `$methodology-setup` para inicializar Memory Bank (`docs/methodology/`, `tasks/`).
    - Tareas manuales fuera de scope: rename Django app, regenerar OAuth Client ID, actualizar `scripts/systemd/`, `.env.example`.
-   - Cuando el proyecto esté maduro y próximo a staging: `/pre-staging-cleanup` para limpiar residuos del template.
+   - Cuando el proyecto esté maduro y próximo a staging: `$pre-staging-cleanup` para limpiar residuos del template.
 
 ## Ejemplos de invocación
 
 Invocación típica — pegando el `.md` del cliente como argumento:
 
 ```
-/new-project-setup # Pet Adoption Platform
+$new-project-setup # Pet Adoption Platform
 
 > Plataforma para conectar refugios y adoptantes en Latinoamérica.
 

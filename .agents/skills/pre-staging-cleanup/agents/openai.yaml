@@ -1,3 +1,7 @@
 interface:
-  display_name: "Pre-Staging Cleanup"
-  short_description: "Audita y elimina por fases los residuos del template base (modelos demo, endpoints, stores, vistas, traducciones, docs) antes de promover el proyecto a staging"
+  display_name: "Pre Staging Cleanup"
+  short_description: "Pre-staging template residue cleanup — checklist por fases..."
+  default_prompt: "Use $pre-staging-cleanup to handle this task with its documented workflow."
+
+policy:
+  allow_implicit_invocation: true

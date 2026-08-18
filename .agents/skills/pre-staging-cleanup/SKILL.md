@@ -1,7 +1,6 @@
 ---
-name: pre-staging-cleanup
+name: "pre-staging-cleanup"
 description: "Pre-staging template residue cleanup — checklist por fases para auditar y eliminar residuos del template base (modelos demo, endpoints, stores, vistas, traducciones, docs) que quedaron dispersos en el proyecto antes de promover a staging."
-argument-hint: "[optional: fase B1..B10, F1..F9, D1..D6, o sección 'backend'|'frontend'|'docs'|'all']"
 ---
 
 # Pre-Staging Cleanup — Limpieza de Residuos del Template
@@ -22,7 +21,7 @@ Este skill audita el repo **por fases**, clasifica cada item del template como *
 1. **Nunca eliminar sin confirmación explícita** — incluso si la clasificación dice "residuo puro".
 2. **Inventario fijo es la fuente de verdad** — la lista de items del template está embebida abajo. No inferir items en runtime.
 3. **Cada fase = un commit aislado** — facilita rollback (`git revert <sha>`).
-4. **Lista de PRESERVAR siempre** (no proponer jamás eliminar): `User`, `PasswordCode` modelos; `views/auth.py`, `urls/auth.py`, `urls/user.py`, `views/user_crud.py`, `serializers/user_*.py`; `forms/user.py`; `django_attachments/`; `components/layout/Header.tsx`, `components/layout/Footer.tsx`; `lib/stores/authStore.ts`, `lib/stores/localeStore.ts`; `lib/services/http.ts`, `lib/services/tokens.ts`; `lib/hooks/useRequireAuth.ts`; `lib/i18n/config.ts`.
+4. **Lista de PRESERVAR siempre** (no proponer jamás eliminar): `User`, `PasswordCode` modelos; `views/auth.py`, `urls/auth.py`, `urls/user.py`, `views/user_crud.py`, `serializers/user_*.py`; `forms/user.py`; `django_attachments/`; `components/layout/Header.tsx`, `components/layout/Footer.tsx`; `lib/stores/authStore.ts`, `lib/stores/localeStore.ts`; `lib/services/http.ts`, `lib/services/tokens.ts`; `lib/hooks/useRequireAuth.ts`; `lib/i18n/config.ts`. **Staging Phase Banner** (feature de revisión por fases): `models/staging_phase_banner.py`, `serializers/staging_phase_banner.py`, `views/staging_phase_banner.py`, `urls/staging_phase_banner.py`, `StagingPhaseBannerAdmin` en `admin.py`; `components/staging/` (Banner, Overlay, Gate), `lib/stores/stagingBannerStore.ts`, `lib/services/staging-banner.ts`. **Nunca eliminar** — esta feature se controla vía el flag `StagingPhaseBanner.is_visible` desde Django admin (acción "Hide banner"), no por borrado.
 5. **Antes de eliminar un archivo, verificar referencias** con `grep -r "<symbol>" backend/ frontend/ --include="*.py" --include="*.ts" --include="*.tsx"`. Si hay referencias **fuera** de la lista de archivos demo, marcar **adaptado** y preservar.
 6. **Detectar archivos modificados** con `git log --oneline -- <file>` — más de 1 commit (el inicial) ⇒ probablemente adaptado.
 7. **Migraciones:** nunca eliminar migraciones aplicadas a producción. Para limpieza de modelos, generar nueva migración con `python manage.py makemigrations` tras eliminar el modelo.
@@ -114,6 +113,16 @@ Formato de tabla de hallazgos:
 
 #### Fase B10 — Admin demo
 - Editar `backend/base_feature_app/admin.py` para quitar `admin.site.register(Blog/Product/Sale/SoldProduct)` y sus `ModelAdmin` clases.
+- **Preservar:** `StagingPhaseBannerAdmin` y la sección "🚧 Staging Phase Banner" en `BaseFeatureAdminSite.get_app_list`.
+
+#### Fase B11 — Staging Phase Banner (PRESERVAR, no eliminar)
+- `backend/base_feature_app/models/staging_phase_banner.py`
+- `backend/base_feature_app/serializers/staging_phase_banner.py`
+- `backend/base_feature_app/views/staging_phase_banner.py`
+- `backend/base_feature_app/urls/staging_phase_banner.py`
+- `StagingPhaseBannerAdmin` en `admin.py` con sus actions (`start_design_phase`, `start_development_phase`, `show_banner`, `hide_banner`).
+- Acción: **ninguna**. Esta feature controla la visibilidad del banner de revisión para clientes en staging. Se oculta poniendo `is_visible=False` desde Django admin (acción "Hide banner"), nunca se borra.
+- Verificación: confirmar que el registro singleton (id=1) existe tras `migrate` y que `GET /api/staging-banner/` responde 200.
 
 ---
 
@@ -166,6 +175,15 @@ Formato de tabla de hallazgos:
 - Reemplazar `frontend/app/favicon.ico` si sigue siendo el del template.
 - Revisar `frontend/app/layout.tsx` — `metadata.title`, `metadata.description`, `openGraph` deben reflejar el nuevo proyecto, no "Base Django React Next Feature".
 - Revisar archivos `manifest.json` / `robots.txt` / `sitemap.ts` si existen — deben reflejar el dominio real.
+
+#### Fase F10 — Staging Phase Banner UI (PRESERVAR, no eliminar)
+- `frontend/components/staging/StagingPhaseBanner.tsx`
+- `frontend/components/staging/StagingExpiredOverlay.tsx`
+- `frontend/components/staging/StagingGate.tsx`
+- `frontend/lib/stores/stagingBannerStore.ts`
+- `frontend/lib/services/staging-banner.ts`
+- Wrapper `<StagingGate>` en `app/layout.tsx`.
+- Acción: **ninguna**. La visibilidad la controla el modelo `StagingPhaseBanner.is_visible` en backend. Cuando el flag está en `false` o `started_at` es null, el componente no renderiza nada (early-return), pero el archivo debe permanecer en disco.
 
 #### Fase F9 — Tests unit + E2E demo
 - Tests unit:
@@ -255,8 +273,8 @@ Al terminar (o al ejecutar una fase puntual), entregar:
 
 ## Ejemplos de invocación
 
-- `/pre-staging-cleanup` → recorre todas las fases en orden, con confirmación por fase.
-- `/pre-staging-cleanup B1` → solo modelos demo.
-- `/pre-staging-cleanup backend` → fases B1–B10.
-- `/pre-staging-cleanup frontend` → fases F1–F9.
-- `/pre-staging-cleanup docs` → fases D1–D6.
+- `$pre-staging-cleanup` → recorre todas las fases en orden, con confirmación por fase.
+- `$pre-staging-cleanup B1` → solo modelos demo.
+- `$pre-staging-cleanup backend` → fases B1–B10.
+- `$pre-staging-cleanup frontend` → fases F1–F9.
+- `$pre-staging-cleanup docs` → fases D1–D6.
