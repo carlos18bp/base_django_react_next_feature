@@ -43,6 +43,8 @@ Gaps cerrados por la corrida 2026-08-13: los 6 partial (auth-sign-up-form, catal
 
 ## Backlog
 
+- [x] Documentar `allow-negation-only` en el estándar canónico para mantenerlo
+  alineado con el quality gate compartido.
 - [x] Corrida /qa --apply 2026-08-13: partial flows + clases negativas + purga de junk (25 rewrites, 6 deletes, 2 merges) + baseline a 0 — COMPLETADA (rama qa/13082026).
 - [ ] Producto: rama not-found en BlogDetailPage (issue 7) → habilita rewrite del test marcado.
 - [ ] Producto: decidir destino de Footer.tsx (issue 8) y remover selectores muertos (issue 9).

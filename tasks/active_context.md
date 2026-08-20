@@ -1,16 +1,12 @@
 # Active Context — Base Django React Next Feature
 
-> Memory Bank · actualizado 2026-08-13 (cierre de la corrida /qa). Refrescar al cerrar cada sesión significativa.
+> Memory Bank · actualizado 2026-08-20. Refrescar al cerrar cada sesión significativa.
 
 ## Foco actual
 
-Corrida **`/qa --apply`** (2026-08-13, 3 layers) **COMPLETADA** en la rama `qa/13082026`:
-
-1. ✅ Substrate local (backend/venv + sqlite + create_fake_data 5) y Memory Bank completado (5 core files).
-2. ✅ Autoría: 9 tests e2e nuevos (clases failure/display + 3 flows nuevos), 17 rewrites unit, freezegun backend.
-3. ✅ Audit + purga aprobada por el operador: 6 DELETE, 2 MERGE, 25 REWRITE (falsos verdes por guards condicionales eliminados), baseline 15 → 0.
-4. ✅ Verificación: gate CI-parity 0 errores en las 3 suites; 48/48 e2e verdes en vivo; flow audit 36/36 covered.
-5. 🔄 Pendiente inmediato: PR de `qa/13082026` contra master → CI → `/merge-when-green` (QA nunca mergea).
+Alinear el estándar canónico de testing con el quality gate. El motor ya
+soporta `allow-negation-only`; este cambio documenta el marcador sin modificar
+el comportamiento del detector.
 
 ## Decisiones activas
 
@@ -28,6 +24,6 @@ Corrida **`/qa --apply`** (2026-08-13, 3 layers) **COMPLETADA** en la rama `qa/1
 
 ## Próximos pasos
 
-1. (operador) `/merge-when-green` sobre el PR de `qa/13082026` cuando el CI esté verde.
+1. Integrar el PR documental después de que el CI quede verde.
 2. Bugs de producto detectados por el QA: BlogDetailPage not-found, Footer huérfano, selectores muertos, data-testid per-card (ver tasks_plan issues 7-11).
 3. Registrar `db:`/`branch:` en projects.yml del toolkit.
