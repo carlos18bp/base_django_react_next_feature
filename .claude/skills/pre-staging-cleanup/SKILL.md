@@ -233,8 +233,8 @@ Formato de tabla de hallazgos:
 - `frontend/package.json` — `name`, `version`, `description`.
 - `backend/pyproject.toml` (si existe) — metadatos del proyecto.
 
-#### Fase D6 — Workflows `.windsurf/` y skills `.claude/` / `.agents/`
-- `grep -rln "base_feature_app\|base_feature_project" .claude/ .agents/ .windsurf/`
+#### Fase D6 — Skills `.claude/` / `.agents/`
+- `grep -rln "base_feature_app\|base_feature_project" .claude/ .agents/`
 - Actualizar referencias en otros skills (ej. `repo-cleanup`, `plan-task`, `vuln-audit`) que mencionen el nombre del módulo si fue renombrado.
 
 #### Fase D7 — Scripts raíz, CI y systemd

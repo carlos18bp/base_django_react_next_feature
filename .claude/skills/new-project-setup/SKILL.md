@@ -10,7 +10,7 @@ argument-hint: "<contenido completo del checklist .md del cliente, pegado verbat
 
 El repo `base_django_react_next_feature/` se acaba de clonar para arrancar un nuevo proyecto. Antes de empezar a desarrollar, hace falta dejar el repo "auto-consciente" del proyecto real: el cliente entrega un `.md` muy estructurado con el checklist de requerimientos por categorías (listas, componentes, módulos, funcionalidades), y los archivos madre (`CLAUDE.md`, `README.md`, `AGENTS.md`) todavía describen el template, no el producto.
 
-Este skill cubre exactamente esa transición de arranque, **simétrico al final del ciclo `pre-staging-cleanup`**: persiste el checklist del cliente en un release versionado y reescribe la identidad del template por la del nuevo proyecto en los archivos que Claude Code, Codex (vía `AGENTS.md`) y Windsurf consultan **primero** para entender de qué va el repo.
+Este skill cubre exactamente esa transición de arranque, **simétrico al final del ciclo `pre-staging-cleanup`**: persiste el checklist del cliente en un release versionado y reescribe la identidad del template por la del nuevo proyecto en los archivos que Claude Code y Codex (vía `AGENTS.md`) consultan **primero** para entender de qué va el repo.
 
 > **No toca lógica, endpoints, modelos ni estructura** — eso evoluciona durante el desarrollo y se limpia al final con `pre-staging-cleanup`. Aquí solo se persiste input del cliente y se reescribe identidad/contexto.
 
