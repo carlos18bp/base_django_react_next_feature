@@ -24,7 +24,7 @@ Este skill cubre exactamente esa transición de arranque, **simétrico al final 
 1. **Checklist verbatim** — el contenido de `$ARGUMENTS` se escribe SIN modificar (ni headers, ni encoding, ni espaciado, ni saltos de línea).
 2. **No tocar lógica** — el skill solo modifica `CLAUDE.md` raíz, `README.md`, `AGENTS.md` y `docs/release/`. NUNCA `models/`, `views/`, `serializers/`, `urls/`, `components/`, `stores/`, `services/`, `migrations/`, `tests/`, ni código fuente.
 3. **Confirmación humana antes de cada edit a archivos madre** (S3, S4, S5). S1 es la única fase write-only sin confirmación porque es input directo del usuario.
-4. **Working tree limpio** — si `git status --porcelain` no está vacío al invocar, abortar antes de S1 con mensaje: `"Hay cambios sin commitear. Commitea o stashea antes de correr new-project-setup para mantener commits aislados."`
+4. **Working tree limpio** — si `git status --porcelain` no está vacío al invocar, abortar antes de S1 con mensaje: `"Hay cambios sin commitear. Commiteá en tu worktree de sesión antes de correr new-project-setup para mantener commits aislados (nunca stash en un clon principal del fleet)."`
 5. **Commits aislados por fase** que escriba archivos (S1, S3, S4, S5). S2, S6, S7 no commitean.
 6. **No automatizar renames invasivos** — rename de Django app, edición de `.env.example`, edición de `scripts/systemd/`, regenerar Google OAuth Client ID **están fuera de scope**. S6 solo reporta.
 7. **Idempotencia en S1** — si `$ARGUMENTS` (trim de whitespace) es idéntico byte-a-byte al contenido del último `NN-release-checklist.md`, abortar S1 (no crear `NN+1`); S2–S6 pueden re-ejecutarse manualmente para re-aplicar identidad.
