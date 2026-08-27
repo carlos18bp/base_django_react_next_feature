@@ -1,0 +1,32 @@
+# Django application
+Django==6.1
+django-cleanup==9.0.0
+django-cors-headers==4.9.0
+django-dbbackup==5.3.0
+django-silk==5.5.2
+djangorestframework==3.18.0
+djangorestframework-simplejwt==5.5.1
+easy-thumbnails==2.10.1
+gunicorn==23.0.0
+huey==3.3.4
+mysqlclient==2.2.8
+pillow==12.3.0
+python-dotenv==1.2.3
+redis==8.1.0
+requests==2.34.2
+
+# Development and test tooling
+coverage==7.15.4
+factory-boy==3.3.3
+Faker==40.37.0
+freezegun==1.5.5
+pytest==9.1.1
+pytest-cov==7.1.0
+pytest-django==4.14.0
+ruff==0.15.13
+
+# Explicit transitive security boundaries
+Pygments==2.21.0
+PyJWT==2.13.0
+sqlparse==0.5.5
+urllib3==2.7.0

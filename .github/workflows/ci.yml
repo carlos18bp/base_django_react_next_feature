@@ -29,7 +29,9 @@ jobs:
         with:
           python-version-file: '.python-version'
           cache: 'pip'
-          cache-dependency-path: backend/requirements.txt
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-tools.txt
 
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -49,8 +51,12 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq pkg-config default-libmysqlclient-dev
 
-      - name: Install Python dependencies
-        run: pip install -r requirements.txt
+      - name: Verify and install locked Python dependencies
+        run: |
+          python -m pip install --requirement requirements-tools.txt
+          python -m piptools compile --generate-hashes --no-header --resolver=backtracking --strip-extras --output-file=/tmp/requirements.txt requirements.in
+          diff --unified requirements.txt /tmp/requirements.txt
+          python -m pip install --require-hashes --requirement requirements.txt
 
       - name: Verify Python dependencies and WSGI configuration
         env:
@@ -179,7 +185,7 @@ jobs:
         working-directory: backend
         run: |
           python -m venv venv
-          venv/bin/pip install -r requirements.txt
+          venv/bin/python -m pip install --require-hashes --requirement requirements.txt
 
       - name: Run backend migrations
         working-directory: backend
