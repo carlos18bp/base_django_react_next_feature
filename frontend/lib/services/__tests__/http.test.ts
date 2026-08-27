@@ -42,7 +42,7 @@ describe('http service', () => {
     requestInterceptor = null;
     responseSuccessInterceptor = null;
     responseErrorInterceptor = null;
-    apiInstance = jest.fn() as jest.Mock<Promise<any>, any>;
+    apiInstance = jest.fn() as typeof apiInstance;
     apiInstance.interceptors = {
       request: {
         use: jest.fn((handler) => {

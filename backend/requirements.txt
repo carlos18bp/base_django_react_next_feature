@@ -1,21 +1,21 @@
-asgiref==3.11.1
-Django==6.0.5
+asgiref==3.12.1
+Django==6.1
 django-cleanup==9.0.0
 django-cors-headers==4.9.0
 django-dbbackup>=4.0.0
-django-silk>=5.0.0
-djangorestframework==3.17.1
+django-silk>=5.5.2
+djangorestframework==3.18.0
 djangorestframework-simplejwt==5.5.1
-python-dotenv==1.2.2
+python-dotenv==1.2.3
 easy-thumbnails==2.10.1
-Faker==40.18.0
+Faker==40.37.0
 huey>=2.5.0
-pillow==12.2.0
-pytest==9.0.3
+pillow==12.3.0
+pytest==9.1.1
 pytest-cov==7.1.0
-pytest-django==4.12.0
+pytest-django==4.14.0
 freezegun==1.5.5
-coverage==7.14.0
+coverage==7.15.4
 factory-boy==3.3.3
 redis>=4.0.0
 ruff==0.15.13
@@ -23,7 +23,7 @@ requests==2.34.2
 python-dateutil==2.9.0.post0
 six==1.17.0
 sqlparse==0.5.5
-typing_extensions==4.15.0
+typing_extensions==4.16.0
 
 # Production server
 gunicorn>=23.0,<24.0
@@ -31,5 +31,5 @@ mysqlclient>=2.2,<3.0
 
 # Security pins (transitive deps con CVEs en versiones previas)
 urllib3>=2.7.0
-pygments>=2.20.0
+pygments>=2.21.0
 pyjwt>=2.12.1
