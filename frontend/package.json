@@ -71,6 +71,11 @@
     "tailwindcss": "4.3.3",
     "typescript": "npm:@typescript/typescript6@6.0.2"
   },
+  "allowScripts": {
+    "@parcel/watcher@2.5.6": true,
+    "@swc/core@1.16.1": true,
+    "unrs-resolver@1.11.1": true
+  },
   "overrides": {
     "minimatch": "10.2.6",
     "flatted": "3.4.4"
