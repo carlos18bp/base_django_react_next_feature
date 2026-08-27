@@ -115,6 +115,7 @@ jobs:
       - name: Verify frontend dependencies and build
         run: |
           npm audit --audit-level=high
+          npm run check:install-scripts
           npm run lint
           npm run typecheck
           npm run typecheck:compat

@@ -12,6 +12,7 @@
     "build": "NODE_OPTIONS=--no-deprecation next build",
     "start": "NODE_OPTIONS=--no-deprecation next start",
     "lint": "eslint",
+    "check:install-scripts": "node scripts/check-install-scripts.cjs",
     "typecheck": "tsc --noEmit",
     "typecheck:compat": "tsc6 --noEmit",
     "test": "NODE_OPTIONS=--no-deprecation jest",
