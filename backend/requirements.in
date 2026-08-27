@@ -23,7 +23,7 @@ freezegun==1.5.5
 pytest==9.1.1
 pytest-cov==7.1.0
 pytest-django==4.14.0
-ruff==0.15.13
+ruff==0.16.4
 
 # Explicit transitive security boundaries
 Pygments==2.21.0
