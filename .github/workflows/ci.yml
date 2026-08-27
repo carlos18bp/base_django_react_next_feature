@@ -57,6 +57,7 @@ jobs:
           python -m piptools compile --generate-hashes --no-header --resolver=backtracking --strip-extras --output-file=/tmp/requirements.txt requirements.in
           diff --unified requirements.txt /tmp/requirements.txt
           python -m pip install --require-hashes --requirement requirements.txt
+          pip-audit --require-hashes --disable-pip --progress-spinner=off --requirement requirements.txt
 
       - name: Verify Python dependencies and WSGI configuration
         env:

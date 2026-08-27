@@ -28,5 +28,5 @@ ruff==0.15.13
 # Explicit transitive security boundaries
 Pygments==2.21.0
 PyJWT==2.13.0
-sqlparse==0.5.5
+sqlparse==0.6.0
 urllib3==2.7.0
