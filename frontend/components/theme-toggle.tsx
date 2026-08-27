@@ -8,9 +8,11 @@
  * stored preference). Implements WAI-ARIA menu keyboard contract:
  * ArrowUp/Down navigate, Home/End jump to ends, Escape closes.
  */
-import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { useTheme } from 'next-themes';
 import { Sun, Moon, Monitor } from 'lucide-react';
+
+import { useHydrated } from '@/lib/hooks/useHydrated';
 
 const OPTIONS = [
   { value: 'light', label: 'Light', Icon: Sun },
@@ -18,17 +20,9 @@ const OPTIONS = [
   { value: 'system', label: 'System', Icon: Monitor },
 ] as const;
 
-const subscribeToHydration = () => () => {};
-const getClientHydrationSnapshot = () => true;
-const getServerHydrationSnapshot = () => false;
-
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
-  const mounted = useSyncExternalStore(
-    subscribeToHydration,
-    getClientHydrationSnapshot,
-    getServerHydrationSnapshot,
-  );
+  const mounted = useHydrated();
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const itemsRef = useRef<Array<HTMLButtonElement | null>>([]);
