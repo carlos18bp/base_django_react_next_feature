@@ -117,6 +117,7 @@ jobs:
           npm audit --audit-level=high
           npm run lint
           npm run typecheck
+          npm run typecheck:compat
           npm run build
 
       - name: Run Jest tests with coverage

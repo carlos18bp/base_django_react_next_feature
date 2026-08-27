@@ -13,6 +13,7 @@
     "start": "NODE_OPTIONS=--no-deprecation next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "typecheck:compat": "tsc6 --noEmit",
     "test": "NODE_OPTIONS=--no-deprecation jest",
     "test:watch": "NODE_OPTIONS=--no-deprecation jest --watch",
     "test:ci": "NODE_OPTIONS=--no-deprecation jest --ci",
@@ -61,13 +62,14 @@
     "@types/node": "24.13.3",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",
+    "@typescript/native": "npm:typescript@7.0.2",
     "eslint": "10.9.1",
     "eslint-config-next": "16.3.3",
     "eslint-plugin-playwright": "2.11.0",
     "jest": "30.4.2",
     "jest-environment-jsdom": "30.4.1",
     "tailwindcss": "4.3.3",
-    "typescript": "5.9.3"
+    "typescript": "npm:@typescript/typescript6@6.0.2"
   },
   "overrides": {
     "minimatch": "10.2.6",

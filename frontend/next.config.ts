@@ -17,6 +17,11 @@ try {
 
 const nextConfig: NextConfig = {
   skipTrailingSlashRedirect: true,
+  experimental: {
+    // TypeScript 7 provides the primary CLI typecheck while Next and ESLint
+    // retain the TypeScript 6 API during the upstream transition.
+    useTypeScriptCli: false,
+  },
   images: {
     unoptimized: true,
     remotePatterns: [
