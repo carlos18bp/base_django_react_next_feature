@@ -52,6 +52,14 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
+      - name: Verify Python dependencies and WSGI configuration
+        env:
+          DJANGO_SETTINGS_MODULE: base_feature_project.settings_dev
+        run: |
+          python -m pip check
+          python manage.py check
+          gunicorn --check-config base_feature_project.wsgi:application
+
       - name: Run migrations
         run: python manage.py migrate --no-input
 
@@ -96,6 +104,13 @@ jobs:
         run: npm ci
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+      - name: Verify frontend dependencies and build
+        run: |
+          npm audit --audit-level=high
+          npm run lint
+          npm run typecheck
+          npm run build
 
       - name: Run Jest tests with coverage
         run: |

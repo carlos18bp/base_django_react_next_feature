@@ -8,7 +8,7 @@
  * stored preference). Implements WAI-ARIA menu keyboard contract:
  * ArrowUp/Down navigate, Home/End jump to ends, Escape closes.
  */
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent } from 'react';
 import { useTheme } from 'next-themes';
 import { Sun, Moon, Monitor } from 'lucide-react';
 
@@ -18,14 +18,20 @@ const OPTIONS = [
   { value: 'system', label: 'System', Icon: Monitor },
 ] as const;
 
+const subscribeToHydration = () => () => {};
+const getClientHydrationSnapshot = () => true;
+const getServerHydrationSnapshot = () => false;
+
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    subscribeToHydration,
+    getClientHydrationSnapshot,
+    getServerHydrationSnapshot,
+  );
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const itemsRef = useRef<Array<HTMLButtonElement | null>>([]);
-
-  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (open) itemsRef.current[0]?.focus();

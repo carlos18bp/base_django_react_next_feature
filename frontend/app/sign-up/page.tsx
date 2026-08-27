@@ -8,6 +8,7 @@ import { jwtDecode } from 'jwt-decode';
 import ReCAPTCHA from 'react-google-recaptcha';
 
 import { useAuthStore } from '@/lib/stores/authStore';
+import { getApiErrorMessage } from '@/lib/services/errors';
 import { api } from '@/lib/services/http';
 
 type GoogleUser = {
@@ -76,8 +77,8 @@ export default function SignUpPage() {
         captcha_token: captchaToken ?? undefined,
       });
       router.replace('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Registration failed');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Registration failed'));
       recaptchaRef.current?.reset();
       setCaptchaToken(null);
     } finally {
@@ -111,8 +112,8 @@ export default function SignUpPage() {
       });
       
       router.replace('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Google registration failed');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Google registration failed'));
     } finally {
       setLoading(false);
     }

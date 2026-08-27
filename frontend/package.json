@@ -7,6 +7,7 @@
     "build": "NODE_OPTIONS=--no-deprecation next build",
     "start": "NODE_OPTIONS=--no-deprecation next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "test": "NODE_OPTIONS=--no-deprecation jest",
     "test:watch": "NODE_OPTIONS=--no-deprecation jest --watch",
     "test:ci": "NODE_OPTIONS=--no-deprecation jest --ci",

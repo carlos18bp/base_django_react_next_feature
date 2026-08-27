@@ -35,10 +35,6 @@ export default function ManualSearch({ locale, sections }: Props) {
   const { results, isSearching } = useManualSearch(query, locale, sections);
 
   useEffect(() => {
-    setHighlighted(0);
-  }, [query]);
-
-  useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
@@ -77,8 +73,13 @@ export default function ManualSearch({ locale, sections }: Props) {
     }, HIGHLIGHT_MS);
   };
 
+  const updateQuery = (value: string) => {
+    setQuery(value);
+    setHighlighted(0);
+  };
+
   const handleSelect = (id: string) => {
-    setQuery('');
+    updateQuery('');
     scrollToProcess(id);
   };
 
@@ -94,7 +95,7 @@ export default function ManualSearch({ locale, sections }: Props) {
       e.preventDefault();
       handleSelect(results[highlighted].process.id);
     } else if (e.key === 'Escape') {
-      setQuery('');
+      updateQuery('');
       inputRef.current?.blur();
     }
   };
@@ -110,7 +111,7 @@ export default function ManualSearch({ locale, sections }: Props) {
           aria-label={LABELS.placeholder[locale]}
           placeholder={LABELS.placeholder[locale]}
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => updateQuery(e.target.value)}
           onKeyDown={handleKey}
           className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
         />
@@ -118,7 +119,7 @@ export default function ManualSearch({ locale, sections }: Props) {
           <button
             type="button"
             onClick={() => {
-              setQuery('');
+              updateQuery('');
               inputRef.current?.focus();
             }}
             className="text-muted-foreground hover:text-foreground"

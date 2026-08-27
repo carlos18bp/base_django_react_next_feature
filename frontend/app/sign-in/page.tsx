@@ -8,6 +8,7 @@ import { jwtDecode } from 'jwt-decode';
 import ReCAPTCHA from 'react-google-recaptcha';
 
 import { useAuthStore } from '@/lib/stores/authStore';
+import { getApiErrorMessage } from '@/lib/services/errors';
 import { api } from '@/lib/services/http';
 
 type GoogleUser = {
@@ -51,8 +52,8 @@ export default function SignInPage() {
     try {
       await signIn({ email, password, captcha_token: captchaToken ?? undefined });
       router.replace('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Invalid credentials');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Invalid credentials'));
       recaptchaRef.current?.reset();
       setCaptchaToken(null);
     } finally {
@@ -86,8 +87,8 @@ export default function SignInPage() {
       });
       
       router.replace('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Google login failed');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Google login failed'));
     } finally {
       setLoading(false);
     }
@@ -182,7 +183,7 @@ export default function SignInPage() {
         </div>
 
         <div className="mt-6 text-center text-sm">
-          <span className="text-muted-foreground">Don't have an account? </span>
+          <span className="text-muted-foreground">Don&apos;t have an account? </span>
           <Link href="/sign-up" className="text-foreground hover:underline">
             Sign up
           </Link>
