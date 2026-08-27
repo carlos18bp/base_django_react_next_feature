@@ -4,11 +4,11 @@
 
 This repository serves as a foundation for rapid implementation of future projects using Django backend and Next.js + React frontend, with RESTful architecture and JWT authentication.
 
-[![Django](https://img.shields.io/badge/Django-6.0+-092E20?style=flat&logo=django)](https://www.djangoproject.com/)
+[![Django](https://img.shields.io/badge/Django-6.1-092E20?style=flat&logo=django)](https://www.djangoproject.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-16+-000000?style=flat&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19+-61DAFB?style=flat&logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5+-3178C6?style=flat&logo=typescript)](https://www.typescriptlang.org/)
-[![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=flat&logo=python)](https://www.python.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7.0-3178C6?style=flat&logo=typescript)](https://www.typescriptlang.org/)
+[![Python](https://img.shields.io/badge/Python-3.14-3776AB?style=flat&logo=python)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
@@ -90,45 +90,46 @@ This repository serves as a foundation for rapid implementation of future projec
 ### Backend
 | Technology | Version | Description |
 |------------|---------|-------------|
-| Python | 3.12+ | Programming language |
-| Django | 6.0+ | Web framework |
-| Django REST Framework | 3.16+ | REST API toolkit |
-| Simple JWT | 5.5+ | JWT authentication |
-| django-cors-headers | 4.9+ | CORS middleware |
+| Python | 3.14.7 | Programming language |
+| Django | 6.1 | Web framework |
+| Django REST Framework | 3.18.0 | REST API toolkit |
+| Simple JWT | 5.5.1 | JWT authentication |
+| django-cors-headers | 4.9.0 | CORS middleware |
 | django-attachments | Custom | File management |
-| django-cleanup | 9.0+ | Automatic orphan file removal |
-| easy-thumbnails | 2.10+ | Image thumbnail generation |
-| python-dotenv | 1.2+ | Environment variable management |
-| requests | 2.32+ | HTTP library (Google OAuth verification) |
-| Faker | 40.5+ | Fake data generation |
-| factory-boy | 3.3+ | Test factories |
-| freezegun | 1.5+ | Time mocking for tests |
-| Pytest | 9.0+ | Testing framework |
-| pytest-cov | 7.0+ | Coverage plugin |
-| Ruff | 0.15+ | Python linter |
-| django-dbbackup | 4.0+ | Database & media backup automation |
-| django-silk | 5.0+ | Query profiling & N+1 detection |
-| Huey | 2.5+ | Lightweight task queue |
-| Redis | 4.0+ | Message broker for Huey |
+| django-cleanup | 9.0.0 | Automatic orphan file removal |
+| easy-thumbnails | 2.10.1 | Image thumbnail generation |
+| python-dotenv | 1.2.3 | Environment variable management |
+| requests | 2.34.2 | HTTP library (Google OAuth verification) |
+| Faker | 40.37.0 | Fake data generation |
+| factory-boy | 3.3.3 | Test factories |
+| freezegun | 1.5.5 | Time mocking for tests |
+| Pytest | 9.1.1 | Testing framework |
+| pytest-cov | 7.1.0 | Coverage plugin |
+| Ruff | 0.16.4 | Python linter |
+| django-dbbackup | 5.3.0 | Database & media backup automation |
+| django-silk | 5.5.2 | Query profiling & N+1 detection |
+| Huey | 3.3.4 | Lightweight task queue |
+| Redis | 8.1.0 | Message broker for Huey |
 
 ### Frontend
 | Technology | Version | Description |
 |------------|---------|-------------|
-| Next.js | 16.1+ | React framework with App Router |
-| React | 19.2+ | UI library |
-| TypeScript | 5+ | Type-safe JavaScript |
-| Zustand | 5.0+ | State management |
-| Axios | 1.13+ | HTTP client |
-| TailwindCSS | 4.2+ | CSS framework |
-| next-intl | 4.8+ | Internationalization |
-| @react-oauth/google | 0.13+ | Google OAuth |
-| js-cookie | 3.0+ | Cookie management |
-| jwt-decode | 4.0+ | JWT token decoding |
-| ESLint | 9.39+ | TypeScript linting |
-| eslint-plugin-playwright | 2.7+ | Playwright lint rules |
-| Jest | 30.2+ | Unit testing |
-| @testing-library/react | 16.3+ | React component testing |
-| Playwright | 1.58+ | E2E testing |
+| Node.js / npm | 24.20.0 / 11.19.0 | Runtime and package manager |
+| Next.js | 16.3.3 | React framework with App Router |
+| React | 19.2.8 | UI library |
+| TypeScript | 7.0.2 + 6.0 compatibility API | Type-safe JavaScript |
+| Zustand | 5.0.15 | State management |
+| Axios | 1.20.0 | HTTP client |
+| TailwindCSS | 4.3.3 | CSS framework |
+| next-intl | 4.14.0 | Internationalization |
+| @react-oauth/google | 0.13.5 | Google OAuth |
+| js-cookie | 3.0.8 | Cookie management |
+| jwt-decode | 4.0.0 | JWT token decoding |
+| ESLint | 10.9.1 | TypeScript linting |
+| eslint-plugin-playwright | 2.11.0 | Playwright lint rules |
+| Jest | 30.4.2 | Unit testing |
+| @testing-library/react | 16.3.2 | React component testing |
+| Playwright | 1.62.1 | E2E testing |
 
 ---
 
@@ -267,8 +268,8 @@ base_django_react_next_feature/
 
 ### Prerequisites
 
-- **Python 3.12+**
-- **Node.js 20+** and **npm**
+- **Python 3.14.7**
+- **Node.js 24.20.0 LTS** and **npm 11.19.0**
 - **Git**
 
 ### 1. Clone Repository
@@ -288,8 +289,9 @@ python3 -m venv backend/venv
 source backend/venv/bin/activate  # Linux/Mac
 # backend\venv\Scripts\activate   # Windows
 
-# Install dependencies
-pip install -r backend/requirements.txt
+# Install the pinned package manager and hashed dependencies
+python -m pip install --upgrade pip==26.2.1
+python -m pip install --require-hashes -r backend/requirements.txt
 
 # Configure environment variables
 cp backend/.env.example backend/.env
@@ -323,8 +325,8 @@ Backend will be available at: `http://localhost:8000`
 # In a new terminal
 cd frontend
 
-# Install dependencies
-npm install
+# Install the exact lockfile
+npm ci
 
 # Configure environment variables
 cp .env.example .env.local
@@ -752,6 +754,9 @@ npm run e2e:clean          # Remove playwright-report, test-results, blob-report
 
 # Linting
 npm run lint               # Run ESLint
+npm run check:install-scripts  # Reject unreviewed dependency lifecycle scripts
+npm run typecheck          # TypeScript 7 native typecheck
+npm run typecheck:compat   # TypeScript 6 ecosystem compatibility
 ```
 
 ---
