@@ -1,23 +1,23 @@
 # Technical — Base Django React Next Feature
 
-> Memory Bank · actualizado 2026-08-13 (corrida /qa). Versiones verificadas contra `backend/requirements.txt` y `frontend/package.json`.
+> Memory Bank · actualizado 2026-08-27 (corrida vuln-audit). Versiones verificadas contra `backend/requirements.txt` y `frontend/package.json`.
 
 ## Stack
 
 | Capa | Tecnología | Versión pineada |
 |---|---|---|
-| Backend | Django / DRF / simplejwt | 6.0.5 / 3.17.1 / 5.5.1 |
+| Backend | Django / DRF / simplejwt | 6.1 / 3.18.0 / 5.5.1 |
 | Tareas | Huey + Redis | huey≥2.5, redis≥4.0 |
 | DB dev/test | sqlite3 (default `DJANGO_DB_ENGINE`) | — |
 | DB prod | MySQL (mysqlclient≥2.2, settings_prod) | — |
-| Frontend | Next.js (App Router) / React | 16.2.6 / 19.2.6 |
-| Estado | Zustand | ^5.0.13 |
-| i18n | next-intl | ^4.12.0 |
-| HTTP | axios | ^1.16.1 |
-| Testing backend | pytest / pytest-django / freezegun / factory-boy | 9.0.3 / 4.12.0 / 1.5.5 / 3.3.3 |
-| Testing unit | Jest 30 + Testing Library (jsdom) | ^30.4.2 |
-| Testing E2E | Playwright | ^1.60.0 |
-| Estilos | Tailwind CSS | ^4.3.0 |
+| Frontend | Next.js (App Router) / React | 16.3.3 / 19.2.8 |
+| Estado | Zustand | ^5.0.15 |
+| i18n | next-intl | ^4.14.0 |
+| HTTP | axios | ^1.20.0 |
+| Testing backend | pytest / pytest-django / freezegun / factory-boy | 9.1.1 / 4.14.0 / 1.5.5 / 3.3.3 |
+| Testing unit | Jest 30 + Testing Library (jsdom) | ^30.4.2 / jest-dom ^6.9.1 |
+| Testing E2E | Playwright | ^1.62.1 |
+| Estilos | Tailwind CSS | ^4.3.3 |
 
 ## Selección de settings (¡no es DJANGO_ENV!)
 
@@ -63,6 +63,8 @@ cd frontend && npx playwright test
 
 ## Constraints técnicos
 
+- Django 6.1 todavía acepta los settings `EMAIL_*`, pero emite
+  `RemovedInDjango70Warning`; migrar a `MAILERS` antes de Django 7.
 - Los tags E2E viven como constantes en `e2e/helpers/flow-tags.ts` (`@flow:`/`@module:`/`@priority:`; `@outcome:` inline) — specs nuevos reutilizan ese idioma.
 - Sin `data-testid` en el source de producción (salvo `components/staging/`): selectores por rol/label; el copy es bilingüe, evitar `getByText` con strings hardcodeados.
 - Playwright projects Mobile/Tablet están comentados; los scripts `e2e:mobile`/`e2e:tablet` de package.json fallan si se invocan.

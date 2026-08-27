@@ -1,6 +1,6 @@
 # Tasks Plan — Base Django React Next Feature
 
-> Memory Bank · actualizado 2026-08-13 (corrida /qa). Conteos verificados con find/grep.
+> Memory Bank · actualizado 2026-08-27 (corrida vuln-audit). Conteos funcionales conservados de /qa; dependencias verificadas contra los manifests.
 
 ## Estado por feature (template)
 
@@ -40,12 +40,17 @@ Gaps cerrados por la corrida 2026-08-13: los 6 partial (auth-sign-up-form, catal
 9. **Selectores muertos**: `selectBlogs*`/`selectProducts*` (blogStore.ts:44-46, productStore.ts:44-46) no tienen consumidores — candidatos a remoción de producto.
 10. **Deuda pydocstyle latente**: ~153 findings D (ruff select curado del gate toolkit) en 24 archivos de test backend. El CI está verde sólo porque su job de gate no instala ruff; si se agrega `pip install`, master pasa a rojo. Burn-down antes de tocar ese workflow.
 11. **~19 selectores posicionales e2e bounded**: seleccionar cards de listas seedeadas requiere un hook estable (`data-testid` per-card en ProductCard/BlogCard) — cambio de producto que destrabaría los warnings fragile_locator restantes.
+12. **Django 7 compatibility**: Django 6.1 emite `RemovedInDjango70Warning` por
+    los settings legacy `EMAIL_*`; migrar la configuración a `MAILERS` antes del
+    próximo major.
 
 ## Backlog
 
 - [x] Documentar `allow-negation-only` en el estándar canónico para mantenerlo
   alineado con el quality gate compartido.
 - [x] Corrida /qa --apply 2026-08-13: partial flows + clases negativas + purga de junk (25 rewrites, 6 deletes, 2 merges) + baseline a 0 — COMPLETADA (rama qa/13082026).
+- [x] Corrida vuln-audit 2026-08-27: frontend 10→0 vulnerabilidades; backend
+  40→11, con los remanentes de pip/sqlparse documentados.
 - [ ] Producto: rama not-found en BlogDetailPage (issue 7) → habilita rewrite del test marcado.
 - [ ] Producto: decidir destino de Footer.tsx (issue 8) y remover selectores muertos (issue 9).
 - [ ] Producto: `data-testid` per-card en ProductCard/BlogCard (issue 11).
@@ -54,3 +59,6 @@ Gaps cerrados por la corrida 2026-08-13: los 6 partial (auth-sign-up-form, catal
 - [ ] repo-cleanup: eliminar `base_feature_app/urls.py` shadowed y scripts e2e huérfanos.
 - [ ] Corregir la sección Directory Structure de `CLAUDE.md` (content/ → base_feature_app/).
 - [ ] Registrar `db:` y `branch:` de este proyecto en `projects.yml` del toolkit.
+- [ ] Migrar settings de email a `MAILERS` antes de Django 7.
+- [ ] Evaluar `sqlparse 0.6` en un PR dedicado para cerrar 4 CVEs sin mezclar
+  el salto `0.x` con bumps patch/minor.
