@@ -7,7 +7,7 @@ django-silk==5.5.2
 djangorestframework==3.18.0
 djangorestframework-simplejwt==5.5.1
 easy-thumbnails==2.10.1
-gunicorn==23.0.0
+gunicorn==26.2.0
 huey==3.3.4
 mysqlclient==2.2.8
 pillow==12.3.0
