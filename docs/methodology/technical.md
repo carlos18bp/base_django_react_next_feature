@@ -1,23 +1,27 @@
 # Technical — Base Django React Next Feature
 
-> Memory Bank · actualizado 2026-08-27 (corrida vuln-audit). Versiones verificadas contra `backend/requirements.txt` y `frontend/package.json`.
+> Memory Bank · actualizado 2026-08-27 (dependency refresh integral). Versiones verificadas contra los locks y los escaneos finales.
 
 ## Stack
 
 | Capa | Tecnología | Versión pineada |
 |---|---|---|
+| Runtime backend | Python / pip | 3.14.7 / 26.2.1 |
 | Backend | Django / DRF / simplejwt | 6.1 / 3.18.0 / 5.5.1 |
-| Tareas | Huey + Redis | huey≥2.5, redis≥4.0 |
+| Tareas | Huey + Redis | 3.3.4 / 8.1.0 |
 | DB dev/test | sqlite3 (default `DJANGO_DB_ENGINE`) | — |
-| DB prod | MySQL (mysqlclient≥2.2, settings_prod) | — |
+| DB prod | MySQL (mysqlclient 2.2.8, settings_prod) | — |
+| Runtime frontend | Node.js / npm | 24.20.0 LTS / 11.19.0 |
 | Frontend | Next.js (App Router) / React | 16.3.3 / 19.2.8 |
-| Estado | Zustand | ^5.0.15 |
-| i18n | next-intl | ^4.14.0 |
-| HTTP | axios | ^1.20.0 |
+| Estado | Zustand | 5.0.15 |
+| i18n | next-intl | 4.14.0 |
+| HTTP | axios | 1.20.0 |
+| Tipado | TypeScript nativo / API compatible | 7.0.2 / 6.0.2 |
+| Lint frontend | ESLint / @eslint/compat | 10.9.1 / 2.1.0 |
 | Testing backend | pytest / pytest-django / freezegun / factory-boy | 9.1.1 / 4.14.0 / 1.5.5 / 3.3.3 |
-| Testing unit | Jest 30 + Testing Library (jsdom) | ^30.4.2 / jest-dom ^6.9.1 |
-| Testing E2E | Playwright | ^1.62.1 |
-| Estilos | Tailwind CSS | ^4.3.3 |
+| Testing unit | Jest 30 + Testing Library (jsdom) | 30.4.2 / jest-dom 7.0.1 |
+| Testing E2E | Playwright | 1.62.1 |
+| Estilos | Tailwind CSS | 4.3.3 |
 
 ## Selección de settings (¡no es DJANGO_ENV!)
 
@@ -29,12 +33,14 @@
 
 ```bash
 # Backend
-cd backend && python3 -m venv venv && venv/bin/pip install -r requirements.txt
+cd backend && python3.14 -m venv venv
+venv/bin/python -m pip install --upgrade pip==26.2.1
+venv/bin/python -m pip install --require-hashes -r requirements.txt
 venv/bin/python manage.py migrate
 venv/bin/python manage.py create_fake_data 5
 
 # Frontend
-cd frontend && npm install
+cd frontend && npm ci
 npm run dev            # Next en :3000
 
 # E2E (Playwright levanta ambos webServers solo; requiere backend/venv)
@@ -58,13 +64,28 @@ cd frontend && npx playwright test
 | E2E | Playwright (project "Desktop Chrome") | `frontend/e2e/` (8 specs / 40 tests) | flow map: `e2e/flow-definitions.json` (33 flows) |
 
 - Quality gate: `scripts/test_quality_gate.py` + `.testquality.yml` (≤50 líneas/test, ≤7 asserts, timeout ≤100ms) con baseline `.junk-baseline.json` (15 findings frontend grandfathered, keyed `file::rule::test_name`).
-- CI (`.github/workflows/`): `ci.yml` (backend sqlite + unit + e2e con fake data + coverage summary) y `test-quality-gate.yml` (`--junk-severity=error`).
+- CI (`.github/workflows/`): `ci.yml` valida drift del lock Python, instalación
+  con hashes, `pip-audit`, `pip check`, WSGI/Gunicorn, `npm audit`, ESLint,
+  allowlist de scripts npm, TypeScript 7 + compatibilidad TypeScript 6, build,
+  backend sqlite, unit y e2e con fake data + coverage summary;
+  `test-quality-gate.yml` ejecuta
+  `--junk-severity=error`.
 - Reglas de ejecución: ≤20 tests por batch, ≤3 comandos por ciclo, e2e ≤2 archivos por invocación, `E2E_REUSE_SERVER=1` si el dev server ya corre.
 
 ## Constraints técnicos
 
 - Django 6.1 todavía acepta los settings `EMAIL_*`, pero emite
   `RemovedInDjango70Warning`; migrar a `MAILERS` antes de Django 7.
+- `backend/requirements.in` es la fuente humana; `requirements.txt` se genera
+  con `pip-compile`, hashes y versiones exactas. `requirements-tools.txt` fija
+  pip/pip-tools/pip-audit y CI rechaza drift.
+- TypeScript 7 es el typecheck principal. Next y typescript-eslint usan la API
+  TypeScript 6 mediante el alias oficial hasta que la API nativa esté soportada.
+- ESLint 10 necesita `@eslint/compat` para los plugins legacy anidados por
+  `eslint-config-next`; sus peers todavía declaran ESLint ≤9 pese a pasar lint.
+- npm `allowScripts` autoriza por versión sólo `@parcel/watcher`, `@swc/core` y
+  `unrs-resolver`; cualquier bump exige una revisión nueva y
+  `check:install-scripts` hace fallar CI si queda alguno pendiente.
 - Los tags E2E viven como constantes en `e2e/helpers/flow-tags.ts` (`@flow:`/`@module:`/`@priority:`; `@outcome:` inline) — specs nuevos reutilizan ese idioma.
 - Sin `data-testid` en el source de producción (salvo `components/staging/`): selectores por rol/label; el copy es bilingüe, evitar `getByText` con strings hardcodeados.
 - Playwright projects Mobile/Tablet están comentados; los scripts `e2e:mobile`/`e2e:tablet` de package.json fallan si se invocan.

@@ -1,11 +1,12 @@
+import { fixupConfigRules } from '@eslint/compat';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
 import playwright from 'eslint-plugin-playwright';
 
 const eslintConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
+  ...fixupConfigRules(nextVitals),
+  ...fixupConfigRules(nextTs),
   {
     ...playwright.configs['flat/recommended'],
     files: ['e2e/**/*.{ts,tsx,js,jsx}'],
@@ -17,7 +18,7 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    files: ['**/__tests__/**/*.{ts,tsx}', 'e2e/**/*.{ts,tsx}'],
+    files: ['**/__tests__/**/*.{ts,tsx}', 'e2e/**/*.{ts,tsx}', 'jest.setup.ts'],
     rules: {
       '@typescript-eslint/no-unused-vars': ['error', {
         varsIgnorePattern: '^_',
@@ -27,9 +28,15 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    files: ['**/__tests__/**/*.{ts,tsx}'],
+    files: ['**/__tests__/**/*.{ts,tsx}', 'e2e/**/*.{ts,tsx}', 'jest.setup.ts'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
+  {
+    files: ['**/*.cjs', 'scripts/__tests__/**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
     },
   },
   globalIgnores([

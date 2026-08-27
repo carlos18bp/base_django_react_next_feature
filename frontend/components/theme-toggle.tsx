@@ -12,6 +12,8 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { useTheme } from 'next-themes';
 import { Sun, Moon, Monitor } from 'lucide-react';
 
+import { useHydrated } from '@/lib/hooks/useHydrated';
+
 const OPTIONS = [
   { value: 'light', label: 'Light', Icon: Sun },
   { value: 'dark', label: 'Dark', Icon: Moon },
@@ -20,12 +22,10 @@ const OPTIONS = [
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useHydrated();
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const itemsRef = useRef<Array<HTMLButtonElement | null>>([]);
-
-  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (open) itemsRef.current[0]?.focus();

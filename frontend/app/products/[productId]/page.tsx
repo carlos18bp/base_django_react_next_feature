@@ -13,23 +13,22 @@ export default function ProductDetailPage() {
   const fetchProduct = useProductStore((s) => s.fetchProduct);
   const addToCart = useCartStore((s) => s.addToCart);
   const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
   const params = useParams<{ productId: string | string[] }>();
   const productIdParam = params?.productId;
   const productId = Array.isArray(productIdParam) ? productIdParam[0] : productIdParam;
+  const numericProductId = Number(productId);
+  const hasValidProductId = Number.isFinite(numericProductId);
+  const [loading, setLoading] = useState(hasValidProductId);
 
   useEffect(() => {
-    const id = Number(productId);
-    if (!Number.isFinite(id)) {
-      setLoading(false);
-      return;
-    }
+    if (!hasValidProductId) return;
+
     void (async () => {
-      const data = await fetchProduct(id);
+      const data = await fetchProduct(numericProductId);
       setProduct(data);
       setLoading(false);
     })();
-  }, [fetchProduct, productId]);
+  }, [fetchProduct, hasValidProductId, numericProductId]);
 
   if (loading) {
     return (

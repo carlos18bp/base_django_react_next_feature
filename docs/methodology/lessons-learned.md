@@ -136,3 +136,39 @@ venv/bin/python <command>
 - Every navigation flow must be registered in `docs/USER_FLOW_MAP.md` and `frontend/e2e/flow-definitions.json`
 - E2E tests must reflect real user integrations
 - Follow quality standards from `docs/TESTING_QUALITY_STANDARDS.md`
+
+---
+
+## 8. Gestión de dependencias
+
+### Backend reproducible
+
+- `backend/requirements.in` contiene sólo pins directos y límites de seguridad
+  explícitos; `requirements.txt` es un lock generado con hashes.
+- CI recompila el lock con la versión pineada de pip-tools y compara el diff
+  antes de instalar. Un cambio manual en el lock sin actualizar la fuente falla.
+- `pip-audit --require-hashes --disable-pip` evita resolver un entorno distinto
+  del que realmente se instala.
+
+### Majors secuenciales
+
+- Los saltos major y `0.x` se aíslan en commits pequeños y cada commit espera CI
+  verde antes del siguiente. Esto identifica con precisión qué frontera rompe.
+- Los runtimes se fijan primero (`.python-version`, `.nvmrc`, `engines`) para no
+  mezclar incompatibilidades del package manager con las librerías.
+
+### Transición TypeScript 7
+
+- TypeScript 7 aporta `tsc` nativo pero todavía no la API programática que usan
+  Next y typescript-eslint. La disposición estable es TypeScript 7 bajo
+  `@typescript/native` y `@typescript/typescript6` bajo el nombre `typescript`.
+- `typecheck` valida con 7; `typecheck:compat` valida con 6; Next se configura en
+  modo API (`useTypeScriptCli: false`) hasta que el ecosistema soporte la API 7.
+
+### ESLint 10 y scripts npm
+
+- `@eslint/compat` permite ejecutar los plugins legacy de Next sobre ESLint 10;
+  no elimina el warning peer upstream, pero lint y CI verifican la compatibilidad
+  efectiva.
+- `allowScripts` se fija por paquete **y versión**. No aprobar por nombre sin pin:
+  un bump debe volver a revisión para impedir que herede permiso de ejecución.

@@ -1,8 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useMemo, useState } from 'react';
 
+import { useHydrated } from '@/lib/hooks/useHydrated';
 import { api } from '@/lib/services/http';
 import { useCartStore } from '@/lib/stores/cartStore';
 import type { SaleCreatePayload } from '@/lib/types';
@@ -23,14 +24,10 @@ export default function CheckoutPage() {
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
   const [postalCode, setPostalCode] = useState('');
-  const [hydrated, setHydrated] = useState(false);
+  const hydrated = useHydrated();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();

@@ -1,6 +1,6 @@
 # Tasks Plan — Base Django React Next Feature
 
-> Memory Bank · actualizado 2026-08-27 (corrida vuln-audit). Conteos funcionales conservados de /qa; dependencias verificadas contra los manifests.
+> Memory Bank · actualizado 2026-08-27 (dependency refresh integral). Conteos funcionales conservados de /qa; dependencias verificadas contra locks y auditorías.
 
 ## Estado por feature (template)
 
@@ -43,6 +43,9 @@ Gaps cerrados por la corrida 2026-08-13: los 6 partial (auth-sign-up-form, catal
 12. **Django 7 compatibility**: Django 6.1 emite `RemovedInDjango70Warning` por
     los settings legacy `EMAIL_*`; migrar la configuración a `MAILERS` antes del
     próximo major.
+13. **Puentes frontend upstream**: ESLint 10 necesita `@eslint/compat` hasta que
+    los plugins Next amplíen sus peers; TypeScript 7 necesita la API compatible
+    6 hasta que Next/typescript-eslint soporten la nueva API programática.
 
 ## Backlog
 
@@ -50,7 +53,12 @@ Gaps cerrados por la corrida 2026-08-13: los 6 partial (auth-sign-up-form, catal
   alineado con el quality gate compartido.
 - [x] Corrida /qa --apply 2026-08-13: partial flows + clases negativas + purga de junk (25 rewrites, 6 deletes, 2 merges) + baseline a 0 — COMPLETADA (rama qa/13082026).
 - [x] Corrida vuln-audit 2026-08-27: frontend 10→0 vulnerabilidades; backend
-  40→11, con los remanentes de pip/sqlparse documentados.
+  40→11 en la primera fase patch/minor.
+- [x] Dependency refresh integral 2026-08-27 (PR #20): Python/Node/npm/pip,
+  Actions, locks, majors y fronteras 0.x; backend 11→0 vulnerabilidades,
+  frontend permanece en 0, cero pins backend atrasados.
+- [x] Actualizar sqlparse 0.6, Gunicorn 26, Ruff 0.16, jest-dom 7, ESLint 10 y
+  TypeScript 7 en commits secuenciales con CI verde.
 - [ ] Producto: rama not-found en BlogDetailPage (issue 7) → habilita rewrite del test marcado.
 - [ ] Producto: decidir destino de Footer.tsx (issue 8) y remover selectores muertos (issue 9).
 - [ ] Producto: `data-testid` per-card en ProductCard/BlogCard (issue 11).
@@ -60,5 +68,7 @@ Gaps cerrados por la corrida 2026-08-13: los 6 partial (auth-sign-up-form, catal
 - [ ] Corregir la sección Directory Structure de `CLAUDE.md` (content/ → base_feature_app/).
 - [ ] Registrar `db:` y `branch:` de este proyecto en `projects.yml` del toolkit.
 - [ ] Migrar settings de email a `MAILERS` antes de Django 7.
-- [ ] Evaluar `sqlparse 0.6` en un PR dedicado para cerrar 4 CVEs sin mezclar
-  el salto `0.x` con bumps patch/minor.
+- [ ] Retirar `@eslint/compat` y el alias TypeScript 6 cuando el soporte upstream
+  permita mantener lint, Next build y typecheck sin puentes.
+- [ ] Adoptar Node 26 + npm 12 + `@types/node` 26 juntos en la próxima decisión
+  explícita de runtime; Node 24.20.0 sigue siendo el LTS fijado actual.

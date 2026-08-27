@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { FormEvent, useState } from 'react';
 
 import { useAuthStore } from '@/lib/stores/authStore';
+import { getApiErrorMessage } from '@/lib/services/errors';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -29,8 +30,8 @@ export default function ForgotPasswordPage() {
       await sendPasswordResetCode(email);
       setMessage('Verification code sent to your email');
       setStep('code');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to send code');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Failed to send code'));
     } finally {
       setLoading(false);
     }
@@ -60,8 +61,8 @@ export default function ForgotPasswordPage() {
       await resetPassword({ email, code, new_password: newPassword });
       setMessage('Password reset successfully! Redirecting...');
       router.replace('/sign-in');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to reset password');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Failed to reset password'));
     } finally {
       setLoading(false);
     }
@@ -74,7 +75,7 @@ export default function ForgotPasswordPage() {
       {step === 'email' ? (
         <form className="mt-6 space-y-4" onSubmit={onSendCode}>
           <p className="text-sm text-muted-foreground">
-            Enter your email address and we'll send you a verification code to reset your password.
+            Enter your email address and we&apos;ll send you a verification code to reset your password.
           </p>
 
           <div>

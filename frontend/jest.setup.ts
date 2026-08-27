@@ -3,17 +3,19 @@ import { jest } from '@jest/globals';
 import '@testing-library/jest-dom';
 import '@testing-library/jest-dom/jest-globals';
 
+type NextImageProps = React.ComponentPropsWithoutRef<'img'> & { fill?: boolean };
+type NextLinkProps = React.ComponentPropsWithoutRef<'a'>;
+
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: function NextImage(props: any) {
-    const { fill, ...rest } = props;
-    return React.createElement('img', { ...rest, alt: props.alt });
+  default: function NextImage({ fill: _fill, ...rest }: NextImageProps) {
+    return React.createElement('img', rest);
   },
 }));
 
 jest.mock('next/link', () => ({
   __esModule: true,
-  default: ({ href, children, ...rest }: any) => React.createElement('a', { href, ...rest }, children),
+  default: ({ href, children, ...rest }: NextLinkProps) => React.createElement('a', { href, ...rest }, children),
 }));
 
 Object.defineProperty(window, 'matchMedia', {

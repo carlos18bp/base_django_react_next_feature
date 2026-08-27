@@ -22,19 +22,21 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: '3.12'
+          python-version-file: '.python-version'
           cache: 'pip'
-          cache-dependency-path: backend/requirements.txt
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-tools.txt
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: '22'
+          node-version-file: '.nvmrc'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
@@ -49,8 +51,21 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq pkg-config default-libmysqlclient-dev
 
-      - name: Install Python dependencies
-        run: pip install -r requirements.txt
+      - name: Verify and install locked Python dependencies
+        run: |
+          python -m pip install --requirement requirements-tools.txt
+          python -m piptools compile --generate-hashes --no-header --resolver=backtracking --strip-extras --output-file=/tmp/requirements.txt requirements.in
+          diff --unified requirements.txt /tmp/requirements.txt
+          python -m pip install --require-hashes --requirement requirements.txt
+          pip-audit --require-hashes --disable-pip --progress-spinner=off --requirement requirements.txt
+
+      - name: Verify Python dependencies and WSGI configuration
+        env:
+          DJANGO_SETTINGS_MODULE: base_feature_project.settings_dev
+        run: |
+          python -m pip check
+          python manage.py check
+          gunicorn --check-config base_feature_project.wsgi:application
 
       - name: Run migrations
         run: python manage.py migrate --no-input
@@ -64,7 +79,7 @@ jobs:
 
       - name: Upload backend coverage
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: coverage-backend
           path: |
@@ -83,12 +98,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: '22'
+          node-version-file: '.nvmrc'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
@@ -96,6 +111,15 @@ jobs:
         run: npm ci
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+      - name: Verify frontend dependencies and build
+        run: |
+          npm audit --audit-level=high
+          npm run check:install-scripts
+          npm run lint
+          npm run typecheck
+          npm run typecheck:compat
+          npm run build
 
       - name: Run Jest tests with coverage
         run: |
@@ -114,7 +138,7 @@ jobs:
 
       - name: Upload frontend-unit coverage
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: coverage-frontend-unit
           path: |
@@ -134,12 +158,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: '22'
+          node-version-file: '.nvmrc'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
@@ -149,9 +173,9 @@ jobs:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: '3.12'
+          python-version-file: '.python-version'
           cache: 'pip'
           cache-dependency-path: backend/requirements.txt
 
@@ -164,7 +188,7 @@ jobs:
         working-directory: backend
         run: |
           python -m venv venv
-          venv/bin/pip install -r requirements.txt
+          venv/bin/python -m pip install --require-hashes --requirement requirements.txt
 
       - name: Run backend migrations
         working-directory: backend
@@ -185,7 +209,7 @@ jobs:
 
       - name: Upload E2E flow coverage
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: coverage-frontend-e2e
           path: |
@@ -195,7 +219,7 @@ jobs:
 
       - name: Upload test traces (failures only)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: playwright-traces
           path: frontend/test-results/
@@ -214,29 +238,29 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: '22'
+          node-version-file: '.nvmrc'
 
       - name: Download backend coverage
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: coverage-backend
           path: coverage-artifacts/backend
         continue-on-error: true
 
       - name: Download frontend-unit coverage
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: coverage-frontend-unit
           path: coverage-artifacts/frontend-unit
         continue-on-error: true
 
       - name: Download frontend-e2e coverage
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: coverage-frontend-e2e
           path: coverage-artifacts/frontend-e2e
@@ -252,7 +276,7 @@ jobs:
 
       - name: Upload coverage report (md)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: coverage-report-md
           path: coverage-report.md
@@ -260,7 +284,6 @@ jobs:
 
       - name: Post PR comment
         if: github.event_name == 'pull_request'
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
         with:
           path: coverage-report.md
-
